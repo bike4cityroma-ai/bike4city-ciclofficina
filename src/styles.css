@@ -552,7 +552,8 @@ nav ul,
 .bike-table-wrap,
 .registry-table-wrap,
 .bike-detail,
-.repair-detail {
+.repair-detail,
+.part-detail {
   overflow: hidden;
   border: 1px solid #dce5e1;
   border-radius: 1rem;
@@ -650,7 +651,8 @@ nav ul,
 }
 
 .bike-detail,
-.repair-detail {
+.repair-detail,
+.part-detail {
   position: sticky;
   top: 2rem;
   padding: 1.3rem;
@@ -773,6 +775,100 @@ nav ul,
   margin-top: 0.3rem;
 }
 
+.parts-toolbar {
+  grid-template-columns:
+    minmax(14rem, 1fr) minmax(10rem, 0.3fr)
+    minmax(11rem, 0.35fr) auto auto;
+}
+
+.availability-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  margin: 0;
+  color: #405d54;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.availability-filter input {
+  width: 1.1rem;
+  min-height: 1.1rem;
+  accent-color: #1e5a47;
+}
+
+.origin-badge,
+.quantity-badge {
+  display: inline-flex;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.origin-badge {
+  color: #5a536c;
+  background: #f0ebf7;
+}
+
+.quantity-badge {
+  color: #2f654a;
+  background: #e3f2e9;
+}
+
+.quantity-badge.empty {
+  color: #7a3f34;
+  background: #f9e7e2;
+}
+
+.movement-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.movement-list li {
+  display: grid;
+  padding: 0.8rem 0;
+  border-top: 1px solid #e6ece9;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.75rem;
+}
+
+.movement-list li > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.movement-list span,
+.movement-list small {
+  color: #71827d;
+  font-size: 0.75rem;
+}
+
+.movement-list p,
+.movement-list small {
+  grid-column: 1 / -1;
+}
+
+.movement-list p {
+  margin: 0.4rem 0 0;
+}
+
+.movement-quantity {
+  font-weight: 900;
+}
+
+.movement-quantity.positive {
+  color: #2f654a;
+}
+
+.movement-quantity.negative {
+  color: #8a4a3e;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -813,7 +909,8 @@ nav ul,
   }
 
   .bike-detail,
-  .repair-detail {
+  .repair-detail,
+  .part-detail {
     position: static;
   }
 }

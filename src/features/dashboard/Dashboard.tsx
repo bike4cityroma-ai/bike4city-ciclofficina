@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DemoUser } from "../../app/App";
 import { BikeRegistry } from "../bikes/BikeRegistry";
+import { PartRegistry } from "../parts/PartRegistry";
 import { RepairRegistry } from "../repairs/RepairRegistry";
 import { demoActivities, demoMetrics } from "./demoData";
 
@@ -9,7 +10,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type AppSection = "dashboard" | "bikes" | "repairs";
+type AppSection = "dashboard" | "bikes" | "repairs" | "parts";
 
 const navigationItems: Array<{
   id: AppSection | "disabled";
@@ -18,7 +19,7 @@ const navigationItems: Array<{
   { id: "dashboard", label: "Dashboard" },
   { id: "bikes", label: "Biciclette" },
   { id: "repairs", label: "Riparazioni" },
-  { id: "disabled", label: "Ricambi" },
+  { id: "parts", label: "Ricambi" },
   { id: "disabled", label: "Collaudi" },
   { id: "disabled", label: "Consegne" },
 ];
@@ -106,6 +107,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         {section === "dashboard" && <DashboardOverview />}
         {section === "bikes" && <BikeRegistry />}
         {section === "repairs" && <RepairRegistry />}
+        {section === "parts" && <PartRegistry />}
       </main>
     </div>
   );

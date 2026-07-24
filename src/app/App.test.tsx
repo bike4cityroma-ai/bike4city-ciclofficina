@@ -96,4 +96,38 @@ describe("App", () => {
       "Da classificare",
     );
   });
+
+  it("filtra i ricambi disponibili e mostra i movimenti", () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Ricambi" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Ricambi" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "6 ricambi trovati" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Solo disponibili" }));
+
+    expect(
+      screen.getByRole("status", { name: "5 ricambi trovati" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Camera d'aria 26 × 1.75")).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri ricambio RIC-2026-0042" }),
+    );
+
+    expect(screen.getByTestId("part-detail")).toHaveTextContent(
+      "Coppia pattini freno V-brake",
+    );
+    expect(screen.getByTestId("part-detail")).toHaveTextContent(
+      "RIP-2026-0008",
+    );
+  });
 });
