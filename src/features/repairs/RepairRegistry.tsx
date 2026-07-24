@@ -1,0 +1,307 @@
+import { useMemo, useState } from "react";
+import {
+  demoRepairs,
+  repairStatuses,
+  type DemoRepair,
+  type RepairStatus,
+} from "./demoRepairs";
+
+type RepairStatusFilter = RepairStatus | "Tutti gli stati";
+type CustomerFilter = DemoRepair["customerType"] | "Tutti gli utenti";
+
+export function RepairRegistry() {
+  const [query, setQuery] = useState("");
+  const [status, setStatus] =
+    useState<RepairStatusFilter>("Tutti gli stati");
+  const [customerType, setCustomerType] =
+    useState<CustomerFilter>("Tutti gli utenti");
+  const [selectedRepair, setSelectedRepair] = useState<DemoRepair | null>(null);
+
+  const filteredRepairs = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("it");
+
+    return demoRepairs.filter((repair) => {
+      const matchesStatus =
+        status === "Tutti gli stati" || repair.status === status;
+      const matchesCustomer =
+        customerType === "Tutti gli utenti" ||
+        repair.customerType === customerType;
+      const searchableText = [
+        repair.code,
+        repair.customerLabel,
+        repair.bikeLabel,
+        repair.frameNumber ?? "",
+        repair.declaredIssue,
+      ]
+        .join(" ")
+        .toLocaleLowerCase("it");
+
+      return (
+        matchesStatus &&
+        matchesCustomer &&
+        searchableText.includes(normalizedQuery)
+      );
+    });
+  }, [customerType, query, status]);
+
+  const resultLabel = `${filteredRepairs.length} ${
+    filteredRepairs.length === 1 ? "intervento trovato" : "interventi trovati"
+  }`;
+
+  return (
+    <section className="repair-registry" aria-labelledby="repairs-title">
+      <div className="section-heading registry-heading">
+        <div>
+          <p className="eyebrow">Registro operativo</p>
+          <h2 id="repairs-title">Riparazioni</h2>
+          <p className="section-description">
+            Segui accettazione, diagnosi e avanzamento degli interventi
+            dimostrativi.
+          </p>
+        </div>
+        <button className="primary-action" type="button" disabled>
+          Nuova riparazione
+        </button>
+      </div>
+
+      <div className="registry-toolbar repair-toolbar" role="search">
+        <div className="field-group search-field">
+          <label htmlFor="repair-search">Cerca intervento</label>
+          <input
+            id="repair-search"
+            type="search"
+            placeholder="Codice, utente, bicicletta o problema"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <div className="field-group">
+          <label htmlFor="repair-status">Stato</label>
+          <select
+            id="repair-status"
+            value={status}
+            onChange={(event) =>
+              setStatus(event.target.value as RepairStatusFilter)
+            }
+          >
+            <option>Tutti gli stati</option>
+            {repairStatuses.map((repairStatus) => (
+              <option key={repairStatus}>{repairStatus}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field-group">
+          <label htmlFor="customer-type">Utente</label>
+          <select
+            id="customer-type"
+            value={customerType}
+            onChange={(event) =>
+              setCustomerType(event.target.value as CustomerFilter)
+            }
+          >
+            <option>Tutti gli utenti</option>
+            <option>Socio</option>
+            <option>Non socio</option>
+          </select>
+        </div>
+        <div className="result-count" role="status" aria-label={resultLabel}>
+          <strong>{filteredRepairs.length}</strong>
+          <span>
+            {filteredRepairs.length === 1
+              ? "intervento trovato"
+              : "interventi trovati"}
+          </span>
+        </div>
+      </div>
+
+      <div className="registry-layout">
+        <div className="registry-table-wrap">
+          <table className="registry-table repair-table">
+            <caption className="sr-only">
+              Interventi dimostrativi presenti nel registro
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Intervento</th>
+                <th scope="col">Utente</th>
+                <th scope="col">Stato</th>
+                <th scope="col">Consegna prevista</th>
+                <th scope="col">
+                  <span className="sr-only">Azioni</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRepairs.map((repair) => (
+                <tr key={repair.id}>
+                  <td>
+                    <span className="bike-code">{repair.code}</span>
+                    <strong>{repair.bikeLabel}</strong>
+                    <small>{repair.declaredIssue}</small>
+                  </td>
+                  <td>
+                    <strong>{repair.customerLabel}</strong>
+                    <small>{repair.customerType}</small>
+                  </td>
+                  <td>
+                    <span
+                      className="repair-status"
+                      data-status={repair.status.toLocaleLowerCase("it")}
+                    >
+                      {repair.status}
+                    </span>
+                  </td>
+                  <td>{repair.expectedDeliveryLabel}</td>
+                  <td>
+                    <button
+                      className="row-action"
+                      type="button"
+                      onClick={() => setSelectedRepair(repair)}
+                      aria-label={`Apri intervento ${repair.code}`}
+                    >
+                      Apri
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {filteredRepairs.length === 0 && (
+            <div className="empty-state">
+              <strong>Nessun intervento trovato</strong>
+              <span>Modifica la ricerca o seleziona filtri diversi.</span>
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setStatus("Tutti gli stati");
+                  setCustomerType("Tutti gli utenti");
+                }}
+              >
+                Azzera filtri
+              </button>
+            </div>
+          )}
+        </div>
+
+        {selectedRepair && (
+          <RepairDetail
+            repair={selectedRepair}
+            onClose={() => setSelectedRepair(null)}
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+interface RepairDetailProps {
+  repair: DemoRepair;
+  onClose: () => void;
+}
+
+function RepairDetail({ repair, onClose }: RepairDetailProps) {
+  return (
+    <aside
+      className="repair-detail"
+      aria-labelledby="repair-detail-title"
+      data-testid="repair-detail"
+    >
+      <div className="detail-heading">
+        <div>
+          <span className="bike-code">{repair.code}</span>
+          <h3 id="repair-detail-title">{repair.bikeLabel}</h3>
+        </div>
+        <button
+          className="close-button"
+          type="button"
+          onClick={onClose}
+          aria-label="Chiudi scheda riparazione"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="detail-badges">
+        <span
+          className="repair-status"
+          data-status={repair.status.toLocaleLowerCase("it")}
+        >
+          {repair.status}
+        </span>
+        <span className="customer-badge">{repair.customerType}</span>
+      </div>
+
+      <dl className="bike-facts">
+        <div>
+          <dt>Utente dimostrativo</dt>
+          <dd>{repair.customerLabel}</dd>
+        </div>
+        <div>
+          <dt>Data accettazione</dt>
+          <dd>{repair.acceptedLabel}</dd>
+        </div>
+        <div>
+          <dt>Numero telaio</dt>
+          <dd>{repair.frameNumber ?? "Non disponibile"}</dd>
+        </div>
+        <div>
+          <dt>Consegna prevista</dt>
+          <dd>{repair.expectedDeliveryLabel}</dd>
+        </div>
+        <div>
+          <dt>Tempo registrato</dt>
+          <dd>{repair.minutesSpent} minuti</dd>
+        </div>
+        <div>
+          <dt>Classificazione attività</dt>
+          <dd>{repair.activityClassification}</dd>
+        </div>
+      </dl>
+
+      <DetailList title="Problema dichiarato" items={[repair.declaredIssue]} />
+      <DetailList title="Diagnosi" items={[repair.diagnosis]} />
+      <DetailList title="Interventi richiesti" items={repair.requestedWork} />
+      <DetailList
+        title="Interventi eseguiti"
+        items={repair.completedWork}
+        emptyLabel="Nessun intervento ancora completato"
+      />
+      <DetailList
+        title="Ricambi previsti o usati"
+        items={repair.parts}
+        emptyLabel="Nessun ricambio registrato"
+      />
+      <DetailList title="Persone assegnate" items={repair.assignedTo} />
+    </aside>
+  );
+}
+
+interface DetailListProps {
+  title: string;
+  items: string[];
+  emptyLabel?: string;
+}
+
+function DetailList({
+  title,
+  items,
+  emptyLabel = "Nessun dato registrato",
+}: DetailListProps) {
+  return (
+    <div className="detail-section">
+      <h4>{title}</h4>
+      {items.length > 0 ? (
+        <ul className="detail-list">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>{emptyLabel}</p>
+      )}
+    </div>
+  );
+}

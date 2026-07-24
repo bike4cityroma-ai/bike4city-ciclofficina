@@ -550,7 +550,9 @@ nav ul,
 }
 
 .bike-table-wrap,
-.bike-detail {
+.registry-table-wrap,
+.bike-detail,
+.repair-detail {
   overflow: hidden;
   border: 1px solid #dce5e1;
   border-radius: 1rem;
@@ -558,13 +560,15 @@ nav ul,
   box-shadow: 0 0.8rem 2rem rgb(26 58 48 / 5%);
 }
 
-.bike-table {
+.bike-table,
+.registry-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.bike-table th {
+.bike-table th,
+.registry-table th {
   padding: 0.8rem 1rem;
   color: #5d736c;
   background: #f7f9f7;
@@ -573,19 +577,23 @@ nav ul,
   text-transform: uppercase;
 }
 
-.bike-table td {
+.bike-table td,
+.registry-table td {
   padding: 1rem;
   border-top: 1px solid #e6ece9;
   vertical-align: middle;
 }
 
-.bike-table td:first-child {
+.bike-table td:first-child,
+.registry-table td:first-child,
+.repair-table td:nth-child(2) {
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
 }
 
-.bike-table small {
+.bike-table small,
+.registry-table small {
   color: #71827d;
 }
 
@@ -641,7 +649,8 @@ nav ul,
   padding: 0.4rem 0.65rem;
 }
 
-.bike-detail {
+.bike-detail,
+.repair-detail {
   position: sticky;
   top: 2rem;
   padding: 1.3rem;
@@ -709,6 +718,61 @@ nav ul,
   line-height: 1.5;
 }
 
+.repair-toolbar {
+  grid-template-columns:
+    minmax(15rem, 1fr) minmax(11rem, 0.35fr)
+    minmax(10rem, 0.3fr) auto;
+}
+
+.repair-status,
+.customer-badge {
+  display: inline-flex;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.repair-status {
+  color: #315c79;
+  background: #e7f1f8;
+}
+
+.repair-status[data-status="in attesa autorizzazione"],
+.repair-status[data-status="in attesa ricambi"] {
+  color: #744d2d;
+  background: #f8e9dd;
+}
+
+.repair-status[data-status="pronta"],
+.repair-status[data-status="collaudata"] {
+  color: #2f654a;
+  background: #e3f2e9;
+}
+
+.customer-badge {
+  color: #5a536c;
+  background: #f0ebf7;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.detail-list {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: #526760;
+  line-height: 1.55;
+}
+
+.detail-list li + li {
+  margin-top: 0.3rem;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -748,7 +812,8 @@ nav ul,
     grid-template-columns: 1fr;
   }
 
-  .bike-detail {
+  .bike-detail,
+  .repair-detail {
     position: static;
   }
 }
@@ -817,11 +882,13 @@ nav ul,
     padding-bottom: 0;
   }
 
-  .bike-table-wrap {
+  .bike-table-wrap,
+  .registry-table-wrap {
     overflow-x: auto;
   }
 
-  .bike-table {
+  .bike-table,
+  .registry-table {
     min-width: 48rem;
   }
 }

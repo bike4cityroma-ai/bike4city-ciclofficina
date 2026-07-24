@@ -62,4 +62,38 @@ describe("App", () => {
       "Area biciclette pronte",
     );
   });
+
+  it("filtra le riparazioni e apre il dettaglio tecnico", () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Riparazioni" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Riparazioni" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "5 interventi trovati" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Utente"), {
+      target: { value: "Non socio" },
+    });
+
+    expect(
+      screen.getByRole("status", { name: "2 interventi trovati" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
+    );
+
+    expect(screen.getByTestId("repair-detail")).toHaveTextContent(
+      "Freno posteriore poco efficace",
+    );
+    expect(screen.getByTestId("repair-detail")).toHaveTextContent(
+      "Da classificare",
+    );
+  });
 });
