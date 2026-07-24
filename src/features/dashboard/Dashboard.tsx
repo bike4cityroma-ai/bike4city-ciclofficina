@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { DemoUser } from "../../app/App";
+import { BikeRegistry } from "../bikes/BikeRegistry";
 import { demoActivities, demoMetrics } from "./demoData";
 
 interface DashboardProps {
@@ -6,16 +8,23 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const navigationItems = [
-  "Dashboard",
-  "Biciclette",
-  "Riparazioni",
-  "Ricambi",
-  "Collaudi",
-  "Consegne",
+type AppSection = "dashboard" | "bikes";
+
+const navigationItems: Array<{
+  id: AppSection | "disabled";
+  label: string;
+}> = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "bikes", label: "Biciclette" },
+  { id: "disabled", label: "Riparazioni" },
+  { id: "disabled", label: "Ricambi" },
+  { id: "disabled", label: "Collaudi" },
+  { id: "disabled", label: "Consegne" },
 ];
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
+  const [section, setSection] = useState<AppSection>("dashboard");
+
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="Navigazione principale">
@@ -32,16 +41,27 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         <nav>
           <ul>
             {navigationItems.map((item, index) => (
-              <li key={item}>
+              <li key={item.label}>
                 <button
-                  className={index === 0 ? "nav-item active" : "nav-item"}
+                  className={
+                    item.id === section ? "nav-item active" : "nav-item"
+                  }
                   type="button"
-                  aria-current={index === 0 ? "page" : undefined}
-                  disabled={index !== 0}
-                  title={index !== 0 ? "Modulo non ancora disponibile" : ""}
+                  aria-current={item.id === section ? "page" : undefined}
+                  disabled={item.id === "disabled"}
+                  title={
+                    item.id === "disabled"
+                      ? "Modulo non ancora disponibile"
+                      : ""
+                  }
+                  onClick={() => {
+                    if (item.id !== "disabled") {
+                      setSection(item.id);
+                    }
+                  }}
                 >
                   <span aria-hidden="true">{index + 1}</span>
-                  {item}
+                  {item.label}
                 </button>
               </li>
             ))}
@@ -82,7 +102,20 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           </span>
         </section>
 
-        <section aria-labelledby="overview-title">
+        {section === "dashboard" ? (
+          <DashboardOverview />
+        ) : (
+          <BikeRegistry />
+        )}
+      </main>
+    </div>
+  );
+}
+
+function DashboardOverview() {
+  return (
+    <>
+      <section aria-labelledby="overview-title">
           <div className="section-heading">
             <div>
               <p className="eyebrow">Situazione della ciclofficina</p>
@@ -149,7 +182,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </ul>
           </aside>
         </div>
-      </main>
-    </div>
+    </>
   );
 }

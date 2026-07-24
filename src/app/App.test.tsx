@@ -28,4 +28,38 @@ describe("App", () => {
       screen.getByRole("heading", { name: "Gestionale ciclofficina" }),
     ).toBeInTheDocument();
   });
+
+  it("filtra il registro biciclette e apre una scheda", () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Biciclette" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Biciclette" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "6 biciclette trovate" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Cerca nel registro"), {
+      target: { value: "BICI-2026-0011" },
+    });
+
+    expect(
+      screen.getByRole("status", { name: "1 bicicletta trovata" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri scheda BICI-2026-0011" }),
+    );
+
+    expect(screen.getByTestId("bike-detail")).toHaveTextContent(
+      "Olmo Passeggio",
+    );
+    expect(screen.getByTestId("bike-detail")).toHaveTextContent(
+      "Area biciclette pronte",
+    );
+  });
 });

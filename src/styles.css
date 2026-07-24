@@ -19,7 +19,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -28,7 +29,8 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 3px solid #f0a72f;
   outline-offset: 3px;
 }
@@ -128,6 +130,15 @@ input {
   width: 100%;
   min-height: 3rem;
   padding: 0.75rem 0.9rem;
+  border: 1px solid #b7c5c0;
+  border-radius: 0.7rem;
+  color: #18332b;
+  background: white;
+}
+
+select {
+  min-height: 3rem;
+  padding: 0.7rem 2.5rem 0.7rem 0.9rem;
   border: 1px solid #b7c5c0;
   border-radius: 0.7rem;
   color: #18332b;
@@ -467,6 +478,263 @@ nav ul,
   font-size: 0.82rem;
 }
 
+.section-description {
+  max-width: 44rem;
+  margin: 0.55rem 0 0;
+  color: #657a73;
+  line-height: 1.55;
+}
+
+.primary-action {
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 0.7rem;
+  color: white;
+  background: #1e5a47;
+  font-weight: 800;
+}
+
+.primary-action:disabled {
+  opacity: 0.55;
+}
+
+.registry-toolbar {
+  display: grid;
+  align-items: end;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #dce5e1;
+  border-radius: 1rem;
+  background: white;
+  grid-template-columns: minmax(15rem, 1fr) minmax(12rem, 0.4fr) auto;
+  gap: 1rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-group label {
+  margin: 0;
+  color: #405d54;
+  font-size: 0.78rem;
+}
+
+.result-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-width: 10rem;
+  padding-bottom: 0.75rem;
+  color: #657a73;
+}
+
+.result-count strong {
+  color: #18332b;
+  font-size: 1.35rem;
+}
+
+.registry-layout {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.registry-layout:has(.bike-detail) {
+  grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 0.65fr);
+}
+
+.bike-table-wrap,
+.bike-detail {
+  overflow: hidden;
+  border: 1px solid #dce5e1;
+  border-radius: 1rem;
+  background: white;
+  box-shadow: 0 0.8rem 2rem rgb(26 58 48 / 5%);
+}
+
+.bike-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.bike-table th {
+  padding: 0.8rem 1rem;
+  color: #5d736c;
+  background: #f7f9f7;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bike-table td {
+  padding: 1rem;
+  border-top: 1px solid #e6ece9;
+  vertical-align: middle;
+}
+
+.bike-table td:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.bike-table small {
+  color: #71827d;
+}
+
+.bike-code {
+  color: #497067;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.bike-status {
+  display: inline-flex;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  color: #36584d;
+  background: #e8f1ed;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.bike-status[data-status="da valutare"],
+.bike-status[data-status="da riparare"] {
+  color: #6a4a15;
+  background: #fff1d2;
+}
+
+.bike-status[data-status="in lavorazione"] {
+  color: #315c79;
+  background: #e7f1f8;
+}
+
+.bike-status[data-status="in attesa ricambi"] {
+  color: #744d2d;
+  background: #f8e9dd;
+}
+
+.bike-status[data-status="consegnata"] {
+  color: #59635f;
+  background: #ecefed;
+}
+
+.row-action,
+.close-button {
+  border: 0;
+  color: #27634f;
+  background: transparent;
+  font-weight: 850;
+}
+
+.row-action {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.bike-detail {
+  position: sticky;
+  top: 2rem;
+  padding: 1.3rem;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detail-heading h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.35rem;
+}
+
+.close-button {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #f0f4f2;
+  font-size: 1.5rem;
+}
+
+.bike-facts {
+  display: grid;
+  margin: 1.2rem 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bike-facts div {
+  min-width: 0;
+}
+
+.bike-facts dt {
+  color: #71827d;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bike-facts dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.detail-section {
+  padding: 1rem 0 0;
+  border-top: 1px solid #e6ece9;
+}
+
+.detail-section h4 {
+  margin: 0 0 0.35rem;
+}
+
+.detail-section p {
+  margin-bottom: 1rem;
+  color: #526760;
+  line-height: 1.5;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 4rem 1rem;
+  color: #657a73;
+  text-align: center;
+}
+
+.empty-state strong {
+  margin-bottom: 0.35rem;
+  color: #18332b;
+  font-size: 1.1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
 @media (max-width: 68rem) {
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -474,6 +742,14 @@ nav ul,
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .registry-layout:has(.bike-detail) {
+    grid-template-columns: 1fr;
+  }
+
+  .bike-detail {
+    position: static;
   }
 }
 
@@ -485,9 +761,32 @@ nav ul,
   .sidebar {
     position: static;
     height: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
   }
 
-  .sidebar nav,
+  .sidebar nav {
+    display: block;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .sidebar nav ul {
+    display: flex;
+    min-width: max-content;
+    gap: 0.4rem;
+  }
+
+  .sidebar nav li {
+    flex: 0 0 auto;
+  }
+
+  .sidebar .nav-item {
+    width: auto;
+    min-height: 2.7rem;
+    padding-right: 1rem;
+  }
+
   .sidebar-footer {
     display: none;
   }
@@ -507,6 +806,23 @@ nav ul,
 
   .user-menu .text-button {
     margin-left: auto;
+  }
+
+  .registry-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .result-count {
+    justify-content: flex-start;
+    padding-bottom: 0;
+  }
+
+  .bike-table-wrap {
+    overflow-x: auto;
+  }
+
+  .bike-table {
+    min-width: 48rem;
   }
 }
 
@@ -530,6 +846,14 @@ nav ul,
   .activity-list li {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .bike-heading {
+    align-items: stretch;
+  }
+
+  .bike-facts {
+    grid-template-columns: 1fr;
   }
 }
 
