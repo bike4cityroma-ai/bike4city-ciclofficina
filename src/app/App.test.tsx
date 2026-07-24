@@ -130,4 +130,35 @@ describe("App", () => {
       "RIP-2026-0008",
     );
   });
+
+  it("filtra i collaudi negativi e mostra la checklist", () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Collaudi" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Collaudi" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Esito"), {
+      target: { value: "Negativo" },
+    });
+
+    expect(
+      screen.getByRole("status", { name: "1 collaudo trovato" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri collaudo COL-2026-0009" }),
+    );
+
+    expect(screen.getByTestId("test-detail")).toHaveTextContent(
+      "Il freno anteriore non mantiene la regolazione",
+    );
+    expect(screen.getByTestId("test-detail")).toHaveTextContent(
+      "Prova non eseguita",
+    );
+  });
 });

@@ -553,7 +553,8 @@ nav ul,
 .registry-table-wrap,
 .bike-detail,
 .repair-detail,
-.part-detail {
+.part-detail,
+.test-detail {
   overflow: hidden;
   border: 1px solid #dce5e1;
   border-radius: 1rem;
@@ -652,7 +653,8 @@ nav ul,
 
 .bike-detail,
 .repair-detail,
-.part-detail {
+.part-detail,
+.test-detail {
   position: sticky;
   top: 2rem;
   padding: 1.3rem;
@@ -869,6 +871,79 @@ nav ul,
   color: #8a4a3e;
 }
 
+.test-toolbar {
+  grid-template-columns: minmax(15rem, 1fr) minmax(11rem, 0.35fr) auto;
+}
+
+.test-result {
+  display: inline-flex;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  color: #2f654a;
+  background: #e3f2e9;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.test-result[data-result="negativo"] {
+  color: #7a3f34;
+  background: #f9e7e2;
+}
+
+.test-result[data-result="condizionato"] {
+  color: #744d2d;
+  background: #f8e9dd;
+}
+
+.check-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.check-list li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid #e6ece9;
+}
+
+.check-list li > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.check-list li span,
+.check-list li small {
+  color: #71827d;
+  font-size: 0.75rem;
+}
+
+.check-indicator {
+  display: grid;
+  flex: 0 0 auto;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #2f654a !important;
+  background: #e3f2e9;
+  font-weight: 900;
+}
+
+.check-indicator[data-check="non conforme"] {
+  color: #7a3f34 !important;
+  background: #f9e7e2;
+}
+
+.check-indicator[data-check="non applicabile"] {
+  color: #59635f !important;
+  background: #ecefed;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -910,7 +985,8 @@ nav ul,
 
   .bike-detail,
   .repair-detail,
-  .part-detail {
+  .part-detail,
+  .test-detail {
     position: static;
   }
 }

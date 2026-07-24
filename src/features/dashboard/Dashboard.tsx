@@ -3,6 +3,7 @@ import type { DemoUser } from "../../app/App";
 import { BikeRegistry } from "../bikes/BikeRegistry";
 import { PartRegistry } from "../parts/PartRegistry";
 import { RepairRegistry } from "../repairs/RepairRegistry";
+import { TestRegistry } from "../tests/TestRegistry";
 import { demoActivities, demoMetrics } from "./demoData";
 
 interface DashboardProps {
@@ -10,7 +11,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type AppSection = "dashboard" | "bikes" | "repairs" | "parts";
+type AppSection = "dashboard" | "bikes" | "repairs" | "parts" | "tests";
 
 const navigationItems: Array<{
   id: AppSection | "disabled";
@@ -20,7 +21,7 @@ const navigationItems: Array<{
   { id: "bikes", label: "Biciclette" },
   { id: "repairs", label: "Riparazioni" },
   { id: "parts", label: "Ricambi" },
-  { id: "disabled", label: "Collaudi" },
+  { id: "tests", label: "Collaudi" },
   { id: "disabled", label: "Consegne" },
 ];
 
@@ -108,6 +109,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         {section === "bikes" && <BikeRegistry />}
         {section === "repairs" && <RepairRegistry />}
         {section === "parts" && <PartRegistry />}
+        {section === "tests" && <TestRegistry />}
       </main>
     </div>
   );
