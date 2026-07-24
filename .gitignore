@@ -1,0 +1,32 @@
+# Dipendenze e build
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Variabili e segreti locali
+.env
+.env.*
+!.env.example
+*.local
+service-account*.json
+firebase-adminsdk*.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Editor e sistema operativo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# File temporanei
+*.log
+*.tmp
+temp/
+

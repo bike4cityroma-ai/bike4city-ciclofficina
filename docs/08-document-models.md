@@ -1,0 +1,189 @@
+# Modelli documentali
+
+## Stato del documento
+
+Le strutture seguenti sono bozze funzionali. Testi, dichiarazioni, riferimenti
+normativi, firme e tempi di conservazione devono essere approvati
+dall'associazione e, quando necessario, da professionisti incaricati.
+
+## Regole comuni
+
+Ogni documento dovrebbe contenere:
+
+- tipo e titolo;
+- codice progressivo, quando previsto;
+- data e luogo;
+- versione del modello;
+- riferimenti associativi approvati;
+- riferimenti alle entità gestionali collegate;
+- campi compilati;
+- firme o attestazioni previste;
+- indicazione di eventuali allegati;
+- identificativo interno del file.
+
+Il PDF consolidato non deve essere sovrascritto. Una nuova versione deve avere
+un legame esplicito con quella sostituita.
+
+## Scheda di accettazione
+
+Finalità: fotografare la richiesta e lo stato visibile della bicicletta.
+
+Sezioni:
+
+1. dati minimi dell'utente;
+2. eventuale riferimento al socio;
+3. dati identificativi della bicicletta;
+4. problema dichiarato;
+5. condizioni visibili;
+6. accessori consegnati;
+7. interventi richiesti;
+8. modalità di autorizzazione per attività aggiuntive;
+9. informativa o riferimento al trattamento dei dati;
+10. condizioni del servizio validate;
+11. data e firme.
+
+Controlli:
+
+- nessuna classificazione fiscale automatica;
+- campi personali limitati;
+- copia collegata alla riparazione;
+- versione del testo conservata.
+
+## Scheda di collaudo
+
+Finalità: documentare i controlli tecnici finali.
+
+Controlli proposti:
+
+- serraggio ruote;
+- pressione pneumatici;
+- stato copertoni;
+- freni;
+- sterzo;
+- trasmissione;
+- cambio;
+- pedali;
+- sella;
+- luci;
+- campanello;
+- prova su strada;
+- note e limitazioni.
+
+Ogni controllo dovrebbe supportare:
+
+- esito `conforme`, `non conforme` o `non applicabile`;
+- nota obbligatoria per non conformità o non applicabilità;
+- operatore e data.
+
+Esito complessivo: positivo, negativo o condizionato. Il significato di
+“condizionato” deve essere definito e approvato prima dell'uso.
+
+## Liberatoria di donazione
+
+Finalità: documentare la consegna gratuita della bicicletta.
+
+Sezioni proposte:
+
+1. dati minimi del donatore;
+2. descrizione e numero telaio;
+3. dichiarazione di proprietà o disponibilità, con testo validato;
+4. cessione gratuita;
+5. possibili destinazioni: recupero, riuso, smontaggio o smaltimento;
+6. trattamento dei dati;
+7. data e firma.
+
+Il software non deve stabilire la sufficienza legale della dichiarazione.
+
+## Verbale di consegna
+
+Finalità: documentare la consegna di una bicicletta.
+
+Sezioni:
+
+1. soggetto ricevente;
+2. bicicletta e codice interno;
+3. condizioni alla consegna;
+4. accessori;
+5. collaudo collegato;
+6. eventuale contributo;
+7. ricevuta o altro documento collegato;
+8. dichiarazioni validate;
+9. data e firme.
+
+## Ricevuta
+
+Campi funzionali:
+
+- numero progressivo annuale;
+- data di emissione;
+- soggetto;
+- causale;
+- importo;
+- metodo di pagamento;
+- classificazione e relativa fotografia storica;
+- eventuali valori fiscali configurati;
+- riferimenti a riparazione o bicicletta;
+- note;
+- stato `emessa` o `annullata`.
+
+L'eventuale sezione fiscale deve essere alimentata esclusivamente da
+configurazioni validate e temporalmente applicabili. Il gestionale non deve
+interpretare autonomamente IVA, esenzioni o esclusioni.
+
+## Annullamento di una ricevuta
+
+Non si modifica il PDF originale. Si conserva:
+
+- numero originale;
+- documento originale;
+- data e autore dell'annullamento;
+- motivazione;
+- eventuale riferimento al documento sostitutivo;
+- evento audit.
+
+## Intestazione configurabile
+
+Campi da approvare:
+
+- denominazione completa;
+- eventuale acronimo;
+- sede e contatti;
+- codice fiscale e altri riferimenti;
+- iscrizione RUNTS, se e come indicarla;
+- logo;
+- eventuali diciture obbligatorie.
+
+Le configurazioni devono essere versionate affinché un documento storico
+mantenga l'intestazione valida al momento dell'emissione.
+
+## Generazione e conservazione
+
+- generazione preferibilmente lato backend;
+- codice e metadati creati atomicamente;
+- file in Storage privato;
+- checksum opzionale per controllare l'integrità;
+- contenuto e versione del modello registrati;
+- accesso ed esportazione coerenti con i ruoli;
+- conservazione definita per categoria documentale.
+
+## Accessibilità e stampa
+
+- formato A4 leggibile;
+- contrasto adeguato;
+- dimensioni dei caratteri adatte alla stampa;
+- etichette non basate soltanto sul colore;
+- ordine logico dei campi;
+- spazio firme sufficiente;
+- gestione di testi lunghi e pagine aggiuntive.
+
+## Decisioni da validare
+
+- testi completi e riferimenti normativi;
+- documenti obbligatori per ciascun flusso;
+- valore e metodo delle firme;
+- soggetti autorizzati a firmare;
+- intestazione associativa;
+- numerazioni separate o condivise;
+- conservazione dei PDF e degli originali firmati;
+- trattamento delle correzioni;
+- contenuto fiscale delle ricevute.
