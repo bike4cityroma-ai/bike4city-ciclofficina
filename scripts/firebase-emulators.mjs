@@ -23,6 +23,16 @@ if (!existsSync(firebaseCli)) {
   );
 }
 
+const build = spawnSync("npm.cmd", ["--prefix", "functions", "run", "build"], {
+  cwd: process.cwd(),
+  stdio: "inherit",
+  shell: true,
+});
+
+if (build.status !== 0) {
+  process.exit(build.status ?? 1);
+}
+
 const javaHome = findJavaHome();
 const command =
   mode === "start"
@@ -32,7 +42,7 @@ const command =
         "--project",
         projectId,
         "--only",
-        "auth,firestore,storage",
+        "auth,firestore,storage,functions",
       ]
     : [
         firebaseCli,
@@ -40,8 +50,8 @@ const command =
         "--project",
         projectId,
         "--only",
-        "auth,firestore,storage",
-        "npm.cmd run test:rules",
+        "auth,firestore,storage,functions",
+        "npm.cmd run test:emulators",
       ];
 
 if (javaHome) {

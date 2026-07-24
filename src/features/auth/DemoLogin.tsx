@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import type { DemoUser } from "../../app/App";
+import { signInDemo } from "./authService";
 
 interface DemoLoginProps {
   onLogin: (user: DemoUser) => void;
@@ -7,13 +8,23 @@ interface DemoLoginProps {
 
 export function DemoLogin({ onLogin }: DemoLoginProps) {
   const [email, setEmail] = useState("responsabile@example.test");
+  const [password, setPassword] = useState("Demo-Ciclofficina-2026!");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onLogin({
-      name: "Giulia Demo",
-      role: "Responsabile ciclofficina",
-    });
+    setPending(true);
+    setError("");
+    try {
+      onLogin(await signInDemo(email, password));
+    } catch {
+      setError(
+        "Accesso non riuscito. Avvia gli emulatori e carica l’account demo.",
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -31,7 +42,7 @@ export function DemoLogin({ onLogin }: DemoLoginProps) {
 
         <div className="demo-notice" role="note">
           <strong>Ambiente demo</strong>
-          <span>L'accesso è locale e non è collegato a Firebase.</span>
+          <span>L’accesso usa Firebase Auth Emulator, solo in locale.</span>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -52,18 +63,21 @@ export function DemoLogin({ onLogin }: DemoLoginProps) {
             name="password"
             type="password"
             autoComplete="current-password"
-            defaultValue="prototipo"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             required
           />
 
-          <button className="primary-button" type="submit">
-            Entra nel prototipo
+          {error && <p role="alert">{error}</p>}
+
+          <button className="primary-button" type="submit" disabled={pending}>
+            {pending ? "Accesso in corso…" : "Entra nel prototipo"}
           </button>
         </form>
 
         <p className="login-help">
           Le credenziali visualizzate sono fittizie e funzionano soltanto per
-          questa dimostrazione.
+          questa dimostrazione locale.
         </p>
       </section>
     </main>

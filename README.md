@@ -5,8 +5,9 @@ Gestionale web della ciclofficina popolare **InControPedale**, gestita da
 
 ## Stato del progetto
 
-Il progetto è nella fase di analisi e inizializzazione. La struttura di base
-del repository è presente, ma non esiste ancora un'applicazione eseguibile.
+Il progetto dispone di un prototipo eseguibile con moduli dimostrativi,
+autenticazione locale, registro biciclette persistito su Firestore Emulator e
+prima Cloud Function per la registrazione con progressivo atomico.
 
 Il software non è pronto per la produzione e deve essere sviluppato e testato
 esclusivamente con dati fittizi. Non devono essere inseriti dati personali
@@ -74,17 +75,18 @@ Requisito: Node.js 22.12 o successivo.
 
 ```powershell
 npm.cmd install
+npm.cmd --prefix functions install
 npm.cmd run dev
 ```
 
-Il prototipo iniziale contiene un login esclusivamente dimostrativo e una
-dashboard con dati fittizi. Non è collegato a Firebase e non deve essere usato
-con dati personali reali.
+Il prototipo usa soltanto Firebase Emulator Suite e dati fittizi. Non deve
+essere usato con dati personali reali.
 
 Controlli disponibili:
 
 ```powershell
 npm.cmd run typecheck
+npm.cmd run functions:build
 npm.cmd test
 npm.cmd run build
 ```
@@ -104,15 +106,33 @@ npm.cmd run emulators
 
 Interfaccia Emulator Suite: `http://127.0.0.1:4000`.
 
-Per avviare Firestore Emulator, eseguire automaticamente i test delle regole e
-arrestare l'emulatore al termine:
+Con gli emulatori avviati, in un secondo terminale caricare account, ruolo e
+biciclette dimostrative:
+
+```powershell
+npm.cmd run emulators:seed
+```
+
+Credenziali esclusivamente locali:
+
+- email: `responsabile@example.test`
+- password: `Demo-Ciclofficina-2026!`
+
+L'applicazione usa Auth Emulator, legge il registro da Firestore Emulator e
+registra le nuove biciclette tramite la callable `createBike`. La Function
+verifica ruolo e stato attivo, valida l'input e assegna il codice
+`BICI-AAAA-NNNN` con una transazione, audit e chiave d'idempotenza.
+
+Per avviare gli emulatori, eseguire automaticamente test delle regole e test
+Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 
 ```powershell
 npm.cmd run emulators:exec
 ```
 
 In sviluppo `VITE_USE_FIREBASE_EMULATORS` deve rimanere `true`. Non usare dati
-personali reali negli emulatori.
+personali reali negli emulatori. App Check non è imposto nell'ambiente locale:
+andrà configurato e abilitato prima di un eventuale rilascio.
 
 ## Licenza
 

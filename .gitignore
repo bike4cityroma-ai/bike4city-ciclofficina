@@ -1,6 +1,7 @@
 # Dipendenze e build
 node_modules/
 dist/
+functions/lib/
 coverage/
 .vite/
 

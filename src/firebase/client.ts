@@ -14,6 +14,11 @@ import {
   getStorage,
   type FirebaseStorage,
 } from "firebase/storage";
+import {
+  connectFunctionsEmulator,
+  getFunctions,
+  type Functions,
+} from "firebase/functions";
 
 const demoProjectId = "demo-bike4city-ciclofficina";
 
@@ -64,6 +69,7 @@ const app = getApps().length === 0
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);
+export const functions: Functions = getFunctions(app, "europe-west1");
 
 if (import.meta.env.DEV && useEmulators()) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", {
@@ -71,4 +77,5 @@ if (import.meta.env.DEV && useEmulators()) {
   });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectStorageEmulator(storage, "127.0.0.1", 9199);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 }

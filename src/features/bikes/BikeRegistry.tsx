@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   bikeStatuses,
   demoBikes,
   type BikeStatus,
   type DemoBike,
 } from "./demoBikes";
+import { BikeRegistrationForm } from "./BikeRegistrationForm";
+import { observeBikes } from "./bikeService";
 
 type StatusFilter = BikeStatus | "Tutti gli stati";
 
@@ -12,11 +14,25 @@ export function BikeRegistry() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("Tutti gli stati");
   const [selectedBike, setSelectedBike] = useState<DemoBike | null>(null);
+  const [bikes, setBikes] = useState(demoBikes);
+  const [loadError, setLoadError] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") return;
+    return observeBikes(
+      (nextBikes) => {
+        setBikes(nextBikes);
+        setLoadError(false);
+      },
+      () => setLoadError(true),
+    );
+  }, []);
 
   const filteredBikes = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
 
-    return demoBikes.filter((bike) => {
+    return bikes.filter((bike) => {
       const matchesStatus =
         status === "Tutti gli stati" || bike.status === status;
       const searchableText = [
@@ -32,7 +48,7 @@ export function BikeRegistry() {
 
       return matchesStatus && searchableText.includes(normalizedQuery);
     });
-  }, [query, status]);
+  }, [bikes, query, status]);
 
   return (
     <section className="bike-registry" aria-labelledby="bikes-title">
@@ -42,13 +58,23 @@ export function BikeRegistry() {
           <h2 id="bikes-title">Biciclette</h2>
           <p className="section-description">
             Consulta ubicazione, stato e informazioni tecniche delle biciclette
-            dimostrative.
+            registrate nell’ambiente locale.
           </p>
         </div>
-        <button className="primary-action" type="button" disabled>
+        <button
+          className="primary-action"
+          type="button"
+          onClick={() => setShowRegistration(true)}
+        >
           Registra bicicletta
         </button>
       </div>
+
+      {loadError && (
+        <p className="notice-banner" role="alert">
+          Registro non disponibile: verifica che gli emulatori siano avviati.
+        </p>
+      )}
 
       <div className="registry-toolbar" role="search">
         <div className="field-group search-field">
@@ -173,6 +199,9 @@ export function BikeRegistry() {
           />
         )}
       </div>
+      {showRegistration && (
+        <BikeRegistrationForm onClose={() => setShowRegistration(false)} />
+      )}
     </section>
   );
 }

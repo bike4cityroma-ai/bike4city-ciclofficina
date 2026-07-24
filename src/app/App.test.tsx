@@ -12,14 +12,14 @@ describe("App", () => {
     expect(screen.getByText("Ambiente demo")).toBeInTheDocument();
   });
 
-  it("apre la dashboard e consente di uscire", () => {
+  it("apre la dashboard e consente di uscire", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
     expect(
-      screen.getByRole("heading", { name: "Buon lavoro, Giulia" }),
+      await screen.findByRole("heading", { name: "Buon lavoro, Giulia" }),
     ).toBeInTheDocument();
     expect(screen.getByText("BICI-2026-0014")).toBeInTheDocument();
 
@@ -29,13 +29,15 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("filtra il registro biciclette e apre una scheda", () => {
+  it("filtra il registro biciclette e apre una scheda", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Biciclette" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Biciclette" }),
+    );
 
     expect(
       screen.getByRole("heading", { name: "Biciclette" }),
@@ -63,13 +65,36 @@ describe("App", () => {
     );
   });
 
-  it("filtra le riparazioni e apre il dettaglio tecnico", () => {
+  it("apre la nuova registrazione bicicletta", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Riparazioni" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Biciclette" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Registra bicicletta" }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Registra bicicletta" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Il codice viene assegnato automaticamente\./),
+    ).toBeInTheDocument();
+  });
+
+  it("filtra le riparazioni e apre il dettaglio tecnico", async () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
 
     expect(
       screen.getByRole("heading", { name: "Riparazioni" }),
@@ -97,13 +122,13 @@ describe("App", () => {
     );
   });
 
-  it("filtra i ricambi disponibili e mostra i movimenti", () => {
+  it("filtra i ricambi disponibili e mostra i movimenti", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Ricambi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
 
     expect(
       screen.getByRole("heading", { name: "Ricambi" }),
@@ -131,13 +156,13 @@ describe("App", () => {
     );
   });
 
-  it("filtra i collaudi negativi e mostra la checklist", () => {
+  it("filtra i collaudi negativi e mostra la checklist", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Collaudi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Collaudi" }));
 
     expect(
       screen.getByRole("heading", { name: "Collaudi" }),
@@ -162,13 +187,13 @@ describe("App", () => {
     );
   });
 
-  it("filtra le consegne senza contributo e apre il verbale", () => {
+  it("filtra le consegne senza contributo e apre il verbale", async () => {
     render(<App />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Consegne" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Consegne" }));
 
     expect(
       screen.getByRole("heading", { name: "Consegne" }),

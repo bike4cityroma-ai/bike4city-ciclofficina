@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dashboard } from "../features/dashboard/Dashboard";
 import { DemoLogin } from "../features/auth/DemoLogin";
+import { observeDemoSession, signOutDemo } from "../features/auth/authService";
 
 export interface DemoUser {
   name: string;
@@ -10,9 +11,19 @@ export interface DemoUser {
 export function App() {
   const [user, setUser] = useState<DemoUser | null>(null);
 
+  useEffect(() => observeDemoSession(setUser), []);
+
   if (!user) {
     return <DemoLogin onLogin={setUser} />;
   }
 
-  return <Dashboard user={user} onLogout={() => setUser(null)} />;
+  return (
+    <Dashboard
+      user={user}
+      onLogout={() => {
+        void signOutDemo();
+        setUser(null);
+      }}
+    />
+  );
 }
