@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DemoUser } from "../../app/App";
 import { BikeRegistry } from "../bikes/BikeRegistry";
+import { DeliveryRegistry } from "../deliveries/DeliveryRegistry";
 import { PartRegistry } from "../parts/PartRegistry";
 import { RepairRegistry } from "../repairs/RepairRegistry";
 import { TestRegistry } from "../tests/TestRegistry";
@@ -11,7 +12,13 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type AppSection = "dashboard" | "bikes" | "repairs" | "parts" | "tests";
+type AppSection =
+  | "dashboard"
+  | "bikes"
+  | "repairs"
+  | "parts"
+  | "tests"
+  | "deliveries";
 
 const navigationItems: Array<{
   id: AppSection | "disabled";
@@ -22,7 +29,7 @@ const navigationItems: Array<{
   { id: "repairs", label: "Riparazioni" },
   { id: "parts", label: "Ricambi" },
   { id: "tests", label: "Collaudi" },
-  { id: "disabled", label: "Consegne" },
+  { id: "deliveries", label: "Consegne" },
 ];
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
@@ -110,6 +117,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         {section === "repairs" && <RepairRegistry />}
         {section === "parts" && <PartRegistry />}
         {section === "tests" && <TestRegistry />}
+        {section === "deliveries" && <DeliveryRegistry />}
       </main>
     </div>
   );

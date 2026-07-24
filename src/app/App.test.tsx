@@ -161,4 +161,38 @@ describe("App", () => {
       "Prova non eseguita",
     );
   });
+
+  it("filtra le consegne senza contributo e apre il verbale", () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Consegne" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Consegne" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Contributo"), {
+      target: { value: "Senza contributo" },
+    });
+
+    expect(
+      screen.getByRole("status", { name: "2 consegne trovate" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri consegna CON-2026-0004" }),
+    );
+
+    expect(screen.getByTestId("delivery-detail")).toHaveTextContent(
+      "Ente Sociale Demo",
+    );
+    expect(screen.getByTestId("delivery-detail")).toHaveTextContent(
+      "Cessione gratuita da validare",
+    );
+    expect(screen.getByTestId("delivery-detail")).toHaveTextContent(
+      "VER-2026-0004",
+    );
+  });
 });

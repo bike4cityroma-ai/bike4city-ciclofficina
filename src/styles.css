@@ -554,7 +554,8 @@ nav ul,
 .bike-detail,
 .repair-detail,
 .part-detail,
-.test-detail {
+.test-detail,
+.delivery-detail {
   overflow: hidden;
   border: 1px solid #dce5e1;
   border-radius: 1rem;
@@ -654,7 +655,8 @@ nav ul,
 .bike-detail,
 .repair-detail,
 .part-detail,
-.test-detail {
+.test-detail,
+.delivery-detail {
   position: sticky;
   top: 2rem;
   padding: 1.3rem;
@@ -944,6 +946,23 @@ nav ul,
   background: #ecefed;
 }
 
+.delivery-toolbar {
+  grid-template-columns:
+    minmax(14rem, 1fr) minmax(12rem, 0.35fr)
+    minmax(11rem, 0.3fr) auto;
+}
+
+.delivery-type {
+  display: inline-flex;
+  padding: 0.38rem 0.58rem;
+  border-radius: 999px;
+  color: #315c79;
+  background: #e7f1f8;
+  font-size: 0.7rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -986,7 +1005,8 @@ nav ul,
   .bike-detail,
   .repair-detail,
   .part-detail,
-  .test-detail {
+  .test-detail,
+  .delivery-detail {
     position: static;
   }
 }
