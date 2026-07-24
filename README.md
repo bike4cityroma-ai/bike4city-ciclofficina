@@ -70,9 +70,24 @@ Le regole operative per chi interviene sul progetto sono in
 
 ## Avvio dello sviluppo
 
-I comandi di installazione e avvio saranno documentati quando saranno stati
-approvati l'architettura e il contenuto iniziale di `package.json`. Al momento
-non sono richieste dipendenze per consultare la documentazione.
+Requisito: Node.js 22.12 o successivo.
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Il prototipo iniziale contiene un login esclusivamente dimostrativo e una
+dashboard con dati fittizi. Non è collegato a Firebase e non deve essere usato
+con dati personali reali.
+
+Controlli disponibili:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd test
+npm.cmd run build
+```
 
 ## Licenza
 
