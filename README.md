@@ -89,6 +89,31 @@ npm.cmd test
 npm.cmd run build
 ```
 
+## Firebase Emulator Suite
+
+La configurazione locale usa esclusivamente il project ID dimostrativo
+`demo-bike4city-ciclofficina` e non richiede credenziali cloud.
+
+Su Windows il launcher usa Java 21, quando disponibile, per garantire la
+compatibilità con il runtime delle Storage Security Rules senza modificare il
+Java predefinito del sistema.
+
+```powershell
+npm.cmd run emulators
+```
+
+Interfaccia Emulator Suite: `http://127.0.0.1:4000`.
+
+Per avviare Firestore Emulator, eseguire automaticamente i test delle regole e
+arrestare l'emulatore al termine:
+
+```powershell
+npm.cmd run emulators:exec
+```
+
+In sviluppo `VITE_USE_FIREBASE_EMULATORS` deve rimanere `true`. Non usare dati
+personali reali negli emulatori.
+
 ## Licenza
 
 Il progetto è attualmente privato e soggetto alla licenza provvisoria contenuta

@@ -1,0 +1,69 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function activeUser() {
+      return signedIn()
+        && request.auth.token.active == true
+        && request.auth.token.roles is list;
+    }
+
+    function hasAnyRole(roles) {
+      return activeUser()
+        && request.auth.token.roles.hasAny(roles);
+    }
+
+    function validImageUpload() {
+      return request.resource != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    match /bikes/{bikeId}/photos/{documentId} {
+      allow read: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'operator',
+        'volunteer'
+      ]);
+      allow create: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'operator'
+      ]) && validImageUpload();
+      allow update, delete: if false;
+    }
+
+    match /repairs/{repairId}/attachments/{documentId} {
+      allow read: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'operator'
+      ]);
+      allow create: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'operator'
+      ]) && validImageUpload();
+      allow update, delete: if false;
+    }
+
+    match /documents/{documentType}/{entityId}/{documentId} {
+      allow read: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'operator',
+        'treasurer'
+      ]);
+      allow write: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

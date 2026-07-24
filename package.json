@@ -6,22 +6,28 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "emulators": "node scripts/firebase-emulators.mjs start",
+    "emulators:exec": "node scripts/firebase-emulators.mjs exec",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/**/*.rules.test.ts",
+    "test:rules": "vitest run tests/firestore.rules.test.ts",
     "test:watch": "vitest",
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "firebase": "12.16.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.1",
     "@testing-library/jest-dom": "7.0.0",
     "@testing-library/react": "16.3.2",
     "@types/node": "26.1.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.4",
+    "firebase-tools": "15.24.0",
     "jsdom": "29.1.1",
     "typescript": "7.0.2",
     "vite": "8.1.5",
