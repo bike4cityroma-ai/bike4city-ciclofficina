@@ -620,6 +620,69 @@ describe("createWorkshopTest", () => {
   }, 20_000);
 });
 
+describe("createDelivery", () => {
+  it("consegna una riparazione collaudata e resta idempotente", async () => {
+    const repairRef = db.collection("repairs").doc();
+    const testRef = db.collection("tests").doc();
+    await testRef.set({
+      code: "COL-DEMO-CONSEGNA",
+      result: "Positivo",
+    });
+    await repairRef.set({
+      code: "RIP-DEMO-CONSEGNA",
+      bikeLabel: "Bicicletta consegna demo",
+      status: "Collaudata",
+      testId: testRef.id,
+      version: 1,
+    });
+    const data = {
+      repairId: repairRef.id,
+      recipientType: "Socio",
+      recipientLabel: "Socio Demo Consegna",
+      conditionSnapshot: "Riparata e collaudata.",
+      accessories: ["Campanello"],
+      contributionAmount: null,
+      declarationsAccepted: true,
+      notes: "Consegna interamente dimostrativa.",
+      idempotencyKey: `delivery-${crypto.randomUUID()}`,
+    };
+    const response = await invokeFunction("createDelivery", data);
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      result: { id: string; code: string; documentCode: string };
+    };
+    expect(body.result.code).toMatch(/^CON-\d{4}-\d{4}$/);
+    expect(body.result.documentCode).toMatch(/^VER-\d{4}-\d{4}$/);
+    expect((await repairRef.get()).data()?.status).toBe("Consegnata");
+    expect((await db.doc(`deliveries/${body.result.id}`).get())
+      .data()?.testId).toBe(testRef.id);
+    const repeated = await invokeFunction("createDelivery", data);
+    expect((await repeated.json()).result).toEqual(body.result);
+  }, 20_000);
+
+  it("nega la consegna senza collaudo positivo", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-NO-COLLAUDO",
+      bikeLabel: "Bicicletta non collaudata",
+      status: "Collaudata",
+      version: 1,
+    });
+    const response = await invokeFunction("createDelivery", {
+      repairId: repairRef.id,
+      recipientType: "Non socio",
+      recipientLabel: "Utente Demo",
+      conditionSnapshot: "Condizioni dimostrative.",
+      accessories: [],
+      contributionAmount: null,
+      declarationsAccepted: true,
+      notes: "Tentativo dimostrativo.",
+      idempotencyKey: `delivery-invalid-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(400);
+  }, 20_000);
+});
+
 function createInput(idempotencyKey: string) {
   return {
     idempotencyKey,

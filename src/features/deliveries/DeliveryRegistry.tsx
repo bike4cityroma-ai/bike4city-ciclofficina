@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   deliveryTypes,
   demoDeliveries,
   type DeliveryType,
   type DemoDelivery,
 } from "./demoDeliveries";
+import { DeliveryRegistrationForm } from "./DeliveryRegistrationForm";
+import { observeDeliveries } from "./deliveryService";
 
 type DeliveryTypeFilter = DeliveryType | "Tutte le consegne";
 type ContributionFilter = "Tutti i contributi" | "Con contributo" | "Senza contributo";
@@ -16,11 +18,21 @@ export function DeliveryRegistry() {
     useState<ContributionFilter>("Tutti i contributi");
   const [selectedDelivery, setSelectedDelivery] =
     useState<DemoDelivery | null>(null);
+  const [deliveries, setDeliveries] = useState(demoDeliveries);
+  const [loadError, setLoadError] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") return;
+    return observeDeliveries((items) => {
+      setDeliveries(items); setLoadError(false);
+    }, () => setLoadError(true));
+  }, []);
 
   const filteredDeliveries = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
 
-    return demoDeliveries.filter((delivery) => {
+    return deliveries.filter((delivery) => {
       const matchesType = type === "Tutte le consegne" || delivery.type === type;
       const matchesContribution =
         contribution === "Tutti i contributi" ||
@@ -44,7 +56,7 @@ export function DeliveryRegistry() {
         searchableText.includes(normalizedQuery)
       );
     });
-  }, [contribution, query, type]);
+  }, [contribution, deliveries, query, type]);
 
   const resultLabel = `${filteredDeliveries.length} ${
     filteredDeliveries.length === 1 ? "consegna trovata" : "consegne trovate"
@@ -61,10 +73,14 @@ export function DeliveryRegistry() {
             dimostrative.
           </p>
         </div>
-        <button className="primary-action" type="button" disabled>
+        <button className="primary-action" type="button"
+          onClick={() => setShowRegistration(true)}>
           Nuova consegna
         </button>
       </div>
+      {loadError && <p className="notice-banner" role="alert">
+        Registro consegne non disponibile: verifica gli emulatori.
+      </p>}
 
       <div className="registry-toolbar delivery-toolbar" role="search">
         <div className="field-group search-field">
@@ -194,6 +210,9 @@ export function DeliveryRegistry() {
           />
         )}
       </div>
+      {showRegistration && (
+        <DeliveryRegistrationForm onClose={() => setShowRegistration(false)} />
+      )}
     </section>
   );
 }

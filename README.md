@@ -162,6 +162,11 @@ tecnica tramite `createWorkshopTest`. Un esito positivo porta la riparazione a
 e ritorno a `In lavorazione`. Collaudo, transizione, storico e audit sono
 registrati atomicamente.
 
+Il modulo Consegne seleziona soltanto riparazioni `Collaudata` con collaudo
+positivo. `createDelivery` genera `CON-AAAA-NNNN` e il riferimento verbale
+`VER-AAAA-NNNN`, consolida condizioni, accessori e ricevente fittizio, quindi
+porta la riparazione a `Consegnata` con storico, audit e idempotenza.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

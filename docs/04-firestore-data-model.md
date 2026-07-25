@@ -306,6 +306,12 @@ Campi principali:
 
 Indici: `bikeId + deliveredAt`; `repairId`; `deliveredAt`.
 
+Nel prototipo `createDelivery` verifica nella stessa transazione che la
+riparazione sia `Collaudata` e che il documento `tests/{testId}` abbia esito
+`Positivo`. La consegna conserva fotografie descrittive fittizie del ricevente,
+condizioni e accessori; aggiorna riparazione, storico, progressivo, idempotenza
+e audit senza consentire scritture dirette dal client.
+
 ### `receipts`
 
 Finalità: ricevute consolidate e annullabili senza cancellazione.

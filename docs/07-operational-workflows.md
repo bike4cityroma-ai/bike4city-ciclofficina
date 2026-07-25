@@ -201,6 +201,11 @@ Flusso:
 6. Impostare bicicletta o riparazione come `consegnata`.
 7. Registrare l'evento in audit.
 
+Nel prototipo la consegna di una riparazione è consentita soltanto dopo un
+collaudo positivo consolidato. Il riferimento `VER-AAAA-NNNN` identifica i
+metadati del futuro verbale, ma non rappresenta ancora un PDF firmato. Importi
+eventuali restano non classificati e non generano automaticamente ricevute.
+
 ## Ricevuta
 
 1. L'utente autorizzato seleziona una classificazione già validata.

@@ -161,9 +161,7 @@ service cloud.firestore {
         'treasurer',
         'read_only'
       ]);
-      allow create: if hasAnyRole(['admin', 'workshop_manager']);
-      allow update: if false;
-      allow delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /receipts/{receiptId} {

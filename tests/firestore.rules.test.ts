@@ -213,6 +213,15 @@ describe("Regole Firestore", () => {
       result: "Positivo",
     }));
   });
+
+  it("nega la creazione diretta di una consegna", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(doc(db, "deliveries", "delivery-demo"), {
+      code: "CON-2026-9999",
+    }));
+  });
 });
 
 describe("Regole Storage", () => {

@@ -140,6 +140,30 @@ const demoRepairs = [
     activityClassification: "Da classificare",
     notes: "Riparazione pronta fittizia per il collaudo.",
   },
+  {
+    id: "repair-demo-tested-0007",
+    code: "RIP-2026-0007",
+    customerType: "Socio",
+    customerLabel: "Socio Demo 307",
+    bikeLabel: "Trekking blu · telaio L",
+    frameNumber: "DEMO-CON07",
+    declaredIssue: "Controllo trasmissione.",
+    diagnosis: "Cavo cambio usurato.",
+    proposedWork: ["Sostituzione cavo cambio"],
+    requestedWork: ["Controllo trasmissione"],
+    authorizedWork: ["Sostituzione cavo cambio"],
+    completedWork: ["Sostituzione cavo cambio", "Regolazione cambio"],
+    parts: ["RIC-2026-0039 · Cavo cambio universale × 1"],
+    partUsages: [],
+    assignedTo: ["Giulia Demo"],
+    assignedUserIds: [user.uid],
+    minutesSpent: 40,
+    expectedDeliveryAt: null,
+    status: "Collaudata",
+    testId: "test-demo-positive-0007",
+    activityClassification: "Da classificare",
+    notes: "Riparazione collaudata fittizia per la consegna.",
+  },
 ];
 const repairBatch = db.batch();
 for (const repair of demoRepairs) {
@@ -154,6 +178,29 @@ for (const repair of demoRepairs) {
     version: 1,
   });
 }
+repairBatch.set(db.doc("tests/test-demo-positive-0007"), {
+  code: "COL-2026-0007",
+  repairId: "repair-demo-tested-0007",
+  repairCode: "RIP-2026-0007",
+  bikeId: null,
+  bikeCode: null,
+  bikeLabel: "Trekking blu · telaio L",
+  checks: Object.fromEntries([
+    "wheels", "tires", "brakes", "steering", "drivetrain", "gears",
+    "pedals", "saddle", "lights", "bell", "road",
+  ].map((id) => [id, { result: "Conforme", note: null }])),
+  roadTest: { result: "Conforme", note: null },
+  result: "Positivo",
+  notes: "Collaudo positivo dimostrativo.",
+  performedAt: now,
+  performedBy: user.uid,
+  operatorLabel: "Giulia Demo",
+  createdAt: now,
+  createdBy: user.uid,
+  updatedAt: now,
+  updatedBy: user.uid,
+  version: 1,
+});
 repairBatch.set(db.doc("counters/repairs-2026"), {
   lastValue: 9,
   updatedAt: now,
@@ -261,6 +308,7 @@ await Promise.all(
     "createPart",
     "recordPartMovement",
     "createWorkshopTest",
+    "createDelivery",
   ].map(warmFunction),
 );
 

@@ -411,4 +411,26 @@ describe("App", () => {
       "VER-2026-0004",
     );
   });
+
+  it("apre la registrazione di una nuova consegna", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Consegne" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Nuova consegna" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Nuova consegna" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Confermo condizioni, accessori e dichiarazioni di consegna",
+      ),
+    ).not.toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "Registra consegna" }),
+    ).toBeDisabled();
+  });
 });
