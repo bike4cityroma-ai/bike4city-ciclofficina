@@ -102,6 +102,12 @@ Attori: responsabile o operatore; utente; eventuale tesoriere.
 8. Impostare lo stato `accettata`.
 9. Registrare l'evento in audit.
 
+Nel prototipo locale è implementato il primo tratto di questo flusso:
+`createRepair` raccoglie riferimenti esclusivamente fittizi, problema e
+interventi richiesti, genera il progressivo e imposta `Accettata`. Collegamento
+all'anagrafica, scheda documentale e autorizzazioni versionate restano fasi
+successive e non devono essere simulate con dati personali reali.
+
 La classificazione fiscale non viene dedotta automaticamente dalla qualità di
 socio o non socio.
 
@@ -124,6 +130,11 @@ La diagnosi conserva:
 L'autorizzazione deve indicare metodo, data, ambito e soggetto. Se cambia
 l'intervento autorizzato, deve restare traccia della versione precedente.
 
+Nel prototipo la diagnosi è separata dall'accettazione: il passaggio
+`Accettata -> Diagnosticata` richiede diagnosi tecnica, almeno un intervento
+proposto e motivazione. I passaggi successivi sono applicati dal backend e
+registrati nello storico della riparazione e nell'audit.
+
 ## Lavorazione e ricambi
 
 1. Assegnare attività a operatori o volontari.
@@ -133,6 +144,16 @@ l'intervento autorizzato, deve restare traccia della versione precedente.
 5. Impedire quantità negative o rettifiche prive di motivazione.
 6. Registrare gli interventi effettivamente completati.
 7. Passare a `pronta` soltanto quando non restano attività bloccanti.
+
+Ogni utilizzo di ricambio richiede quantità e motivazione. Il backend verifica
+la giacenza, impedisce lo scarico fuori dalla lavorazione e conserva il
+movimento anche dopo il completamento della riparazione.
+
+Nel prototipo l'ingresso in `In lavorazione` assegna automaticamente l'utente
+che esegue il passaggio. Il passaggio a `Pronta` richiede almeno un intervento
+eseguito, il tempo impiegato e, se non risultano movimenti di ricambi, una
+conferma esplicita che non ne siano stati utilizzati. Una scheda pronta ma
+incompleta può essere riportata in lavorazione con motivazione.
 
 ## Collaudo
 

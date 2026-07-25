@@ -71,6 +71,16 @@ beforeEach(async () => {
     await setDoc(doc(adminDb, "members", "member-demo"), {
       membershipNumber: "DEMO-001",
     });
+    await setDoc(doc(adminDb, "repairs", "repair-demo"), {
+      code: "RIP-DEMO-0001",
+      status: "Accettata",
+      createdAt: "demo-created-at",
+      createdBy: "manager-demo",
+    });
+    await setDoc(doc(adminDb, "parts", "part-demo"), {
+      code: "RIC-DEMO-0001",
+      quantityOnHand: 3,
+    });
   });
 });
 
@@ -148,6 +158,46 @@ describe("Regole Firestore", () => {
         },
       ),
     );
+  });
+
+  it("nega la creazione diretta di una riparazione", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+
+    await assertFails(
+      setDoc(doc(db, "repairs", "repair-demo"), {
+        code: "RIP-2026-0001",
+        status: "Accettata",
+      }),
+    );
+  });
+
+  it("nega aggiornamento e storico riparazione dal client", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(updateDoc(doc(db, "repairs", "repair-demo"), {
+      status: "Diagnosticata",
+    }));
+    await assertFails(setDoc(
+      doc(db, "repairs", "repair-demo", "statusHistory", "event-demo"),
+      { from: "Accettata", to: "Diagnosticata" },
+    ));
+  });
+
+  it("nega scarico ricambi e movimenti diretti dal client", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(updateDoc(doc(db, "parts", "part-demo"), {
+      quantityOnHand: 2,
+    }));
+    await assertFails(setDoc(doc(db, "partMovements", "movement-demo"), {
+      partId: "part-demo",
+      type: "use",
+      quantity: -1,
+    }));
   });
 });
 

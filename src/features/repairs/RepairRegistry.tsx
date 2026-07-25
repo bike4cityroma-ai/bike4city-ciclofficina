@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   demoRepairs,
   repairStatuses,
   type DemoRepair,
   type RepairStatus,
 } from "./demoRepairs";
+import { RepairAcceptanceForm } from "./RepairAcceptanceForm";
+import { observeRepairs } from "./repairService";
+import { RepairWorkflow } from "./RepairWorkflow";
+import { RepairPartsUsage } from "./RepairPartsUsage";
 
 type RepairStatusFilter = RepairStatus | "Tutti gli stati";
 type CustomerFilter = DemoRepair["customerType"] | "Tutti gli utenti";
@@ -16,11 +20,31 @@ export function RepairRegistry() {
   const [customerType, setCustomerType] =
     useState<CustomerFilter>("Tutti gli utenti");
   const [selectedRepair, setSelectedRepair] = useState<DemoRepair | null>(null);
+  const [repairs, setRepairs] = useState(demoRepairs);
+  const [loadError, setLoadError] = useState(false);
+  const [showAcceptance, setShowAcceptance] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") return;
+    return observeRepairs(
+      (nextRepairs) => {
+        setRepairs(nextRepairs);
+        setLoadError(false);
+      },
+      () => setLoadError(true),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!selectedRepair) return;
+    const updated = repairs.find((repair) => repair.id === selectedRepair.id);
+    if (updated && updated !== selectedRepair) setSelectedRepair(updated);
+  }, [repairs, selectedRepair]);
 
   const filteredRepairs = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
 
-    return demoRepairs.filter((repair) => {
+    return repairs.filter((repair) => {
       const matchesStatus =
         status === "Tutti gli stati" || repair.status === status;
       const matchesCustomer =
@@ -42,7 +66,7 @@ export function RepairRegistry() {
         searchableText.includes(normalizedQuery)
       );
     });
-  }, [customerType, query, status]);
+  }, [customerType, query, repairs, status]);
 
   const resultLabel = `${filteredRepairs.length} ${
     filteredRepairs.length === 1 ? "intervento trovato" : "interventi trovati"
@@ -59,10 +83,17 @@ export function RepairRegistry() {
             dimostrativi.
           </p>
         </div>
-        <button className="primary-action" type="button" disabled>
+        <button className="primary-action" type="button"
+          onClick={() => setShowAcceptance(true)}>
           Nuova riparazione
         </button>
       </div>
+
+      {loadError && (
+        <p className="notice-banner" role="alert">
+          Registro non disponibile: verifica che gli emulatori siano avviati.
+        </p>
+      )}
 
       <div className="registry-toolbar repair-toolbar" role="search">
         <div className="field-group search-field">
@@ -193,6 +224,9 @@ export function RepairRegistry() {
           />
         )}
       </div>
+      {showAcceptance && (
+        <RepairAcceptanceForm onClose={() => setShowAcceptance(false)} />
+      )}
     </section>
   );
 }
@@ -256,13 +290,18 @@ function RepairDetail({ repair, onClose }: RepairDetailProps) {
           <dd>{repair.minutesSpent} minuti</dd>
         </div>
         <div>
-          <dt>Classificazione attività</dt>
+          <dt>Classificazione amministrativa</dt>
           <dd>{repair.activityClassification}</dd>
         </div>
       </dl>
 
       <DetailList title="Problema dichiarato" items={[repair.declaredIssue]} />
       <DetailList title="Diagnosi" items={[repair.diagnosis]} />
+      <DetailList
+        title="Interventi proposti"
+        items={repair.proposedWork}
+        emptyLabel="Nessun intervento ancora proposto"
+      />
       <DetailList title="Interventi richiesti" items={repair.requestedWork} />
       <DetailList
         title="Interventi eseguiti"
@@ -270,11 +309,28 @@ function RepairDetail({ repair, onClose }: RepairDetailProps) {
         emptyLabel="Nessun intervento ancora completato"
       />
       <DetailList
-        title="Ricambi previsti o usati"
+        title="Ricambi"
         items={repair.parts}
-        emptyLabel="Nessun ricambio registrato"
+        emptyLabel="Nessun ricambio collegato. Potrà essere aggiunto durante la lavorazione."
       />
       <DetailList title="Persone assegnate" items={repair.assignedTo} />
+      <RepairPartsUsage repair={repair} />
+      {repair.activityClassification === "Da classificare" && (
+        <p className="workflow-note">
+          La classificazione amministrativa sarà gestita separatamente da un
+          ruolo autorizzato e non determina lo stato tecnico.
+        </p>
+      )}
+      {repair.status === "Pronta" &&
+        (repair.completedWork.length === 0 ||
+          repair.assignedTo.length === 0 ||
+          repair.minutesSpent < 1) && (
+          <p className="notice-banner" role="alert">
+            Scheda incompleta: riporta la riparazione in lavorazione e registra
+            interventi eseguiti, operatore e tempo prima di renderla pronta.
+          </p>
+        )}
+      <RepairWorkflow repair={repair} />
     </aside>
   );
 }

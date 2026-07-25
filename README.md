@@ -129,6 +129,23 @@ incrementa la versione del record e produce storico append-only e audit.
 Lo stato `Consegnata` non è selezionabile manualmente: sarà applicato dal
 flusso controllato del modulo Consegne.
 
+Il registro Riparazioni legge i record da Firestore e consente una prima
+accettazione controllata tramite la callable `createRepair`. La Function
+verifica account e ruolo, assegna il progressivo `RIP-AAAA-NNNN` in transazione
+e registra idempotenza e audit. In questa fase devono essere usati soltanto
+riferimenti dimostrativi: diagnosi e avanzamento saranno aggiunti nei passaggi
+successivi del modulo.
+
+La scheda riparazione permette ora di registrare separatamente la diagnosi
+tecnica e gli interventi proposti, quindi di avanzare soltanto lungo le
+transizioni operative ammesse tramite `updateRepairWorkflow`. Ogni passaggio
+richiede una motivazione e produce storico append-only e audit.
+
+Durante lo stato `In lavorazione` è possibile collegare un ricambio disponibile
+tramite `useRepairPart`. L'operazione aggiorna atomicamente la giacenza, crea
+un movimento di utilizzo append-only, collega il ricambio alla riparazione e
+registra l'audit; il client non può modificare direttamente scorte o movimenti.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

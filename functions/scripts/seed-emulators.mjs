@@ -41,6 +41,8 @@ await db.doc(`users/${user.uid}`).set({
   updatedAt: Timestamp.now(),
 });
 
+await deleteTestArtifacts();
+
 const now = Timestamp.now();
 const demoBikes = [
   {
@@ -92,6 +94,94 @@ for (const bike of demoBikes) {
 }
 await batch.commit();
 
+const demoRepairs = [
+  {
+    id: "repair-demo-0009",
+    code: "RIP-2026-0009",
+    customerType: "Socio",
+    customerLabel: "Socio Demo 104",
+    bikeLabel: "Trekking blu · telaio M",
+    frameNumber: "DEMO-R09",
+    declaredIssue: "Il cambio salta sotto sforzo.",
+    diagnosis: null,
+    proposedWork: [],
+    requestedWork: ["Controllo trasmissione", "Regolazione cambio"],
+    authorizedWork: [],
+    completedWork: [],
+    parts: [],
+    assignedTo: [],
+    minutesSpent: 0,
+    expectedDeliveryAt: null,
+    status: "Accettata",
+    activityClassification: "Da classificare",
+    notes: "Dati interamente fittizi.",
+  },
+];
+const repairBatch = db.batch();
+for (const repair of demoRepairs) {
+  repairBatch.set(db.doc(`repairs/${repair.id}`), {
+    ...repair,
+    acceptedAt: now,
+    createdAt: now,
+    createdBy: user.uid,
+    updatedAt: now,
+    updatedBy: user.uid,
+    archivedAt: null,
+    version: 1,
+  });
+}
+repairBatch.set(db.doc("counters/repairs-2026"), {
+  lastValue: 9,
+  updatedAt: now,
+}, { merge: true });
+await repairBatch.commit();
+
+const demoParts = [
+  {
+    id: "part-demo-0042",
+    code: "RIC-2026-0042",
+    category: "Freni",
+    description: "Coppia pattini freno V-brake",
+    originType: "recovered",
+    condition: "Buono",
+    locationId: "Cassettiera F-2",
+    quantityOnHand: 4,
+  },
+  {
+    id: "part-demo-0040",
+    code: "RIC-2026-0040",
+    category: "Trasmissione",
+    description: "Catena 7/8 velocità",
+    originType: "purchased",
+    condition: "Nuovo",
+    locationId: "Cassettiera T-1",
+    quantityOnHand: 2,
+  },
+  {
+    id: "part-demo-0039",
+    code: "RIC-2026-0039",
+    category: "Trasmissione",
+    description: "Cavo cambio universale",
+    originType: "recovered",
+    condition: "Buono",
+    locationId: "Cassettiera T-2",
+    quantityOnHand: 5,
+  },
+];
+const partBatch = db.batch();
+for (const part of demoParts) {
+  partBatch.set(db.doc(`parts/${part.id}`), {
+    ...part,
+    createdAt: now,
+    createdBy: user.uid,
+    updatedAt: now,
+    updatedBy: user.uid,
+    archivedAt: null,
+    version: 1,
+  });
+}
+await partBatch.commit();
+
 const bikeSnapshots = await db.collection("bikes").get();
 const highestBikeNumber = bikeSnapshots.docs.reduce((highest, snapshot) => {
   const match = /^BICI-2026-(\d+)$/.exec(String(snapshot.data().code));
@@ -109,7 +199,15 @@ await db.runTransaction(async (transaction) => {
   });
 });
 
-await Promise.all(["createBike", "updateBikeStatus"].map(warmFunction));
+await Promise.all(
+  [
+    "createBike",
+    "updateBikeStatus",
+    "createRepair",
+    "updateRepairWorkflow",
+    "useRepairPart",
+  ].map(warmFunction),
+);
 
 console.info(`Demo locale pronta: ${email}`);
 
@@ -133,4 +231,23 @@ async function warmFunction(functionName) {
   }
 
   throw new Error(`Function locale non pronta: ${functionName}.`);
+}
+
+async function deleteTestArtifacts() {
+  const targets = [
+    ["parts", "code", "RIC-DEMO-"],
+    ["repairs", "code", "RIP-DEMO-"],
+    ["partMovements", "partCode", "RIC-DEMO-"],
+    ["auditLogs", "entityCode", "RIC-DEMO-"],
+  ];
+  for (const [collectionName, field, prefix] of targets) {
+    const snapshot = await db.collection(collectionName)
+      .where(field, ">=", prefix)
+      .where(field, "<=", `${prefix}\uf8ff`)
+      .get();
+    if (snapshot.empty) continue;
+    const cleanupBatch = db.batch();
+    snapshot.docs.forEach((item) => cleanupBatch.delete(item.ref));
+    await cleanupBatch.commit();
+  }
 }

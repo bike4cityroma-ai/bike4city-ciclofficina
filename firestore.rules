@@ -96,10 +96,20 @@ service cloud.firestore {
         'treasurer',
         'read_only'
       ]);
-      allow create: if hasAnyRole(['admin', 'workshop_manager', 'operator']);
-      allow update: if hasAnyRole(['admin', 'workshop_manager', 'operator'])
-        && immutableMetadata();
+      allow create: if false;
+      allow update: if false;
       allow delete: if false;
+
+      match /statusHistory/{eventId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator',
+          'treasurer',
+          'read_only'
+        ]);
+        allow write: if false;
+      }
     }
 
     match /repairTasks/{taskId} {
@@ -123,11 +133,12 @@ service cloud.firestore {
         'treasurer',
         'read_only'
       ]);
-      allow create, update: if hasAnyRole([
+      allow create: if hasAnyRole([
         'admin',
         'workshop_manager',
         'operator'
       ]);
+      allow update: if false;
       allow delete: if false;
     }
 
@@ -139,8 +150,7 @@ service cloud.firestore {
         'treasurer',
         'read_only'
       ]);
-      allow create: if hasAnyRole(['admin', 'workshop_manager', 'operator']);
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /tests/{testId} {

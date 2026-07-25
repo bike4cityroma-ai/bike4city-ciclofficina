@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run src",
     "test:rules": "vitest run tests/firestore.rules.test.ts",
-    "test:emulators": "npm.cmd run test:rules && npm.cmd --prefix functions run test:emulator",
+    "test:emulators": "npm.cmd run test:rules && npm.cmd --prefix functions run test:emulator && npm.cmd run emulators:seed",
     "test:watch": "vitest",
     "typecheck": "tsc -b --pretty false"
   },

@@ -5,7 +5,8 @@ export type RepairStatus =
   | "In attesa ricambi"
   | "In lavorazione"
   | "Pronta"
-  | "Collaudata";
+  | "Collaudata"
+  | "Annullata";
 
 export interface DemoRepair {
   id: string;
@@ -17,6 +18,7 @@ export interface DemoRepair {
   frameNumber: string | null;
   declaredIssue: string;
   diagnosis: string;
+  proposedWork: string[];
   requestedWork: string[];
   completedWork: string[];
   parts: string[];
@@ -35,6 +37,7 @@ export const repairStatuses: RepairStatus[] = [
   "In lavorazione",
   "Pronta",
   "Collaudata",
+  "Annullata",
 ];
 
 export const demoRepairs: DemoRepair[] = [
@@ -47,14 +50,15 @@ export const demoRepairs: DemoRepair[] = [
     bikeLabel: "Trekking blu · telaio M",
     frameNumber: "DEMO-R09",
     declaredIssue: "Il cambio salta sotto sforzo.",
-    diagnosis: "Cavo cambio ossidato e catena prossima al limite di usura.",
+    diagnosis: "Non compilata",
+    proposedWork: [],
     requestedWork: ["Controllo trasmissione", "Regolazione cambio"],
     completedWork: [],
     parts: ["Cavo cambio"],
     assignedTo: ["Marco Demo"],
     minutesSpent: 35,
     expectedDeliveryLabel: "29 luglio 2026",
-    status: "In attesa autorizzazione",
+    status: "Accettata",
     activityClassification: "Da classificare",
   },
   {
@@ -67,6 +71,7 @@ export const demoRepairs: DemoRepair[] = [
     frameNumber: "DEMO-R08",
     declaredIssue: "Freno posteriore poco efficace.",
     diagnosis: "Pattini usurati e cavo da registrare.",
+    proposedWork: ["Sostituzione pattini", "Registrazione cavo"],
     requestedWork: ["Revisione freno posteriore"],
     completedWork: ["Pulizia pista frenante"],
     parts: ["Coppia pattini freno recuperati"],
@@ -86,6 +91,7 @@ export const demoRepairs: DemoRepair[] = [
     frameNumber: "DEMO-R07",
     declaredIssue: "Ruota anteriore perde pressione.",
     diagnosis: "Camera d'aria forata; copertone ancora utilizzabile.",
+    proposedWork: ["Sostituzione camera d'aria"],
     requestedWork: ["Riparazione foratura", "Controllo generale"],
     completedWork: ["Smontaggio ruota", "Controllo copertone"],
     parts: [],
@@ -105,6 +111,7 @@ export const demoRepairs: DemoRepair[] = [
     frameNumber: null,
     declaredIssue: "Rumore durante la pedalata.",
     diagnosis: "Movimento centrale da registrare.",
+    proposedWork: ["Registrazione movimento centrale"],
     requestedWork: ["Controllo movimento centrale"],
     completedWork: ["Registrazione movimento centrale", "Prova statica"],
     parts: [],
@@ -124,6 +131,7 @@ export const demoRepairs: DemoRepair[] = [
     frameNumber: "DEMO-R05",
     declaredIssue: "Richiesto controllo prima di un viaggio.",
     diagnosis: "Nessuna criticità strutturale rilevata.",
+    proposedWork: ["Controllo serraggi e regolazioni"],
     requestedWork: ["Controllo sicurezza", "Regolazione pressione"],
     completedWork: ["Controllo serraggi", "Regolazione freni", "Prova su strada"],
     parts: [],

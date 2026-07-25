@@ -159,7 +159,7 @@ describe("createBike", () => {
 
 describe("updateBikeStatus", () => {
   it("aggiorna stato e storico, resta idempotente e nega ruoli insufficienti", async () => {
-    const bikeId = "bike-status-functions-demo";
+    const bikeId = `bike-status-${crypto.randomUUID()}`;
     await db.doc(`bikes/${bikeId}`).set({
       ...createInput("seed-status"),
       code: "BICI-2026-0900",
@@ -175,7 +175,7 @@ describe("updateBikeStatus", () => {
       bikeId,
       newStatus: "Da riparare",
       reason: "Valutazione tecnica dimostrativa completata.",
-      idempotencyKey: "status-idempotente",
+      idempotencyKey: `status-${crypto.randomUUID()}`,
     };
 
     const response = await invokeFunction("updateBikeStatus", data);
@@ -214,7 +214,7 @@ describe("updateBikeStatus", () => {
       {
         ...data,
         newStatus: "In lavorazione",
-        idempotencyKey: "status-volontario",
+        idempotencyKey: `status-volontario-${crypto.randomUUID()}`,
       },
       volunteerToken,
     );
@@ -245,6 +245,208 @@ describe("updateBikeStatus", () => {
       "Da valutare",
     );
   }, 15_000);
+});
+
+describe("createRepair", () => {
+  it("crea una riparazione con progressivo, audit e idempotenza", async () => {
+    const data = {
+      idempotencyKey: `repair-${crypto.randomUUID()}`,
+      customerType: "Socio",
+      customerLabel: "Socio Demo 501",
+      bikeLabel: "City bike demo verde",
+      frameNumber: "DEMO-501",
+      declaredIssue: "Freno posteriore poco efficace.",
+      requestedWork: ["Controllo impianto frenante"],
+      expectedDeliveryDate: "2026-08-01",
+      notes: "Dati esclusivamente fittizi.",
+    };
+    const response = await invokeFunction("createRepair", data);
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      result: { id: string; code: string };
+    };
+    expect(body.result.code).toMatch(/^RIP-\d{4}-\d{4}$/);
+    const repair = await db.doc(`repairs/${body.result.id}`).get();
+    expect(repair.data()?.status).toBe("Accettata");
+    expect(repair.data()?.createdBy).toBeTruthy();
+    const repeated = await invokeFunction("createRepair", data);
+    expect((await repeated.json()).result).toEqual(body.result);
+    const audits = await db.collection("auditLogs")
+      .where("entityId", "==", body.result.id).get();
+    expect(audits.docs.some((item) =>
+      item.data().action === "repair.create")).toBe(true);
+  }, 20_000);
+
+  it("nega la creazione al volontario", async () => {
+    const response = await invokeFunction("createRepair", {
+      idempotencyKey: `repair-${crypto.randomUUID()}`,
+      customerType: "Non socio",
+      customerLabel: "Utente Demo",
+      bikeLabel: "Bicicletta Demo",
+      frameNumber: null,
+      declaredIssue: "Controllo generale richiesto.",
+      requestedWork: ["Controllo generale"],
+      expectedDeliveryDate: null,
+      notes: "Dati fittizi.",
+    }, volunteerToken);
+    expect(response.status).toBe(403);
+  }, 20_000);
+});
+
+describe("updateRepairWorkflow", () => {
+  it("registra diagnosi, storico e avanzamento consentito", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-DIAGNOSI",
+      status: "Accettata",
+      version: 1,
+      createdAt: Timestamp.now(),
+      createdBy: "demo",
+    });
+    const data = {
+      repairId: repairRef.id,
+      newStatus: "Diagnosticata",
+      diagnosis: "Cambio posteriore danneggiato e non registrabile.",
+      proposedWork: ["Sostituzione cambio posteriore"],
+      reason: "Diagnosi tecnica completata in officina.",
+      idempotencyKey: `diagnosis-${crypto.randomUUID()}`,
+    };
+    const response = await invokeFunction("updateRepairWorkflow", data);
+    expect(response.status).toBe(200);
+    expect((await repairRef.get()).data()?.status).toBe("Diagnosticata");
+    expect((await repairRef.get()).data()?.diagnosis).toContain("danneggiato");
+    const history = await repairRef.collection("statusHistory").get();
+    expect(history.size).toBe(1);
+    const repeated = await invokeFunction("updateRepairWorkflow", data);
+    expect(repeated.status).toBe(200);
+    expect((await repairRef.collection("statusHistory").get()).size).toBe(1);
+
+    const startResponse = await invokeFunction("updateRepairWorkflow", {
+      repairId: repairRef.id,
+      newStatus: "In lavorazione",
+      diagnosis: "",
+      proposedWork: [],
+      completedWork: [],
+      minutesSpent: 0,
+      noPartsUsed: false,
+      reason: "Lavorazione autorizzata e avviata.",
+      idempotencyKey: `start-${crypto.randomUUID()}`,
+    });
+    expect(startResponse.status).toBe(200);
+    expect((await repairRef.get()).data()?.assignedTo).toContain(
+      "Responsabile Functions Demo",
+    );
+
+    const incomplete = await invokeFunction("updateRepairWorkflow", {
+      repairId: repairRef.id,
+      newStatus: "Pronta",
+      diagnosis: "",
+      proposedWork: [],
+      completedWork: [],
+      minutesSpent: 0,
+      noPartsUsed: false,
+      reason: "Tentativo di chiusura incompleta.",
+      idempotencyKey: `incomplete-${crypto.randomUUID()}`,
+    });
+    expect(incomplete.status).toBe(400);
+
+    const complete = await invokeFunction("updateRepairWorkflow", {
+      repairId: repairRef.id,
+      newStatus: "Pronta",
+      diagnosis: "",
+      proposedWork: [],
+      completedWork: ["Sostituzione cambio posteriore"],
+      minutesSpent: 45,
+      noPartsUsed: true,
+      reason: "Lavorazione completata e verificata.",
+      idempotencyKey: `complete-${crypto.randomUUID()}`,
+    });
+    expect(complete.status).toBe(200);
+    expect((await repairRef.get()).data()?.minutesSpent).toBe(45);
+  }, 20_000);
+
+  it("nega il salto diretto da Accettata a In lavorazione", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-SALTO",
+      status: "Accettata",
+      version: 1,
+    });
+    const response = await invokeFunction("updateRepairWorkflow", {
+      repairId: repairRef.id,
+      newStatus: "In lavorazione",
+      diagnosis: "Diagnosi valida ma transizione non consentita.",
+      proposedWork: ["Controllo generale"],
+      reason: "Tentativo dimostrativo non consentito.",
+      idempotencyKey: `jump-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(400);
+  }, 20_000);
+});
+
+describe("useRepairPart", () => {
+  it("scarica il ricambio, crea il movimento e resta idempotente", async () => {
+    const repairRef = db.collection("repairs").doc();
+    const partRef = db.collection("parts").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-RICAMBIO",
+      status: "In lavorazione",
+      parts: [],
+      version: 1,
+      createdAt: Timestamp.now(),
+      createdBy: "demo",
+    });
+    await partRef.set({
+      code: "RIC-DEMO-001",
+      description: "Cavo cambio dimostrativo",
+      quantityOnHand: 3,
+      version: 1,
+      createdAt: Timestamp.now(),
+      createdBy: "demo",
+    });
+    const data = {
+      repairId: repairRef.id,
+      partId: partRef.id,
+      quantity: 2,
+      reason: "Montaggio sulla riparazione dimostrativa.",
+      idempotencyKey: `part-${crypto.randomUUID()}`,
+    };
+    const response = await invokeFunction("useRepairPart", data);
+    expect(response.status).toBe(200);
+    expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
+    expect((await repairRef.get()).data()?.parts[0]).toContain("× 2");
+    const movements = await db.collection("partMovements")
+      .where("repairId", "==", repairRef.id).get();
+    expect(movements.size).toBe(1);
+    expect(movements.docs[0].data().quantity).toBe(-2);
+
+    const repeated = await invokeFunction("useRepairPart", data);
+    expect(repeated.status).toBe(200);
+    expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
+    expect((await db.collection("partMovements")
+      .where("repairId", "==", repairRef.id).get()).size).toBe(1);
+  }, 20_000);
+
+  it("nega quantità superiore alla giacenza", async () => {
+    const repairRef = db.collection("repairs").doc();
+    const partRef = db.collection("parts").doc();
+    await repairRef.set({ status: "In lavorazione", parts: [], version: 1 });
+    await partRef.set({
+      code: "RIC-DEMO-SCARSO",
+      description: "Ricambio con scorta limitata",
+      quantityOnHand: 1,
+      version: 1,
+    });
+    const response = await invokeFunction("useRepairPart", {
+      repairId: repairRef.id,
+      partId: partRef.id,
+      quantity: 2,
+      reason: "Tentativo oltre la disponibilità.",
+      idempotencyKey: `part-stock-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(400);
+    expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
+  }, 20_000);
 });
 
 function createInput(idempotencyKey: string) {

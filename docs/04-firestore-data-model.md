@@ -61,6 +61,13 @@ Campi principali:
 - `scopeIds: string[]`;
 - metadati comuni.
 
+Implementazione locale iniziale: la creazione passa esclusivamente dalla
+callable `createRepair`, che forza lo stato `Accettata`, assegna il progressivo
+annuale in transazione e produce audit e chiave d'idempotenza. I campi
+`customerLabel` e `bikeLabel` sono fotografie descrittive fittizie del
+prototipo; prima dell'uso reale dovranno essere sostituiti dal modello
+minimizzato e separato dei dati personali.
+
 Dati personali: nome visualizzato e possibile collegamento a un socio.
 
 Accesso: amministratore in gestione; l'utente può leggere soltanto il proprio
@@ -217,6 +224,11 @@ Indici: `category + description`; `locationId + quantityOnHand`.
 
 `quantityOnHand` è una proiezione aggiornata atomicamente; la fonte storica è
 `partMovements`.
+
+Nel prototipo lo scarico per una riparazione passa da `useRepairPart` ed è
+consentito soltanto quando la riparazione è `In lavorazione`. La transazione
+impedisce quantità negative e aggiorna insieme ricambio, riparazione, movimento,
+idempotenza e audit.
 
 ### `partMovements`
 

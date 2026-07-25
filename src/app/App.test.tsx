@@ -151,6 +151,94 @@ describe("App", () => {
     );
   });
 
+  it("apre la nuova accettazione riparazione", async () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Nuova riparazione" }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Registra riparazione" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/nominativi e riferimenti fittizi/i),
+    ).toBeInTheDocument();
+  });
+
+  it("mostra la diagnosi per una riparazione accettata", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0009" }),
+    );
+    expect(screen.getByLabelText("Diagnosi tecnica")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nuovo stato")).toHaveValue("Diagnosticata");
+    expect(
+      screen.getByRole("button", { name: "Registra diagnosi" }),
+    ).toBeInTheDocument();
+  });
+
+  it("richiede i dati di completamento prima dello stato Pronta", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
+    );
+    fireEvent.change(screen.getByLabelText("Nuovo stato"), {
+      target: { value: "Pronta" },
+    });
+    expect(
+      screen.getByLabelText("Interventi eseguiti, separati da virgola"),
+    ).toBeRequired();
+    expect(
+      screen.getByLabelText("Tempo totale impiegato, in minuti"),
+    ).toBeRequired();
+    expect(
+      screen.queryByLabelText(
+        "Confermo che non sono stati utilizzati ricambi",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mostra l'inserimento ricambi durante la lavorazione", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Inserisci ricambio usato" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Ricambio disponibile")).toHaveValue(
+      "part-demo-test",
+    );
+    expect(
+      screen.getByRole("button", { name: "Usa ricambio" }),
+    ).toBeInTheDocument();
+  });
+
   it("filtra i ricambi disponibili e mostra i movimenti", async () => {
     render(<App />);
 
