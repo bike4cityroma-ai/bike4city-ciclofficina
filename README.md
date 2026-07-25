@@ -59,6 +59,13 @@ Il documento master dei requisiti è
 Le regole operative per chi interviene sul progetto sono in
 [`AGENTS.md`](AGENTS.md).
 
+Documenti di sintesi:
+
+- [`docs/13-development-report.md`](docs/13-development-report.md): relazione
+  sul lavoro svolto, architettura, verifiche e limiti;
+- [`docs/14-user-manual.md`](docs/14-user-manual.md): manuale operativo del
+  prototipo.
+
 ## Principi di sicurezza e privacy
 
 - non committare file `.env`, chiavi private o account di servizio;
