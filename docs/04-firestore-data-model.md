@@ -174,6 +174,8 @@ Campi principali:
 - `declaredIssue: string` obbligatorio;
 - `diagnosis: string | null`;
 - `requestedWork`, `authorizedWork`, `completedWork: string[]`;
+- `partUsages: { partId, partCode, description, quantity, movementId,
+  usedAt, usedBy }[]` come correlazione tecnica denormalizzata;
 - `status: RepairStatus` obbligatorio;
 - `assignedUserIds: string[]`;
 - `expectedDeliveryAt`, `deliveredAt: Timestamp | null`;
@@ -229,6 +231,17 @@ Nel prototipo lo scarico per una riparazione passa da `useRepairPart` ed è
 consentito soltanto quando la riparazione è `In lavorazione`. La transazione
 impedisce quantità negative e aggiorna insieme ricambio, riparazione, movimento,
 idempotenza e audit.
+
+La registrazione tramite `createPart` richiede quantità iniziale positiva e
+genera nello stesso commit il primo movimento `in`. Il codice progressivo è
+assegnato dal contatore annuale `parts-AAAA`; né il client né l'operatore
+possono scegliere direttamente codice o giacenza.
+
+I movimenti successivi passano da `recordPartMovement`: `in` e `return`
+incrementano la giacenza, mentre `adjustment` applica una variazione positiva o
+negativa motivata. Tutte le operazioni aggiornano la proiezione
+`quantityOnHand` nella stessa transazione che crea movimento, audit e
+idempotenza.
 
 ### `partMovements`
 

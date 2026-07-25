@@ -193,6 +193,10 @@ describe("Regole Firestore", () => {
     await assertFails(updateDoc(doc(db, "parts", "part-demo"), {
       quantityOnHand: 2,
     }));
+    await assertFails(setDoc(doc(db, "parts", "new-part-demo"), {
+      code: "RIC-2026-9999",
+      quantityOnHand: 1,
+    }));
     await assertFails(setDoc(doc(db, "partMovements", "movement-demo"), {
       partId: "part-demo",
       type: "use",

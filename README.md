@@ -146,6 +146,16 @@ tramite `useRepairPart`. L'operazione aggiorna atomicamente la giacenza, crea
 un movimento di utilizzo append-only, collega il ricambio alla riparazione e
 registra l'audit; il client non può modificare direttamente scorte o movimenti.
 
+Il registro Ricambi è persistito su Firestore e consente la registrazione con
+carico iniziale tramite `createPart`. La Function assegna il progressivo
+`RIC-AAAA-NNNN` e crea atomicamente ricambio, movimento di carico, audit e
+chiave d'idempotenza.
+
+La scheda ricambio consente inoltre carichi successivi, resi in magazzino e
+rettifiche inventariali tramite `recordPartMovement`. Le rettifiche accettano
+variazioni firmate ma non possono produrre una giacenza negativa; ogni
+operazione conserva movimento, motivazione e audit.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

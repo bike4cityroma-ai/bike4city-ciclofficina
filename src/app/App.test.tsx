@@ -273,6 +273,42 @@ describe("App", () => {
     );
   });
 
+  it("apre la registrazione con carico iniziale del ricambio", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Registra ricambio" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Registra ricambio" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Quantità iniziale")).toHaveValue(1);
+    expect(
+      screen.getByRole("button", { name: "Registra e carica" }),
+    ).toBeInTheDocument();
+  });
+
+  it("mostra i movimenti successivi nella scheda ricambio", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri ricambio RIC-2026-0042" }),
+    );
+    expect(screen.getByLabelText("Operazione")).toHaveValue("in");
+    expect(
+      screen.getByRole("option", { name: "Rettifica inventariale" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Registra movimento" }),
+    ).toBeDisabled();
+  });
+
   it("filtra i collaudi negativi e mostra la checklist", async () => {
     render(<App />);
 

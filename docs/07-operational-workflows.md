@@ -149,6 +149,15 @@ Ogni utilizzo di ricambio richiede quantità e motivazione. Il backend verifica
 la giacenza, impedisce lo scarico fuori dalla lavorazione e conserva il
 movimento anche dopo il completamento della riparazione.
 
+La prima registrazione di un ricambio produce sempre un movimento di carico
+collegato. Provenienza, condizione, ubicazione e compatibilità sono obbligatorie;
+la bicicletta di origine è facoltativa e va compilata soltanto per un recupero
+effettivamente tracciabile.
+
+Carichi successivi, resi e rettifiche richiedono sempre una motivazione. Le
+rettifiche negative sono ammesse soltanto entro la giacenza disponibile; non è
+prevista modifica o cancellazione ordinaria di un movimento consolidato.
+
 Nel prototipo l'ingresso in `In lavorazione` assegna automaticamente l'utente
 che esegue il passaggio. Il passaggio a `Pronta` richiede almeno un intervento
 eseguito, il tempo impiegato e, se non risultano movimenti di ricambi, una

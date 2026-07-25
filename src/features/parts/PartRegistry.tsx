@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   demoParts,
   partCategories,
@@ -6,6 +6,9 @@ import {
   type DemoPart,
   type PartOrigin,
 } from "./demoParts";
+import { PartRegistrationForm } from "./PartRegistrationForm";
+import { observePartMovements, observeParts } from "./partService";
+import { PartStockMovement } from "./PartStockMovement";
 
 type CategoryFilter = (typeof partCategories)[number] | "Tutte le categorie";
 type OriginFilter = PartOrigin | "Tutte le provenienze";
@@ -18,11 +21,28 @@ export function PartRegistry() {
     useState<OriginFilter>("Tutte le provenienze");
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [selectedPart, setSelectedPart] = useState<DemoPart | null>(null);
+  const [parts, setParts] = useState(demoParts);
+  const [loadError, setLoadError] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") return;
+    return observeParts((nextParts) => {
+      setParts(nextParts);
+      setLoadError(false);
+    }, () => setLoadError(true));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedPart) return;
+    const updated = parts.find((part) => part.id === selectedPart.id);
+    if (updated && updated !== selectedPart) setSelectedPart(updated);
+  }, [parts, selectedPart]);
 
   const filteredParts = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
 
-    return demoParts.filter((part) => {
+    return parts.filter((part) => {
       const matchesCategory =
         category === "Tutte le categorie" || part.category === category;
       const matchesOrigin =
@@ -46,7 +66,7 @@ export function PartRegistry() {
         searchableText.includes(normalizedQuery)
       );
     });
-  }, [category, onlyAvailable, origin, query]);
+  }, [category, onlyAvailable, origin, parts, query]);
 
   const resultLabel = `${filteredParts.length} ${
     filteredParts.length === 1 ? "ricambio trovato" : "ricambi trovati"
@@ -63,10 +83,15 @@ export function PartRegistry() {
             dimostrativi.
           </p>
         </div>
-        <button className="primary-action" type="button" disabled>
+        <button className="primary-action" type="button"
+          onClick={() => setShowRegistration(true)}>
           Registra ricambio
         </button>
       </div>
+
+      {loadError && <p className="notice-banner" role="alert">
+        Inventario non disponibile: verifica che gli emulatori siano avviati.
+      </p>}
 
       <div className="registry-toolbar parts-toolbar" role="search">
         <div className="field-group search-field">
@@ -208,6 +233,9 @@ export function PartRegistry() {
           <PartDetail part={selectedPart} onClose={() => setSelectedPart(null)} />
         )}
       </div>
+      {showRegistration && (
+        <PartRegistrationForm onClose={() => setShowRegistration(false)} />
+      )}
     </section>
   );
 }
@@ -218,6 +246,20 @@ interface PartDetailProps {
 }
 
 function PartDetail({ part, onClose }: PartDetailProps) {
+  const [movements, setMovements] = useState(part.movements);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") {
+      setMovements(part.movements);
+      return;
+    }
+    return observePartMovements(
+      part.id,
+      setMovements,
+      () => setMovements([]),
+    );
+  }, [part.id, part.movements]);
+
   return (
     <aside
       className="part-detail"
@@ -281,9 +323,9 @@ function PartDetail({ part, onClose }: PartDetailProps) {
       </div>
 
       <div className="detail-section">
-        <h4>Movimenti dimostrativi</h4>
+        <h4>Movimenti di magazzino</h4>
         <ol className="movement-list">
-          {part.movements.map((movement) => (
+          {movements.map((movement) => (
             <li key={movement.id}>
               <div>
                 <strong>{movement.type}</strong>
@@ -307,12 +349,14 @@ function PartDetail({ part, onClose }: PartDetailProps) {
             </li>
           ))}
         </ol>
+        {movements.length === 0 && <p>Nessun movimento registrato.</p>}
       </div>
 
       <div className="detail-section">
         <h4>Note</h4>
         <p>{part.notes}</p>
       </div>
+      <PartStockMovement part={part} />
     </aside>
   );
 }

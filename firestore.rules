@@ -133,12 +133,7 @@ service cloud.firestore {
         'treasurer',
         'read_only'
       ]);
-      allow create: if hasAnyRole([
-        'admin',
-        'workshop_manager',
-        'operator'
-      ]);
-      allow update: if false;
+      allow create, update: if false;
       allow delete: if false;
     }
 

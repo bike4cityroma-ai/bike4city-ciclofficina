@@ -131,6 +131,7 @@ export async function useRepairPart(input: {
 }) {
   const callable = httpsCallable<typeof input, {
     repairId: string;
+    repairCode: string;
     partId: string;
     partCode: string;
     partDescription: string;

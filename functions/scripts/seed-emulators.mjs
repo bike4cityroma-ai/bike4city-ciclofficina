@@ -109,6 +109,7 @@ const demoRepairs = [
     authorizedWork: [],
     completedWork: [],
     parts: [],
+    partUsages: [],
     assignedTo: [],
     minutesSpent: 0,
     expectedDeliveryAt: null,
@@ -143,9 +144,13 @@ const demoParts = [
     category: "Freni",
     description: "Coppia pattini freno V-brake",
     originType: "recovered",
+    origin: "Recuperato",
     condition: "Buono",
     locationId: "Cassettiera F-2",
+    location: "Cassettiera F-2",
     quantityOnHand: 4,
+    compatibility: "Freni V-brake",
+    notes: "Ricambio dimostrativo.",
   },
   {
     id: "part-demo-0040",
@@ -153,9 +158,13 @@ const demoParts = [
     category: "Trasmissione",
     description: "Catena 7/8 velocità",
     originType: "purchased",
+    origin: "Acquistato",
     condition: "Nuovo",
     locationId: "Cassettiera T-1",
+    location: "Cassettiera T-1",
     quantityOnHand: 2,
+    compatibility: "Trasmissioni 7 o 8 velocità",
+    notes: "Ricambio dimostrativo.",
   },
   {
     id: "part-demo-0039",
@@ -163,9 +172,13 @@ const demoParts = [
     category: "Trasmissione",
     description: "Cavo cambio universale",
     originType: "recovered",
+    origin: "Recuperato",
     condition: "Buono",
     locationId: "Cassettiera T-2",
+    location: "Cassettiera T-2",
     quantityOnHand: 5,
+    compatibility: "Cambi meccanici standard",
+    notes: "Ricambio dimostrativo.",
   },
 ];
 const partBatch = db.batch();
@@ -179,7 +192,23 @@ for (const part of demoParts) {
     archivedAt: null,
     version: 1,
   });
+  partBatch.set(db.doc(`partMovements/seed-${part.id}`), {
+    partId: part.id,
+    partCode: part.code,
+    type: "in",
+    quantity: part.quantityOnHand,
+    repairId: null,
+    bikeId: null,
+    relatedCode: null,
+    reason: "Carico iniziale dimostrativo.",
+    occurredAt: now,
+    performedBy: user.uid,
+  });
 }
+partBatch.set(db.doc("counters/parts-2026"), {
+  lastValue: 42,
+  updatedAt: now,
+}, { merge: true });
 await partBatch.commit();
 
 const bikeSnapshots = await db.collection("bikes").get();
@@ -206,6 +235,8 @@ await Promise.all(
     "createRepair",
     "updateRepairWorkflow",
     "useRepairPart",
+    "createPart",
+    "recordPartMovement",
   ].map(warmFunction),
 );
 

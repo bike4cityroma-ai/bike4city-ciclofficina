@@ -414,11 +414,21 @@ describe("useRepairPart", () => {
     const response = await invokeFunction("useRepairPart", data);
     expect(response.status).toBe(200);
     expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
-    expect((await repairRef.get()).data()?.parts[0]).toContain("× 2");
+    const repair = (await repairRef.get()).data();
+    expect(repair?.parts[0]).toContain("× 2");
+    expect(repair?.partUsages[0]).toMatchObject({
+      partId: partRef.id,
+      partCode: "RIC-DEMO-001",
+      quantity: 2,
+    });
     const movements = await db.collection("partMovements")
       .where("repairId", "==", repairRef.id).get();
     expect(movements.size).toBe(1);
     expect(movements.docs[0].data().quantity).toBe(-2);
+    expect(movements.docs[0].data().relatedCode).toBe(
+      "RIP-DEMO-RICAMBIO",
+    );
+    expect(repair?.partUsages[0].movementId).toBe(movements.docs[0].id);
 
     const repeated = await invokeFunction("useRepairPart", data);
     expect(repeated.status).toBe(200);
@@ -443,6 +453,108 @@ describe("useRepairPart", () => {
       quantity: 2,
       reason: "Tentativo oltre la disponibilità.",
       idempotencyKey: `part-stock-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(400);
+    expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
+  }, 20_000);
+});
+
+describe("createPart", () => {
+  it("genera progressivo, carico iniziale, audit e idempotenza", async () => {
+    const data = {
+      idempotencyKey: `create-part-${crypto.randomUUID()}`,
+      category: "Freni",
+      description: "Cavo freno dimostrativo",
+      brand: null,
+      compatibility: "Freni meccanici standard",
+      origin: "Recuperato",
+      condition: "Buono",
+      location: "Cassettiera test",
+      quantity: 3,
+      sourceBikeCode: "BICI-DEMO-ORIGINE",
+      reason: "Carico da recupero dimostrativo.",
+      notes: "Dati esclusivamente fittizi.",
+    };
+    const response = await invokeFunction("createPart", data);
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      result: { id: string; code: string; movementId: string };
+    };
+    expect(body.result.code).toMatch(/^RIC-\d{4}-\d{4}$/);
+    const part = await db.doc(`parts/${body.result.id}`).get();
+    const movement = await db.doc(
+      `partMovements/${body.result.movementId}`,
+    ).get();
+    expect(part.data()?.quantityOnHand).toBe(3);
+    expect(movement.data()?.quantity).toBe(3);
+    expect(movement.data()?.type).toBe("in");
+    const repeated = await invokeFunction("createPart", data);
+    expect((await repeated.json()).result).toEqual(body.result);
+  }, 20_000);
+
+  it("nega la registrazione al volontario", async () => {
+    const response = await invokeFunction("createPart", {
+      idempotencyKey: `create-part-vol-${crypto.randomUUID()}`,
+      category: "Freni",
+      description: "Ricambio dimostrativo",
+      brand: null,
+      compatibility: "Compatibilità dimostrativa",
+      origin: "Acquistato",
+      condition: "Nuovo",
+      location: "Area test",
+      quantity: 1,
+      sourceBikeCode: null,
+      reason: "Carico dimostrativo non autorizzato.",
+      notes: "Dati fittizi.",
+    }, volunteerToken);
+    expect(response.status).toBe(403);
+  }, 20_000);
+});
+
+describe("recordPartMovement", () => {
+  it("registra carico, reso e rettifica mantenendo lo storico", async () => {
+    const partRef = db.collection("parts").doc();
+    await partRef.set({
+      code: "RIC-DEMO-MOVIMENTI",
+      description: "Ricambio movimenti demo",
+      quantityOnHand: 5,
+      version: 1,
+    });
+    for (const [operation, quantity] of [
+      ["in", 2],
+      ["return", 1],
+      ["adjustment", -3],
+    ] as const) {
+      const response = await invokeFunction("recordPartMovement", {
+        partId: partRef.id,
+        operation,
+        quantity,
+        relatedCode: "RIP-DEMO-MOVIMENTI",
+        reason: `Movimento ${operation} interamente dimostrativo.`,
+        idempotencyKey: `movement-${crypto.randomUUID()}`,
+      });
+      expect(response.status).toBe(200);
+    }
+    expect((await partRef.get()).data()?.quantityOnHand).toBe(5);
+    const movements = await db.collection("partMovements")
+      .where("partId", "==", partRef.id).get();
+    expect(movements.size).toBe(3);
+  }, 20_000);
+
+  it("nega una rettifica che produrrebbe giacenza negativa", async () => {
+    const partRef = db.collection("parts").doc();
+    await partRef.set({
+      code: "RIC-DEMO-NEGATIVO",
+      quantityOnHand: 1,
+      version: 1,
+    });
+    const response = await invokeFunction("recordPartMovement", {
+      partId: partRef.id,
+      operation: "adjustment",
+      quantity: -2,
+      relatedCode: null,
+      reason: "Rettifica negativa dimostrativa.",
+      idempotencyKey: `negative-${crypto.randomUUID()}`,
     });
     expect(response.status).toBe(400);
     expect((await partRef.get()).data()?.quantityOnHand).toBe(1);
