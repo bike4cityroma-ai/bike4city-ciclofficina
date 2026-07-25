@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
@@ -84,6 +84,35 @@ describe("App", () => {
     expect(
       screen.getByText(/Il codice viene assegnato automaticamente\./),
     ).toBeInTheDocument();
+  });
+
+  it("mostra soltanto gli avanzamenti consentiti nella scheda bici", async () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Biciclette" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Apri scheda BICI-2026-0014",
+      }),
+    );
+
+    const statusSelect = screen.getByLabelText("Nuovo stato");
+    const statusOptions = within(statusSelect);
+    expect(statusSelect).toHaveValue("Da riparare");
+    expect(
+      statusOptions.getByRole("option", { name: "Da riparare" }),
+    ).toBeInTheDocument();
+    expect(
+      statusOptions.getByRole("option", { name: "Pronta" }),
+    ).toBeInTheDocument();
+    expect(
+      statusOptions.queryByRole("option", { name: "Consegnata" }),
+    ).not.toBeInTheDocument();
   });
 
   it("filtra le riparazioni e apre il dettaglio tecnico", async () => {

@@ -33,6 +33,13 @@ export const bikeStatuses: BikeStatus[] = [
   "Consegnata",
 ];
 
+export const bikeStatusTransitions: Partial<Record<BikeStatus, BikeStatus[]>> = {
+  "Da valutare": ["Da riparare", "Pronta"],
+  "Da riparare": ["In lavorazione", "In attesa ricambi"],
+  "In lavorazione": ["In attesa ricambi", "Pronta"],
+  "In attesa ricambi": ["In lavorazione"],
+};
+
 export const demoBikes: DemoBike[] = [
   {
     id: "bike-demo-0014",

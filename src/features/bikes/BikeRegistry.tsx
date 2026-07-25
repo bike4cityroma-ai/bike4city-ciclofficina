@@ -6,6 +6,7 @@ import {
   type DemoBike,
 } from "./demoBikes";
 import { BikeRegistrationForm } from "./BikeRegistrationForm";
+import { BikeStatusWorkflow } from "./BikeStatusWorkflow";
 import { observeBikes } from "./bikeService";
 
 type StatusFilter = BikeStatus | "Tutti gli stati";
@@ -28,6 +29,14 @@ export function BikeRegistry() {
       () => setLoadError(true),
     );
   }, []);
+
+  useEffect(() => {
+    if (!selectedBike) return;
+    const updatedSelection = bikes.find((bike) => bike.id === selectedBike.id);
+    if (updatedSelection && updatedSelection !== selectedBike) {
+      setSelectedBike(updatedSelection);
+    }
+  }, [bikes, selectedBike]);
 
   const filteredBikes = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
@@ -291,6 +300,8 @@ function BikeDetail({ bike, onClose }: BikeDetailProps) {
         <h4>Note dimostrative</h4>
         <p>{bike.notes}</p>
       </div>
+
+      <BikeStatusWorkflow bike={bike} />
     </aside>
   );
 }

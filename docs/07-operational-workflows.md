@@ -52,6 +52,21 @@ pronta -> destinata a donazione | destinata a cessione | destinata a vendita
 destinata ... -> consegnata -> archiviata
 ```
 
+Nel prototipo corrente sono abilitate dal backend le transizioni:
+
+```text
+da valutare -> da riparare | pronta
+da riparare -> in lavorazione | in attesa ricambi
+in lavorazione -> in attesa ricambi | pronta
+in attesa ricambi -> in lavorazione
+```
+
+Ogni passaggio richiede una motivazione tecnica. `Consegnata` resta riservato
+al futuro flusso controllato del modulo Consegne. Il passaggio a `pronta` non
+impone ancora un collaudo positivo perché l'obbligatorietà del collaudo è una
+decisione organizzativa aperta; questa precondizione dovrà essere configurata
+prima dell'uso operativo.
+
 Ogni valutazione deve conservare:
 
 - esito;

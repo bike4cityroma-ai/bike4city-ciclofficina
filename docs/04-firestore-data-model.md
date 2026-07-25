@@ -117,6 +117,17 @@ diventare identificativo indiretto e va limitato ai ruoli necessari.
 
 Indici: `code`; `status + updatedAt`; `locationId + status`.
 
+Lo storico delle transizioni è conservato nella sottocollezione append-only
+`bikes/{bikeId}/statusHistory`. Ogni evento contiene:
+
+- `from`, `to: BikeStatus`;
+- `reason: string`;
+- `changedAt: Timestamp`;
+- `changedBy: string`.
+
+Il client può leggere lo storico secondo il ruolo, ma non può scriverlo. Stato
+della bicicletta, evento storico e audit sono aggiornati insieme dal backend.
+
 ### `bikeDonations`
 
 Finalità: registrare ingresso, provenienza e liberatoria.

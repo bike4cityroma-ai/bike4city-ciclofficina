@@ -63,8 +63,21 @@ service cloud.firestore {
       ]);
       allow create: if hasAnyRole(['admin', 'workshop_manager', 'operator']);
       allow update: if hasAnyRole(['admin', 'workshop_manager', 'operator'])
-        && immutableMetadata();
+        && immutableMetadata()
+        && request.resource.data.status == resource.data.status;
       allow delete: if false;
+
+      match /statusHistory/{eventId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator',
+          'volunteer',
+          'treasurer',
+          'read_only'
+        ]);
+        allow write: if false;
+      }
     }
 
     match /bikeDonations/{donationId} {

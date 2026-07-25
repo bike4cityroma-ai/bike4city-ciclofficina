@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "functions:build": "npm.cmd --prefix functions run build",
-    "emulators:seed": "npm.cmd --prefix functions run seed",
+    "emulators:seed": "npm.cmd run functions:build && npm.cmd --prefix functions run seed",
     "emulators": "node scripts/firebase-emulators.mjs start",
     "emulators:exec": "node scripts/firebase-emulators.mjs exec",
     "preview": "vite preview",

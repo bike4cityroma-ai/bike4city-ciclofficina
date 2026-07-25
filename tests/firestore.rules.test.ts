@@ -8,7 +8,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import {
   getBytes,
   ref,
@@ -64,6 +64,9 @@ beforeEach(async () => {
     });
     await setDoc(doc(adminDb, "bikes", "bike-demo"), {
       code: "BICI-DEMO-0001",
+      status: "Da valutare",
+      createdAt: "demo-created-at",
+      createdBy: "manager-demo",
     });
     await setDoc(doc(adminDb, "members", "member-demo"), {
       membershipNumber: "DEMO-001",
@@ -115,6 +118,35 @@ describe("Regole Firestore", () => {
       setDoc(doc(db, "counters", "bike-2026"), {
         lastValue: 1,
       }),
+    );
+  });
+
+  it("nega la modifica diretta dello stato bicicletta", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+
+    await assertFails(
+      updateDoc(doc(db, "bikes", "bike-demo"), {
+        status: "Da riparare",
+      }),
+    );
+  });
+
+  it("nega la scrittura client dello storico stato", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+
+    await assertFails(
+      setDoc(
+        doc(db, "bikes", "bike-demo", "statusHistory", "event-demo"),
+        {
+          from: "Da valutare",
+          to: "Da riparare",
+          reason: "Tentativo client dimostrativo.",
+        },
+      ),
     );
   });
 });

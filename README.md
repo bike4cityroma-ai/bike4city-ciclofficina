@@ -123,6 +123,12 @@ registra le nuove biciclette tramite la callable `createBike`. La Function
 verifica ruolo e stato attivo, valida l'input e assegna il codice
 `BICI-AAAA-NNNN` con una transazione, audit e chiave d'idempotenza.
 
+La scheda bicicletta consente inoltre le transizioni operative autorizzate
+tramite la callable `updateBikeStatus`. Ogni passaggio richiede una motivazione,
+incrementa la versione del record e produce storico append-only e audit.
+Lo stato `Consegnata` non è selezionabile manualmente: sarà applicato dal
+flusso controllato del modulo Consegne.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

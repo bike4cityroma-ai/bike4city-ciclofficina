@@ -109,4 +109,28 @@ await db.runTransaction(async (transaction) => {
   });
 });
 
+await Promise.all(["createBike", "updateBikeStatus"].map(warmFunction));
+
 console.info(`Demo locale pronta: ${email}`);
+
+async function warmFunction(functionName) {
+  const endpoint =
+    `http://127.0.0.1:5001/${process.env.GCLOUD_PROJECT}` +
+    `/europe-west1/${functionName}`;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ data: {} }),
+        signal: AbortSignal.timeout(45_000),
+      });
+      if (response.status < 500) return;
+    } catch {
+      // Il primo avvio del runtime locale può superare il timeout.
+    }
+  }
+
+  throw new Error(`Function locale non pronta: ${functionName}.`);
+}

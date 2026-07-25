@@ -1,5 +1,6 @@
 import {
   collection,
+  doc,
   onSnapshot,
   orderBy,
   query,
@@ -27,6 +28,14 @@ export interface NewBikeInput {
   notes: string;
 }
 
+export interface BikeStatusEvent {
+  id: string;
+  from: string;
+  to: string;
+  reason: string;
+  changedLabel: string;
+}
+
 export function observeBikes(
   onData: (bikes: DemoBike[]) => void,
   onError: () => void,
@@ -45,6 +54,58 @@ export async function createBike(input: NewBikeInput) {
     { id: string; code: string }
   >(functions, "createBike");
   return (await callable(input)).data;
+}
+
+export async function updateBikeStatus(
+  bikeId: string,
+  newStatus: string,
+  reason: string,
+  idempotencyKey: string,
+) {
+  const callable = httpsCallable<
+    {
+      bikeId: string;
+      newStatus: string;
+      reason: string;
+      idempotencyKey: string;
+    },
+    { bikeId: string; previousStatus: string; newStatus: string }
+  >(functions, "updateBikeStatus");
+  return (await callable({ bikeId, newStatus, reason, idempotencyKey })).data;
+}
+
+export function observeBikeStatusHistory(
+  bikeId: string,
+  onData: (events: BikeStatusEvent[]) => void,
+  onError: () => void,
+) {
+  const historyQuery = query(
+    collection(doc(db, "bikes", bikeId), "statusHistory"),
+    orderBy("changedAt", "desc"),
+  );
+  return onSnapshot(
+    historyQuery,
+    (snapshot) =>
+      onData(
+        snapshot.docs.map((event) => {
+          const data = event.data();
+          const changedAt = data.changedAt as Timestamp | undefined;
+          return {
+            id: event.id,
+            from: String(data.from),
+            to: String(data.to),
+            reason: String(data.reason),
+            changedLabel: changedAt
+              ? new Intl.DateTimeFormat("it-IT", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(changedAt.toDate())
+              : "Data non disponibile",
+          };
+        }),
+      ),
+    onError,
+  );
 }
 
 function mapBike(snapshot: QueryDocumentSnapshot<DocumentData>): DemoBike {

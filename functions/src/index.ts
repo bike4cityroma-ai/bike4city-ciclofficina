@@ -13,6 +13,12 @@ const statuses = new Set([
   "Pronta",
   "Consegnata",
 ]);
+const statusTransitions = new Map<string, Set<string>>([
+  ["Da valutare", new Set(["Da riparare", "Pronta"])],
+  ["Da riparare", new Set(["In lavorazione", "In attesa ricambi"])],
+  ["In lavorazione", new Set(["In attesa ricambi", "Pronta"])],
+  ["In attesa ricambi", new Set(["In lavorazione"])],
+]);
 
 interface BikeInput {
   idempotencyKey: string;
@@ -60,8 +66,11 @@ function requireBikeInput(value: unknown): BikeInput {
   };
 
   const status = text("status", 40);
-  if (!statuses.has(status)) {
-    throw new HttpsError("invalid-argument", "Stato bicicletta non valido.");
+  if (status !== "Da valutare") {
+    throw new HttpsError(
+      "invalid-argument",
+      "Una nuova bicicletta deve iniziare nello stato “Da valutare”.",
+    );
   }
 
   const accessories = data.accessories;
@@ -109,6 +118,50 @@ function requireAuthorizedUser(auth: {
     );
   }
   return auth.uid;
+}
+
+function requireStatusUpdateInput(value: unknown) {
+  if (!value || typeof value !== "object") {
+    throw new HttpsError("invalid-argument", "Dati aggiornamento mancanti.");
+  }
+  const data = value as Record<string, unknown>;
+  const requiredText = (name: string, max: number) => {
+    const field = data[name];
+    if (typeof field !== "string" || !field.trim() || field.length > max) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Il campo ${name} non è valido.`,
+      );
+    }
+    return field.trim();
+  };
+  const newStatus = requiredText("newStatus", 40);
+  if (!statuses.has(newStatus)) {
+    throw new HttpsError("invalid-argument", "Stato bicicletta non valido.");
+  }
+  const reason = requiredText("reason", 500);
+  if (reason.length < 10) {
+    throw new HttpsError(
+      "invalid-argument",
+      "La motivazione deve contenere almeno 10 caratteri.",
+    );
+  }
+  return {
+    bikeId: requiredText("bikeId", 160),
+    newStatus,
+    reason,
+    idempotencyKey: requiredText("idempotencyKey", 80),
+  };
+}
+
+function hasPermittedProfile(data: Record<string, unknown> | undefined) {
+  const roles = Array.isArray(data?.roles) ? data.roles : [];
+  return (
+    data?.active === true &&
+    roles.some(
+      (role) => typeof role === "string" && permittedRoles.has(role),
+    )
+  );
 }
 
 export const createBike = onCall(
@@ -179,6 +232,98 @@ export const createBike = onCall(
         createdAt: now,
       });
 
+      return result;
+    });
+  },
+);
+
+export const updateBikeStatus = onCall(
+  { region: "europe-west1", enforceAppCheck: false },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Accesso richiesto.");
+    }
+    const uid = request.auth.uid;
+    const input = requireStatusUpdateInput(request.data);
+    const db = getFirestore();
+    const userRef = db.doc(`users/${uid}`);
+    const bikeRef = db.doc(`bikes/${input.bikeId}`);
+    const requestRef = db.doc(
+      `idempotencyKeys/bike-status_${uid}_${input.idempotencyKey}`,
+    );
+    const historyRef = bikeRef.collection("statusHistory").doc();
+    const auditRef = db.collection("auditLogs").doc();
+
+    return db.runTransaction(async (transaction) => {
+      const [user, bike, existingRequest] = await Promise.all([
+        transaction.get(userRef),
+        transaction.get(bikeRef),
+        transaction.get(requestRef),
+      ]);
+
+      if (!hasPermittedProfile(user.data())) {
+        throw new HttpsError(
+          "permission-denied",
+          "Ruolo non autorizzato all’aggiornamento dello stato.",
+        );
+      }
+      if (!bike.exists) {
+        throw new HttpsError("not-found", "Bicicletta non trovata.");
+      }
+      if (existingRequest.exists) {
+        const existing = existingRequest.data();
+        return {
+          bikeId: String(existing?.bikeId),
+          previousStatus: String(existing?.previousStatus),
+          newStatus: String(existing?.newStatus),
+        };
+      }
+
+      const bikeData = bike.data();
+      const previousStatus = String(bikeData?.status);
+      if (!statusTransitions.get(previousStatus)?.has(input.newStatus)) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Transizione da “${previousStatus}” a “${input.newStatus}” non consentita.`,
+        );
+      }
+
+      const now = Timestamp.now();
+      const result = {
+        bikeId: bikeRef.id,
+        previousStatus,
+        newStatus: input.newStatus,
+      };
+      transaction.update(bikeRef, {
+        status: input.newStatus,
+        updatedAt: now,
+        updatedBy: uid,
+        version: Number(bikeData?.version ?? 0) + 1,
+      });
+      transaction.create(historyRef, {
+        from: previousStatus,
+        to: input.newStatus,
+        reason: input.reason,
+        changedAt: now,
+        changedBy: uid,
+      });
+      transaction.create(auditRef, {
+        action: "bike.status.update",
+        entityType: "bike",
+        entityId: bikeRef.id,
+        entityCode: String(bikeData?.code),
+        actorUid: uid,
+        changes: {
+          status: { from: previousStatus, to: input.newStatus },
+        },
+        reason: input.reason,
+        createdAt: now,
+      });
+      transaction.create(requestRef, {
+        ...result,
+        createdAt: now,
+        createdBy: uid,
+      });
       return result;
     });
   },
