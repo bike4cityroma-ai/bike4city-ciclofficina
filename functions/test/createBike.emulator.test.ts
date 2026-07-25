@@ -561,6 +561,65 @@ describe("recordPartMovement", () => {
   }, 20_000);
 });
 
+describe("createWorkshopTest", () => {
+  const validChecks = () => Object.fromEntries([
+    "wheels", "tires", "brakes", "steering", "drivetrain", "gears",
+    "pedals", "saddle", "lights", "bell", "road",
+  ].map((id) => [id, { result: "Conforme", note: null }]));
+
+  it("consolida un esito positivo e collega la riparazione", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-COLLAUDO",
+      bikeLabel: "Bicicletta collaudo demo",
+      status: "Pronta",
+      version: 1,
+    });
+    const data = {
+      repairId: repairRef.id,
+      checks: validChecks(),
+      notes: "Collaudo positivo interamente dimostrativo.",
+      idempotencyKey: `test-${crypto.randomUUID()}`,
+    };
+    const response = await invokeFunction("createWorkshopTest", data);
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      result: { id: string; code: string; result: string };
+    };
+    expect(body.result.code).toMatch(/^COL-\d{4}-\d{4}$/);
+    expect(body.result.result).toBe("Positivo");
+    expect((await repairRef.get()).data()?.status).toBe("Collaudata");
+    expect((await db.doc(`tests/${body.result.id}`).get())
+      .data()?.repairId).toBe(repairRef.id);
+    const repeated = await invokeFunction("createWorkshopTest", data);
+    expect((await repeated.json()).result).toEqual(body.result);
+  }, 20_000);
+
+  it("riporta in lavorazione dopo un esito negativo", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-COLLAUDO-NEG",
+      bikeLabel: "Bicicletta negativa demo",
+      status: "Pronta",
+      version: 1,
+    });
+    const checks = validChecks();
+    checks.brakes = {
+      result: "Non conforme",
+      note: "Il freno non mantiene la regolazione.",
+    };
+    const response = await invokeFunction("createWorkshopTest", {
+      repairId: repairRef.id,
+      checks,
+      notes: "Collaudo negativo dimostrativo.",
+      idempotencyKey: `test-negative-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).result.result).toBe("Negativo");
+    expect((await repairRef.get()).data()?.status).toBe("In lavorazione");
+  }, 20_000);
+});
+
 function createInput(idempotencyKey: string) {
   return {
     idempotencyKey,

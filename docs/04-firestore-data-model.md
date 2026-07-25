@@ -281,6 +281,11 @@ Campi principali:
 
 Indici: `bikeId + performedAt`; `repairId + performedAt`.
 
+Nel prototipo `createWorkshopTest` richiede tutti i controlli della checklist e
+una nota per ogni esito non conforme o non applicabile. Il documento è
+consolidato e non modificabile dal client; nella stessa transazione vengono
+aggiornati riparazione, storico, progressivo, idempotenza e audit.
+
 ### `deliveries`
 
 Finalità: registrare consegna e verbale.

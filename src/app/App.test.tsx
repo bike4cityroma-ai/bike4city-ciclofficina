@@ -239,6 +239,26 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("spiega come riprendere una lavorazione in attesa ricambi", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Riparazioni" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0007" }),
+    );
+    expect(screen.getByText(
+      /Quando il componente è disponibile, riportala in “In lavorazione”/,
+    )).toBeInTheDocument();
+    expect(screen.getByLabelText("Nuovo stato")).toHaveValue("In lavorazione");
+    expect(
+      screen.getByRole("button", { name: "Aggiorna stato" }),
+    ).toBeDisabled();
+  });
+
   it("filtra i ricambi disponibili e mostra i movimenti", async () => {
     render(<App />);
 
@@ -338,6 +358,24 @@ describe("App", () => {
     expect(screen.getByTestId("test-detail")).toHaveTextContent(
       "Prova non eseguita",
     );
+  });
+
+  it("apre la checklist di un nuovo collaudo", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Collaudi" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Nuovo collaudo" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Nuovo collaudo" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Esito Freni")).toHaveValue("Conforme");
+    expect(
+      screen.getByRole("button", { name: "Consolida collaudo" }),
+    ).toBeInTheDocument();
   });
 
   it("filtra le consegne senza contributo e apre il verbale", async () => {

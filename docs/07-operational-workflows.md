@@ -173,6 +173,12 @@ incompleta può essere riportata in lavorazione con motivazione.
 5. In caso negativo, riportare la riparazione in lavorazione.
 6. In caso positivo, impostare `collaudata`.
 
+Nel prototipo il risultato è derivato dalla checklist: almeno una voce `Non
+conforme` produce esito `Negativo` e riporta la riparazione in lavorazione;
+altrimenti l'esito è `Positivo` e la riparazione passa a `Collaudata`. L'esito
+`Condizionato` resta visibile nei dati dimostrativi storici ma non è generabile
+finché il suo significato organizzativo non sarà approvato.
+
 Un collaudo non può essere modificato silenziosamente dopo il consolidamento:
 eventuali correzioni devono produrre una nuova versione o un evento tracciato.
 

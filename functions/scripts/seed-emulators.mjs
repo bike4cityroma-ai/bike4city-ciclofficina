@@ -117,6 +117,29 @@ const demoRepairs = [
     activityClassification: "Da classificare",
     notes: "Dati interamente fittizi.",
   },
+  {
+    id: "repair-demo-ready-0008",
+    code: "RIP-2026-0008",
+    customerType: "Socio",
+    customerLabel: "Socio Demo 208",
+    bikeLabel: "City bike verde · telaio M",
+    frameNumber: "DEMO-COL08",
+    declaredIssue: "Freno posteriore poco efficace.",
+    diagnosis: "Pattini usurati e cavo da registrare.",
+    proposedWork: ["Sostituzione pattini", "Registrazione cavo"],
+    requestedWork: ["Controllo impianto frenante"],
+    authorizedWork: ["Sostituzione pattini"],
+    completedWork: ["Sostituzione pattini", "Regolazione freno"],
+    parts: ["RIC-2026-0042 · Coppia pattini freno V-brake × 1"],
+    partUsages: [],
+    assignedTo: ["Giulia Demo"],
+    assignedUserIds: [user.uid],
+    minutesSpent: 45,
+    expectedDeliveryAt: null,
+    status: "Pronta",
+    activityClassification: "Da classificare",
+    notes: "Riparazione pronta fittizia per il collaudo.",
+  },
 ];
 const repairBatch = db.batch();
 for (const repair of demoRepairs) {
@@ -237,6 +260,7 @@ await Promise.all(
     "useRepairPart",
     "createPart",
     "recordPartMovement",
+    "createWorkshopTest",
   ].map(warmFunction),
 );
 
@@ -270,6 +294,7 @@ async function deleteTestArtifacts() {
     ["repairs", "code", "RIP-DEMO-"],
     ["partMovements", "partCode", "RIC-DEMO-"],
     ["auditLogs", "entityCode", "RIC-DEMO-"],
+    ["tests", "repairCode", "RIP-DEMO-"],
   ];
   for (const [collectionName, field, prefix] of targets) {
     const snapshot = await db.collection(collectionName)

@@ -101,10 +101,18 @@ export function RepairWorkflow({ repair }: { repair: DemoRepair }) {
           </label>
           {newStatus === "In lavorazione" &&
             repair.status !== "In lavorazione" && (
-              <p className="workflow-note">
-                L’operatore che esegue il passaggio verrà assegnato
-                automaticamente alla lavorazione.
-              </p>
+              <>
+                <p className="workflow-note">
+                  L’operatore che esegue il passaggio verrà assegnato
+                  automaticamente alla lavorazione.
+                </p>
+                {repair.status === "In attesa ricambi" && (
+                  <p className="workflow-note">
+                    Dopo l’aggiornamento sarà nuovamente possibile registrare
+                    i ricambi utilizzati.
+                  </p>
+                )}
+              </>
             )}
           {repair.status === "In lavorazione" && newStatus === "Pronta" && <>
             <label>Interventi eseguiti, separati da virgola
@@ -129,7 +137,9 @@ export function RepairWorkflow({ repair }: { repair: DemoRepair }) {
               onChange={(event) => setReason(event.target.value)} />
           </label>
           {message && <p role="status">{message}</p>}
-          <button className="primary-action" type="submit" disabled={pending}>
+          <button className="primary-action" type="submit" disabled={
+            pending || reason.trim().length < 10
+          }>
             {pending ? "Aggiornamento…" :
               repair.status === "Accettata" ? "Registra diagnosi" :
                 "Aggiorna stato"}

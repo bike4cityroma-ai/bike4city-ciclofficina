@@ -156,6 +156,12 @@ rettifiche inventariali tramite `recordPartMovement`. Le rettifiche accettano
 variazioni firmate ma non possono produrre una giacenza negativa; ogni
 operazione conserva movimento, motivazione e audit.
 
+Il modulo Collaudi seleziona riparazioni `Pronta` e consolida una checklist
+tecnica tramite `createWorkshopTest`. Un esito positivo porta la riparazione a
+`Collaudata`; la presenza di almeno una non conformità produce esito negativo
+e ritorno a `In lavorazione`. Collaudo, transizione, storico e audit sono
+registrati atomicamente.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

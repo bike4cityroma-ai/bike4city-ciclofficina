@@ -150,10 +150,7 @@ service cloud.firestore {
 
     match /tests/{testId} {
       allow read: if activeUser();
-      allow create: if hasAnyRole(['admin', 'workshop_manager', 'operator']);
-      allow update: if hasAnyRole(['admin', 'workshop_manager'])
-        && immutableMetadata();
-      allow delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /deliveries/{deliveryId} {

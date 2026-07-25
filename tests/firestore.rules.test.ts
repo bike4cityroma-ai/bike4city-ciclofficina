@@ -203,6 +203,16 @@ describe("Regole Firestore", () => {
       quantity: -1,
     }));
   });
+
+  it("nega la creazione diretta di un collaudo", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(doc(db, "tests", "test-demo"), {
+      code: "COL-2026-9999",
+      result: "Positivo",
+    }));
+  });
 });
 
 describe("Regole Storage", () => {

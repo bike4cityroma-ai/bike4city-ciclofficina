@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   demoTests,
   testResults,
   type DemoWorkshopTest,
   type TestResult,
 } from "./demoTests";
+import { TestRegistrationForm } from "./TestRegistrationForm";
+import { observeWorkshopTests } from "./testService";
 
 type ResultFilter = TestResult | "Tutti gli esiti";
 
@@ -13,11 +15,21 @@ export function TestRegistry() {
   const [result, setResult] = useState<ResultFilter>("Tutti gli esiti");
   const [selectedTest, setSelectedTest] =
     useState<DemoWorkshopTest | null>(null);
+  const [tests, setTests] = useState(demoTests);
+  const [loadError, setLoadError] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") return;
+    return observeWorkshopTests((items) => {
+      setTests(items); setLoadError(false);
+    }, () => setLoadError(true));
+  }, []);
 
   const filteredTests = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("it");
 
-    return demoTests.filter((test) => {
+    return tests.filter((test) => {
       const matchesResult =
         result === "Tutti gli esiti" || test.result === result;
       const searchableText = [
@@ -32,7 +44,7 @@ export function TestRegistry() {
 
       return matchesResult && searchableText.includes(normalizedQuery);
     });
-  }, [query, result]);
+  }, [query, result, tests]);
 
   const resultLabel = `${filteredTests.length} ${
     filteredTests.length === 1 ? "collaudo trovato" : "collaudi trovati"
@@ -48,10 +60,14 @@ export function TestRegistry() {
             Consulta esiti e checklist dei collaudi dimostrativi consolidati.
           </p>
         </div>
-        <button className="primary-action" type="button" disabled>
+        <button className="primary-action" type="button"
+          onClick={() => setShowRegistration(true)}>
           Nuovo collaudo
         </button>
       </div>
+      {loadError && <p className="notice-banner" role="alert">
+        Registro collaudi non disponibile: verifica gli emulatori.
+      </p>}
 
       <div className="registry-toolbar test-toolbar" role="search">
         <div className="field-group search-field">
@@ -159,6 +175,9 @@ export function TestRegistry() {
           <TestDetail test={selectedTest} onClose={() => setSelectedTest(null)} />
         )}
       </div>
+      {showRegistration && (
+        <TestRegistrationForm onClose={() => setShowRegistration(false)} />
+      )}
     </section>
   );
 }

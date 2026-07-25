@@ -32,6 +32,18 @@ export function RepairPartsUsage({ repair }: { repair: DemoRepair }) {
     }, () => setMessage("Magazzino ricambi non disponibile."));
   }, []);
 
+  if (repair.status === "In attesa ricambi") {
+    return (
+      <div className="detail-section">
+        <h4>Ricambi per la lavorazione</h4>
+        <p className="workflow-note">
+          La riparazione è in attesa ricambi. Quando il componente è
+          disponibile, riportala in “In lavorazione” usando l’avanzamento
+          sottostante; comparirà quindi il modulo per utilizzare il ricambio.
+        </p>
+      </div>
+    );
+  }
   if (repair.status !== "In lavorazione") return null;
 
   async function submit(event: FormEvent) {
