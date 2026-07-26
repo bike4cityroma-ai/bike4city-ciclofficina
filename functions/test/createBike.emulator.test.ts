@@ -847,6 +847,8 @@ describe("updateRepairWorkflow", () => {
         method: "Telefono",
         evidenceNote: "Telefonata dimostrativa.",
         evidenceStoragePath,
+        communicatedAmount: 25,
+        amountAccepted: true,
         nextStatus: "In lavorazione",
         reason: "Tentativo con modalità non valida operativamente.",
         idempotencyKey: `authorize-phone-${crypto.randomUUID()}`,
@@ -862,6 +864,8 @@ describe("updateRepairWorkflow", () => {
         method: "Modulo firmato",
         evidenceNote: "Telefonata dimostrativa.",
         evidenceStoragePath,
+        communicatedAmount: 25,
+        amountAccepted: true,
         nextStatus: "In lavorazione",
         reason: "Tentativo di autorizzare un lavoro non diagnosticato.",
         idempotencyKey: `authorize-invalid-${crypto.randomUUID()}`,
@@ -875,6 +879,8 @@ describe("updateRepairWorkflow", () => {
       method: "Modulo firmato",
       evidenceNote: "Modulo dimostrativo archiviato in Storage.",
       evidenceStoragePath,
+      communicatedAmount: 25,
+      amountAccepted: true,
       nextStatus: "In lavorazione",
       reason: "Autorizzazione separata registrata dopo la diagnosi.",
       idempotencyKey: `authorize-${crypto.randomUUID()}`,
@@ -1174,6 +1180,17 @@ describe("createWorkshopTest", () => {
     "wheels", "tires", "brakes", "steering", "drivetrain", "gears",
     "pedals", "saddle", "lights", "bell", "road",
   ].map((id) => [id, { result: "Conforme", note: null }]));
+  const validRoadTest = () => ({
+    performed: true,
+    routeType: "controlled_area",
+    publicRoad: false,
+    durationMinutes: 5,
+    conditions: "Area controllata dimostrativa con fondo asciutto.",
+    operatorAuthorized: true,
+    authorizedWorkConfirmed: true,
+    helmetUsed: true,
+    highVisibilityUsed: true,
+  });
 
   it("consolida un esito positivo e collega la riparazione", async () => {
     const repairRef = db.collection("repairs").doc();
@@ -1186,6 +1203,7 @@ describe("createWorkshopTest", () => {
     const data = {
       repairId: repairRef.id,
       checks: validChecks(),
+      roadTestDetails: validRoadTest(),
       notes: "Collaudo positivo interamente dimostrativo.",
       idempotencyKey: `test-${crypto.randomUUID()}`,
     };
@@ -1216,15 +1234,46 @@ describe("createWorkshopTest", () => {
       result: "Non conforme",
       note: "Il freno non mantiene la regolazione.",
     };
+    checks.road = {
+      result: "Non applicabile",
+      note: "Prova esclusa per controllo preliminare negativo.",
+    };
     const response = await invokeFunction("createWorkshopTest", {
       repairId: repairRef.id,
       checks,
+      roadTestDetails: {
+        ...validRoadTest(),
+        performed: false,
+      },
       notes: "Collaudo negativo dimostrativo.",
       idempotencyKey: `test-negative-${crypto.randomUUID()}`,
     });
     expect(response.status).toBe(200);
     expect((await response.json()).result.result).toBe("Negativo");
     expect((await repairRef.get()).data()?.status).toBe("In lavorazione");
+  }, 20_000);
+
+  it("nega la prova dinamica su strada pubblica", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-PROVA-PUBBLICA",
+      bikeLabel: "Bicicletta prova pubblica demo",
+      status: "Pronta",
+      version: 1,
+    });
+    const response = await invokeFunction("createWorkshopTest", {
+      repairId: repairRef.id,
+      checks: validChecks(),
+      roadTestDetails: {
+        ...validRoadTest(),
+        routeType: "public_road",
+        publicRoad: true,
+      },
+      notes: "Tentativo prova pubblica interamente dimostrativo.",
+      idempotencyKey: `test-public-road-${crypto.randomUUID()}`,
+    });
+    expect(response.status).toBe(400);
+    expect((await repairRef.get()).data()?.status).toBe("Pronta");
   }, 20_000);
 });
 
@@ -1264,6 +1313,8 @@ describe("createDelivery", () => {
     expect((await repairRef.get()).data()?.status).toBe("Consegnata");
     expect((await db.doc(`deliveries/${body.result.id}`).get())
       .data()?.testId).toBe(testRef.id);
+    expect((await db.doc(`deliveries/${body.result.id}`).get())
+      .data()?.classificationLabel).toBe("Da classificare");
     const repeated = await invokeFunction("createDelivery", data);
     expect((await repeated.json()).result).toEqual(body.result);
   }, 20_000);
@@ -1457,6 +1508,68 @@ describe("manageRepairSafetyReview", () => {
     });
     expect((await repairRef.collection("safetyHistory").get()).size).toBe(2);
   }, 30_000);
+});
+
+describe("receipt drafts", () => {
+  it("crea una bozza progressiva e consente l'annullamento solo all'admin",
+    async () => {
+      const createResponse = await invokeFunction(
+        "createReceiptDraft",
+        {
+          classification: "EROGAZIONE_LIBERALE",
+          subjectType: "Non socio",
+          subjectLabel: "Donatore Demo Ricevuta",
+          subjectTaxCode: "",
+          membershipCode: "",
+          amount: 15,
+          paymentMethod: "paypal",
+          paymentReference: "PAYPAL-DEMO-001",
+          repairId: "",
+          bikeId: "",
+          deliveryId: "",
+          memberId: "",
+          note: "Erogazione liberale interamente dimostrativa.",
+          idempotencyKey: `receipt-${crypto.randomUUID()}`,
+        },
+        adminToken,
+      );
+      expect(createResponse.status).toBe(200);
+      const body = await createResponse.json() as {
+        result: { id: string; code: string; status: string };
+      };
+      expect(body.result.code).toMatch(/^REC-\d{4}-\d{4}$/);
+      expect(body.result.status).toBe("draft_demo");
+      const receipt = (await db.doc(`receipts/${body.result.id}`).get()).data();
+      expect(receipt).toMatchObject({
+        status: "draft_demo",
+        classification: "EROGAZIONE_LIBERALE",
+        taxConfigurationStatus: "incomplete",
+        vatStatement: null,
+        stampDutyStatement: null,
+      });
+      expect(receipt?.checksumSha256).toMatch(/^[a-f0-9]{64}$/);
+
+      const denied = await invokeFunction("voidReceiptDraft", {
+        receiptId: body.result.id,
+        reason: "Tentativo annullamento del responsabile demo.",
+        replacementReceiptId: "",
+        idempotencyKey: `receipt-void-denied-${crypto.randomUUID()}`,
+      });
+      expect(denied.status).toBe(403);
+      const voided = await invokeFunction(
+        "voidReceiptDraft",
+        {
+          receiptId: body.result.id,
+          reason: "Annullamento amministrativo interamente dimostrativo.",
+          replacementReceiptId: "",
+          idempotencyKey: `receipt-void-${crypto.randomUUID()}`,
+        },
+        adminToken,
+      );
+      expect(voided.status).toBe(200);
+      expect((await db.doc(`receipts/${body.result.id}`).get()).data()?.status)
+        .toBe("void");
+    }, 30_000);
 });
 
 function createInput(idempotencyKey: string) {

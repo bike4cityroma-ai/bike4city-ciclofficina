@@ -336,6 +336,13 @@ Accesso: emissione e annullamento tramite backend; nessuna cancellazione.
 
 Indici: `year + sequence`; `status + issuedAt`; `repairId`.
 
+Nella fase corrente è ammesso anche `status: "draft_demo"`. La callable
+`createReceiptDraft` assegna il progressivo atomico e genera un PDF privato
+marcato `TAX-001 INCOMPLETA - NON EMETTIBILE`. Non esiste una transizione verso
+`issued` finché IVA/articolo 86 e bollo non sono configurati e validati.
+`voidReceiptDraft` è riservata all'amministratore e conserva progressivo,
+motivazione, audit ed eventuale collegamento alla sostitutiva.
+
 ### `documents`
 
 Finalità: metadati dei file in Storage.

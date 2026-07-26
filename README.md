@@ -76,6 +76,16 @@ Profilo istituzionale:
 - [`docs/17-association-profile.md`](docs/17-association-profile.md):
   profilo istituzionale versionato.
 
+Scheda per le validazioni amministrative:
+
+- [`docs/18-leg-tax-validation-form.md`](docs/18-leg-tax-validation-form.md):
+  raccolta strutturata delle informazioni per `LEG-001` e `TAX-001`.
+
+Modello economico in attesa di validazione:
+
+- [`docs/19-receipt-template-draft.md`](docs/19-receipt-template-draft.md):
+  bozza configurabile della ricevuta, non attiva fino a `TAX-001`.
+
 ## Principi di sicurezza e privacy
 
 - non committare file `.env`, chiavi private o account di servizio;
@@ -304,6 +314,28 @@ danneggiate, perdite, componenti instabili e altri rischi. La segnalazione
 conserva stato precedente, misure protettive e ubicazione; soltanto
 responsabile o amministratore possono chiuderla. Il software non classifica
 automaticamente rifiuti e non dispone smaltimenti.
+
+`ACC-018-v1` rende la prova dinamica facoltativa e tracciata. È ammessa solo in
+area controllata, dopo controlli preliminari conformi, con operatore
+autorizzato, casco e alta visibilità. Strada pubblica e geolocalizzazione
+restano bloccate; un'anomalia produce collaudo negativo e ritorno in
+lavorazione.
+
+`ACC-019-v1` mantiene minimale la gestione dei problemi durante la prova:
+interruzione, annotazione tecnica, collaudo negativo e ritorno in lavorazione.
+Non introduce un archivio incidenti e non raccoglie dati sanitari o
+valutazioni di responsabilità.
+
+`ACC-020-v1` mantiene separati flusso tecnico e trattamento economico. Ricambi
+e quantità non diventano automaticamente vendite; i contributi alla consegna
+restano `Da classificare`. Ricevute e classificazioni fiscali attendono le
+validazioni `LEG-001` e `TAX-001`.
+
+Il modulo Ricevute usa un'unica serie annuale `REC-AAAA-NNNN` e le quattro
+classificazioni operative approvate. Finché diciture IVA/articolo 86 e bollo
+non sono validate, `createReceiptDraft` genera esclusivamente PDF privati
+`draft_demo`, marcati come non emettibili. L'annullamento non cancella il
+record ed è riservato all'amministratore.
 
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:

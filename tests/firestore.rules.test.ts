@@ -314,6 +314,17 @@ describe("Regole Firestore", () => {
       code: "CON-2026-9999",
     }));
   });
+
+  it("nega la creazione e modifica diretta delle ricevute", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(doc(db, "receipts", "receipt-demo"), {
+      code: "REC-2026-0001",
+      status: "draft_demo",
+      amount: 10,
+    }));
+  });
 });
 
 describe("Regole Storage", () => {

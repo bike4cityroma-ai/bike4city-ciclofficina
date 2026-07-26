@@ -148,6 +148,48 @@ describe("App", () => {
     );
   });
 
+  it("apre la gestione del mancato ritiro per una riparazione collaudata",
+    async () => {
+      render(<App />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "Entra nel prototipo" }),
+      );
+      await openSection("Riparazioni");
+      fireEvent.click(
+        screen.getByRole("button", { name: "Apri intervento RIP-2026-0005" }),
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: "Gestisci mancato ritiro" }),
+      );
+      expect(screen.getByRole("dialog", {
+        name: "Gestisci mancato ritiro",
+      })).toBeInTheDocument();
+      expect(screen.getByLabelText("Evento")).toHaveValue("ready_notice");
+      expect(screen.getByText(/sequenza 15\/30\/45 giorni/i))
+        .toBeInTheDocument();
+    });
+
+  it("apre la segnalazione di sicurezza dalla scheda riparazione", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Riparazioni");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Segnala rischio sicurezza" }),
+    );
+    expect(screen.getByRole("dialog", {
+      name: "Segnala rischio sicurezza",
+    })).toBeInTheDocument();
+    expect(screen.getByLabelText("Tipo di rischio"))
+      .toHaveValue("damaged_battery");
+    expect(screen.getByText(/nessuno smaltimento automatico/i))
+      .toBeInTheDocument();
+  });
+
   it("apre la nuova accettazione riparazione", async () => {
     render(<App />);
 
@@ -244,6 +286,11 @@ describe("App", () => {
       screen.queryByRole("option", { name: "Email esplicita" }),
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText("File firmato")).toBeRequired();
+    expect(screen.getByLabelText("Importo comunicato dopo la diagnosi"))
+      .toBeRequired();
+    expect(screen.getByRole("checkbox", {
+      name: /conferma esplicitamente l’importo comunicato/i,
+    })).toBeRequired();
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Originale cartaceo conservato" }),
     );
@@ -408,6 +455,13 @@ describe("App", () => {
       screen.getByRole("dialog", { name: "Nuovo collaudo" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Esito Freni")).toHaveValue("Conforme");
+    expect(screen.getByRole("checkbox", {
+      name: "Prova necessaria ed eseguita in area controllata",
+    })).not.toBeChecked();
+    expect(screen.getByLabelText("Motivo della mancata prova")).toBeRequired();
+    expect(screen.getByText(
+      /strada pubblica e la geolocalizzazione sono bloccate/i,
+    )).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Consolida collaudo" }),
     ).toBeInTheDocument();
@@ -511,5 +565,28 @@ describe("App", () => {
     expect(
       screen.getByRole("button", { name: "Genera e archivia" }),
     ).toBeInTheDocument();
+  });
+
+  it("apre il registro e la bozza dimostrativa delle ricevute", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Ricevute");
+    expect(screen.getByRole("heading", { name: "Ricevute" }))
+      .toBeInTheDocument();
+    expect(screen.getByText(/IVA\/articolo 86 e bollo sono da confermare/i))
+      .toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Nuova bozza ricevuta" }),
+    );
+    expect(screen.getByRole("dialog", { name: "Nuova bozza ricevuta" }))
+      .toBeInTheDocument();
+    expect(screen.getByLabelText("Classificazione"))
+      .toHaveValue("RIPARAZIONE");
+    expect(screen.getByLabelText("Codice fiscale facoltativo"))
+      .toBeInTheDocument();
+    expect(screen.getByText(/TAX-001 incompleta — non emettibile/i))
+      .toBeInTheDocument();
   });
 });

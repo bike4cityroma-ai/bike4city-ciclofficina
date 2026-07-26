@@ -151,6 +151,12 @@ rifiuto e non ne autorizza lo smaltimento. La chiusura è riservata al
 responsabile o all'amministratore; l'eventuale affidamento a un soggetto
 autorizzato richiede un riferimento documentale.
 
+Se durante una prova dinamica emerge un problema, la prova viene interrotta,
+l'anomalia viene annotata e il collaudo assume esito negativo. La bicicletta
+torna in lavorazione; se permane un rischio tecnico si applica `ACC-017-v1`.
+Infortuni e danni seguono le procedure organizzative esterne al gestionale,
+senza registrare nel software dati sanitari o valutazioni di responsabilità.
+
 ## 10. Responsabilità e diritti inderogabili
 
 Il soggetto registrato deve segnalare informazioni rilevanti sulla bicicletta,
@@ -210,9 +216,9 @@ Operatore: ____________________
 ## Checklist prima dell'approvazione
 
 - [x] sede e contatti completati;
-- [ ] procedura e termine per biciclette non ritirate approvati;
-- [ ] procedura della prova su strada approvata;
-- [ ] gestione di costi, contributi e ricambi verificata;
+- [x] procedura e termine per biciclette non ritirate approvati;
+- [x] procedura della prova su strada approvata;
+- [x] gestione provvisoria di costi, contributi e ricambi approvata;
 - [ ] responsabilità, garanzie e contestazioni revisionate;
 - [ ] coerenza con statuto, regolamenti interni e attività effettive verificata;
 - [ ] versione e data di efficacia deliberate;

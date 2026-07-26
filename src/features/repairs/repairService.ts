@@ -115,6 +115,8 @@ export async function authorizeRepairWork(input: {
   method: "Modulo firmato" | "Firma su dispositivo";
   evidenceNote: string;
   evidenceStoragePath: string;
+  communicatedAmount: number;
+  amountAccepted: boolean;
   nextStatus: "In lavorazione" | "In attesa ricambi";
   reason: string;
   idempotencyKey: string;

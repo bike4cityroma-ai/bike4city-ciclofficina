@@ -204,7 +204,12 @@ service cloud.firestore {
     }
 
     match /receipts/{receiptId} {
-      allow read: if hasAnyRole(['admin', 'treasurer', 'read_only']);
+      allow read: if hasAnyRole([
+        'admin',
+        'workshop_manager',
+        'treasurer',
+        'read_only'
+      ]) || (hasRole('operator') && resource.data.createdBy == request.auth.uid);
       allow create, update, delete: if false;
     }
 

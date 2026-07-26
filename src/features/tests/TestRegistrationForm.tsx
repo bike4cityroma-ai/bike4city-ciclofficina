@@ -17,7 +17,6 @@ const definitions = [
   ["saddle", "Sella"],
   ["lights", "Luci"],
   ["bell", "Campanello"],
-  ["road", "Prova su strada"],
 ] as const;
 
 export function TestRegistrationForm({ onClose }: { onClose: () => void }) {
@@ -29,6 +28,19 @@ export function TestRegistrationForm({ onClose }: { onClose: () => void }) {
     id, { result: "Conforme", note: "" },
   ])));
   const [notes, setNotes] = useState("Collaudo dimostrativo.");
+  const [roadTestPerformed, setRoadTestPerformed] = useState(false);
+  const [roadTestResult, setRoadTestResult] =
+    useState<CheckResult>("Conforme");
+  const [roadTestNote, setRoadTestNote] = useState(
+    "Prova non necessaria per questo collaudo.",
+  );
+  const [roadDuration, setRoadDuration] = useState(5);
+  const [roadConditions, setRoadConditions] =
+    useState("Area controllata, fondo asciutto.");
+  const [operatorAuthorized, setOperatorAuthorized] = useState(false);
+  const [authorizedWorkConfirmed, setAuthorizedWorkConfirmed] = useState(false);
+  const [helmetUsed, setHelmetUsed] = useState(false);
+  const [highVisibilityUsed, setHighVisibilityUsed] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const key = useRef(crypto.randomUUID());
@@ -53,8 +65,25 @@ export function TestRegistrationForm({ onClose }: { onClose: () => void }) {
     try {
       await createWorkshopTest({
         repairId,
-        checks: Object.fromEntries(Object.entries(checks).map(([id, check]) =>
-          [id, { result: check.result, note: check.note.trim() || null }])),
+        checks: {
+          ...Object.fromEntries(Object.entries(checks).map(([id, check]) =>
+            [id, { result: check.result, note: check.note.trim() || null }])),
+          road: {
+            result: roadTestPerformed ? roadTestResult : "Non applicabile",
+            note: roadTestNote.trim() || null,
+          },
+        },
+        roadTestDetails: {
+          performed: roadTestPerformed,
+          routeType: "controlled_area",
+          publicRoad: false,
+          durationMinutes: roadDuration,
+          conditions: roadConditions,
+          operatorAuthorized,
+          authorizedWorkConfirmed,
+          helmetUsed,
+          highVisibilityUsed,
+        },
         notes,
         idempotencyKey: key.current,
       });
@@ -98,6 +127,61 @@ export function TestRegistrationForm({ onClose }: { onClose: () => void }) {
             </fieldset>;
           })}
         </div>
+        <fieldset className="wide-field">
+          <legend>Prova dinamica ACC-018</legend>
+          <label className="checkbox-field">
+            <input type="checkbox" checked={roadTestPerformed}
+              onChange={(event) => setRoadTestPerformed(event.target.checked)} />
+            Prova necessaria ed eseguita in area controllata
+          </label>
+          {roadTestPerformed ? <div className="test-check-grid">
+            <label>Esito prova dinamica
+              <select value={roadTestResult} onChange={(event) =>
+                setRoadTestResult(event.target.value as CheckResult)}>
+                <option>Conforme</option><option>Non conforme</option>
+              </select>
+            </label>
+            <label>Durata in minuti
+              <input type="number" min={1} max={120} value={roadDuration}
+                onChange={(event) => setRoadDuration(Number(event.target.value))} />
+            </label>
+            <label>Condizioni e percorso
+              <input value={roadConditions} required maxLength={500}
+                onChange={(event) => setRoadConditions(event.target.value)} />
+            </label>
+            <label>Nota della prova
+              <input value={roadTestNote}
+                required={roadTestResult === "Non conforme"} maxLength={500}
+                onChange={(event) => setRoadTestNote(event.target.value)} />
+            </label>
+            <label className="checkbox-field"><input type="checkbox"
+              checked={operatorAuthorized} onChange={(event) =>
+                setOperatorAuthorized(event.target.checked)} required />
+              Operatore espressamente autorizzato
+            </label>
+            <label className="checkbox-field"><input type="checkbox"
+              checked={authorizedWorkConfirmed} onChange={(event) =>
+                setAuthorizedWorkConfirmed(event.target.checked)} required />
+              Prova compresa nei lavori autorizzati
+            </label>
+            <label className="checkbox-field"><input type="checkbox"
+              checked={helmetUsed} onChange={(event) =>
+                setHelmetUsed(event.target.checked)} required />
+              Casco utilizzato
+            </label>
+            <label className="checkbox-field"><input type="checkbox"
+              checked={highVisibilityUsed} onChange={(event) =>
+                setHighVisibilityUsed(event.target.checked)} required />
+              Dispositivo ad alta visibilità utilizzato
+            </label>
+          </div> : <label>Motivo della mancata prova
+            <input value={roadTestNote} required minLength={5} maxLength={500}
+              onChange={(event) => setRoadTestNote(event.target.value)} />
+          </label>}
+          <p className="workflow-note">
+            La strada pubblica e la geolocalizzazione sono bloccate.
+          </p>
+        </fieldset>
         <label>Note finali<textarea value={notes} required
           onChange={(event) => setNotes(event.target.value)} /></label>
         {message && <p role="status">{message}</p>}

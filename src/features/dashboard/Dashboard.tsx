@@ -26,6 +26,9 @@ const UserAccessRegistry = lazy(() => import("../users/UserAccessRegistry").then
 const DocumentRegistry = lazy(() => import("../documents/DocumentRegistry").then(
   (module) => ({ default: module.DocumentRegistry }),
 ));
+const ReceiptRegistry = lazy(() => import("../receipts/ReceiptRegistry").then(
+  (module) => ({ default: module.ReceiptRegistry }),
+));
 
 interface DashboardProps {
   user: DemoUser;
@@ -41,6 +44,7 @@ type AppSection =
   | "deliveries"
   | "members"
   | "documents"
+  | "receipts"
   | "users";
 
 const baseNavigationItems: Array<{
@@ -54,6 +58,7 @@ const baseNavigationItems: Array<{
   { id: "parts", label: "Ricambi" },
   { id: "tests", label: "Collaudi" },
   { id: "deliveries", label: "Consegne" },
+  { id: "receipts", label: "Ricevute" },
   { id: "documents", label: "Documenti" },
 ];
 
@@ -154,6 +159,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             {section === "parts" && <PartRegistry />}
             {section === "tests" && <TestRegistry />}
             {section === "deliveries" && <DeliveryRegistry />}
+            {section === "receipts" && <ReceiptRegistry />}
             {section === "documents" && <DocumentRegistry />}
           </Suspense>
         )}

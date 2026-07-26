@@ -51,6 +51,17 @@ export function observeReadyRepairs(
 export async function createWorkshopTest(input: {
   repairId: string;
   checks: Record<string, { result: CheckResult; note: string | null }>;
+  roadTestDetails: {
+    performed: boolean;
+    routeType: "controlled_area";
+    publicRoad: false;
+    durationMinutes: number;
+    conditions: string;
+    operatorAuthorized: boolean;
+    authorizedWorkConfirmed: boolean;
+    helmetUsed: boolean;
+    highVisibilityUsed: boolean;
+  };
   notes: string;
   idempotencyKey: string;
 }) {

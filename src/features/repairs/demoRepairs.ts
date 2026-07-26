@@ -36,6 +36,7 @@ export const repairStatuses: RepairStatus[] = [
   "In attesa autorizzazione",
   "In attesa ricambi",
   "In lavorazione",
+  "In verifica sicurezza",
   "Pronta",
   "Collaudata",
   "Annullata",

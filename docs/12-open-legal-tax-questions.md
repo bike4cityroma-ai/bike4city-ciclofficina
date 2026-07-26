@@ -34,6 +34,136 @@ Validare:
 Il software dovrà registrare la classificazione approvata senza dedurla
 autonomamente dal tipo di utente o dall'importo.
 
+### Raccolta operativa LEG-001.1 — Riparazioni
+
+Informazione fornita dall'associazione:
+
+- attività svolta verso soci e non soci;
+- importo variabile determinato caso per caso;
+- importo comunicato dopo la diagnosi e prima dell'autorizzazione ai lavori;
+- conferma esplicita dell'importo nella stessa autorizzazione tracciata;
+- rilascio della ricevuta al momento del pagamento/consegna;
+- stesso tipo di ricevuta attualmente usato per soci e non soci.
+- modalità di pagamento attualmente accettate: contanti e PayPal.
+- numerazione delle ricevute con progressivo annuale e ripartenza da 1.
+- unica serie `REC-AAAA-NNNN` condivisa dalle quattro classificazioni;
+- progressivi annullati non riutilizzabili;
+- ricevuta errata annullata senza cancellazione;
+- eventuale ricevuta sostitutiva con nuovo progressivo e collegamento
+  all'originale;
+- motivo, data e operatore dell'annullamento conservati nell'audit.
+- emissione consentita ad amministratore, tesoriere e responsabile della
+  ciclofficina;
+- emissione consentita all'operatore soltanto contestualmente alla consegna;
+- annullamento riservato all'amministratore.
+- dati del pagante minimizzati: nome/cognome o organizzazione e tipologia;
+- numero tessera obbligatorio soltanto per `QUOTA_ASSOCIATIVA`;
+- codice fiscale facoltativo;
+- indirizzo ed email esclusi dalla ricevuta.
+- copia consegnabile su carta o tramite download sul dispositivo in sede;
+- consegna o rifiuto della copia registrati;
+- nessun invio automatico via email.
+- firma o attestazione dell'emittente prevista;
+- firma del pagante facoltativa e non bloccante, salvo futura prescrizione
+  validata.
+- dicitura IVA/articolo 86 lasciata da confermare;
+- dicitura e gestione dell'imposta di bollo lasciate da confermare;
+- emissione definitiva bloccata finché entrambe non sono validate.
+- articolo 86 del D.Lgs. 117/2017 indicato dall'associazione come possibile
+  regime agevolato di riferimento;
+- applicazione effettiva, requisiti, soglia di ricavi e comunicazione
+  dell'opzione da mantenere verificati;
+- associazione dichiara che l'opzione prevista dall'articolo 86 è stata
+  formalmente esercitata;
+- decorrenza ed evidenza documentale devono ancora essere registrate prima
+  dell'attivazione della configurazione software.
+- la decorrenza non viene richiesta nei flussi operativi quotidiani e resta
+  un metadato amministrativo da verificare prima della produzione.
+
+Questa registrazione descrive la prassi effettiva ma non stabilisce ancora la
+classificazione legale o fiscale, il tipo di ricevuta, il trattamento IVA o le
+diciture applicabili. Tali elementi restano da validare in `LEG-001` e
+`TAX-001`.
+
+### Raccolta operativa LEG-001.2 — Biciclette recuperate
+
+Informazione fornita dall'associazione:
+
+- consegna rivolta a soci e non soci;
+- importo variabile;
+- importo comunicato prima della consegna e confermato esplicitamente dal
+  ricevente;
+- stesso modello grafico di ricevuta utilizzato per le riparazioni;
+- descrizione dell'operazione distinta da quella della riparazione.
+
+La classificazione dell'operazione e la dicitura fiscale non vengono dedotte
+automaticamente e restano da validare in `LEG-001` e `TAX-001`.
+
+### Raccolta operativa LEG-001.3 — Ricambi
+
+Informazione fornita dall'associazione:
+
+- nessuna cessione separata di ricambi;
+- ricambi registrabili esclusivamente come componenti tecnici collegati a una
+  riparazione;
+- nessuna ricevuta autonoma o classificazione come vendita di ricambi.
+
+### Raccolta operativa LEG-001.4 — Donazioni e liberalità
+
+Informazione fornita dall'associazione:
+
+- donazioni in denaro ricevute da soci e non soci;
+- importo libero;
+- modalità ammesse: contanti e PayPal;
+- stesso modello grafico delle altre ricevute;
+- descrizione specifica `Erogazione liberale`;
+- classificazione e dicitura fiscale dedicate ancora da validare in
+  `TAX-001`.
+
+### Raccolta operativa LEG-001.5 — Quote associative
+
+Informazione fornita dall'associazione:
+
+- quota associativa annuale riservata ai soci;
+- importo fisso di 10 euro;
+- pagamento tramite contanti o PayPal;
+- ricevuta con importo e descrizione `Quota associativa anno [AAAA]`;
+- operazione separata da riparazioni, consegne ed erogazioni liberali;
+- classificazione e dicitura fiscale da validare in `TAX-001`.
+
+### Raccolta operativa LEG-001.6 — Rimborsi spese
+
+Informazione fornita dall'associazione:
+
+- nessun rimborso spese effettuato allo stato attuale;
+- flusso escluso dalla prima versione del gestionale;
+- eventuale introduzione futura subordinata a una procedura approvata e
+  separata.
+
+### Chiusura della raccolta operativa LEG-001
+
+L'associazione dichiara che non esistono ulteriori attività economiche o
+tipologie di ricevuta oltre a:
+
+- riparazioni;
+- consegna di biciclette recuperate;
+- erogazioni liberali;
+- quote associative.
+
+Sono escluse la cessione separata di ricambi e, allo stato attuale, i rimborsi
+spese. La raccolta della prassi è completa; classificazioni giuridiche e
+trattamenti fiscali restano soggetti alla validazione professionale.
+
+Classificazioni operative approvate dall'associazione:
+
+- `RIPARAZIONE`;
+- `BICI_RECUPERATA`;
+- `EROGAZIONE_LIBERALE`;
+- `QUOTA_ASSOCIATIVA`.
+
+I codici sono stabili; descrizioni, validità e configurazioni fiscali saranno
+versionate.
+
 ## Ricevute e documenti economici
 
 Chiarire:
@@ -186,6 +316,9 @@ Decidere:
 | ACC-015 | Consolidamento definitivo della scheda di accettazione | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | ACC-016 | Procedura per biciclette non ritirate | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | ACC-017 | Componenti pericolosi o non recuperabili | APS Bike4City ETS | Validata | Dal 26/07/2026 |
+| ACC-018 | Prova dinamica e prova su strada | APS Bike4City ETS | Validata | Dal 26/07/2026 |
+| ACC-019 | Gestione minimale dei problemi durante la prova | APS Bike4City ETS | Validata | Dal 26/07/2026 |
+| ACC-020 | Costi, contributi e ricambi senza classificazione automatica | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | LIC-001 | Licenza definitiva | APS Bike4City ETS | Aperta | — |
 
 Lo stato può diventare “validata” soltanto quando esiste un riferimento
@@ -507,3 +640,57 @@ Applicazione tecnica `ACC-017-v1`:
   automatico;
 - le misure di emergenza prevalgono in presenza di pericolo immediato;
 - cronologia e audit sono append-only.
+
+### Decisione ACC-018
+
+Validazione fornita dall'associazione il 26 luglio 2026.
+
+Applicazione tecnica `ACC-018-v1`:
+
+- prova facoltativa e ammessa soltanto quando tecnicamente necessaria;
+- deve essere compresa nei lavori autorizzati;
+- ruote, pneumatici, freni e sterzo devono essere conformi;
+- percorso limitato a un'area controllata predefinita;
+- strada pubblica bloccata fino a verifica organizzativa, assicurativa e
+  professionale;
+- operatore espressamente autorizzato e identificato;
+- casco e dispositivo ad alta visibilità obbligatori;
+- passeggeri e carichi estranei al collaudo non ammessi;
+- registrazione di durata, condizioni, operatore, esito e anomalie;
+- nessuna registrazione GPS o geolocalizzazione continua;
+- in caso di anomalia la prova viene interrotta e il collaudo è negativo;
+- la prova dinamica non sostituisce la checklist statica.
+
+### Decisione ACC-019
+
+Validazione fornita dall'associazione il 26 luglio 2026.
+
+Applicazione tecnica `ACC-019-v1`:
+
+- in caso di problema la prova dinamica viene interrotta;
+- l'anomalia tecnica viene annotata nel collaudo;
+- il collaudo assume esito negativo e la bicicletta torna in lavorazione;
+- se permane un rischio tecnico si applica `ACC-017-v1`;
+- infortuni e danni sono gestiti fuori dal gestionale secondo le procedure
+  organizzative dell'associazione;
+- il software non raccoglie dati sanitari, dichiarazioni di testimoni o
+  valutazioni di responsabilità;
+- non viene introdotto un modulo, uno stato o un archivio incidenti dedicato.
+
+### Decisione ACC-020
+
+Validazione fornita dall'associazione il 26 luglio 2026.
+
+Applicazione tecnica `ACC-020-v1`:
+
+- l'accettazione non determina prezzi, contributi o trattamento fiscale;
+- eventuali importi stimati devono precedere l'autorizzazione;
+- variazioni di importo o intervento richiedono nuova autorizzazione;
+- i ricambi mantengono un collegamento tecnico e quantitativo alla riparazione;
+- l'uso del ricambio non viene qualificato automaticamente come vendita;
+- un contributo alla consegna resta `Da classificare`;
+- ricevute, IVA, esenzioni e pagamenti attendono `LEG-001` e `TAX-001`;
+- nessuna classificazione fiscale libera o dedotta dal ruolo;
+- le future classificazioni saranno configurabili, versionate e temporalmente
+  valide;
+- nessuna applicazione retroattiva automatica.

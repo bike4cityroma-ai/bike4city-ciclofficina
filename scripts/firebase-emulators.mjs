@@ -62,6 +62,8 @@ const result = spawnSync(process.execPath, command, {
   cwd: process.cwd(),
   env: {
     ...process.env,
+    FUNCTIONS_DISCOVERY_TIMEOUT:
+      process.env.FUNCTIONS_DISCOVERY_TIMEOUT ?? "30000",
     ...(javaHome
       ? {
           JAVA_HOME: javaHome,

@@ -168,6 +168,8 @@ function RepairAuthorizationForm({ repair }: { repair: DemoRepair }) {
     "Modulo firmato" | "Firma su dispositivo"
   >("Modulo firmato");
   const [evidenceNote, setEvidenceNote] = useState("");
+  const [communicatedAmount, setCommunicatedAmount] = useState(0);
+  const [amountAccepted, setAmountAccepted] = useState(false);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [originalPaperRetained, setOriginalPaperRetained] = useState(false);
   const [physicalLocationCode, setPhysicalLocationCode] = useState("");
@@ -204,6 +206,8 @@ function RepairAuthorizationForm({ repair }: { repair: DemoRepair }) {
         method,
         evidenceNote,
         evidenceStoragePath,
+        communicatedAmount,
+        amountAccepted,
         nextStatus,
         reason,
         idempotencyKey: key.current,
@@ -275,6 +279,17 @@ function RepairAuthorizationForm({ repair }: { repair: DemoRepair }) {
       <textarea value={evidenceNote} required minLength={5} maxLength={500}
         onChange={(event) => setEvidenceNote(event.target.value)} />
     </label>
+    <label>Importo comunicato dopo la diagnosi
+      <input type="number" min={0} max={1000000} step="0.01"
+        value={communicatedAmount} required
+        onChange={(event) => setCommunicatedAmount(Number(event.target.value))}
+      />
+    </label>
+    <label className="checkbox-field">
+      <input type="checkbox" checked={amountAccepted} required
+        onChange={(event) => setAmountAccepted(event.target.checked)} />
+      Il soggetto autorizzante conferma esplicitamente l’importo comunicato
+    </label>
     <small>
       In questa fase inserire solo riferimenti fittizi. L’acquisizione o
       l’allegato dell’evidenza sarà implementato nel flusso Storage.
@@ -292,7 +307,7 @@ function RepairAuthorizationForm({ repair }: { repair: DemoRepair }) {
     </label>
     {message && <p role="status">{message}</p>}
     <button className="primary-action" disabled={
-      pending || reason.trim().length < 10 || !evidenceFile
+      pending || reason.trim().length < 10 || !evidenceFile || !amountAccepted
     }>{pending ? "Registrazione…" : "Registra autorizzazione"}</button>
   </form>;
 }

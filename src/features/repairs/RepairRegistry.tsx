@@ -9,6 +9,8 @@ import { RepairAcceptanceForm } from "./RepairAcceptanceForm";
 import { observeRepairs } from "./repairService";
 import { RepairWorkflow } from "./RepairWorkflow";
 import { RepairPartsUsage } from "./RepairPartsUsage";
+import { PickupContactDialog } from "./PickupContactDialog";
+import { RepairSafetyDialog } from "./RepairSafetyDialog";
 
 type RepairStatusFilter = RepairStatus | "Tutti gli stati";
 type CustomerFilter = DemoRepair["customerType"] | "Tutti gli utenti";
@@ -23,6 +25,8 @@ export function RepairRegistry() {
   const [repairs, setRepairs] = useState(demoRepairs);
   const [loadError, setLoadError] = useState(false);
   const [showAcceptance, setShowAcceptance] = useState(false);
+  const [pickupRepair, setPickupRepair] = useState<DemoRepair | null>(null);
+  const [safetyRepair, setSafetyRepair] = useState<DemoRepair | null>(null);
 
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
@@ -222,12 +226,18 @@ export function RepairRegistry() {
           <RepairDetail
             repair={selectedRepair}
             onClose={() => setSelectedRepair(null)}
+            onPickup={() => setPickupRepair(selectedRepair)}
+            onSafety={() => setSafetyRepair(selectedRepair)}
           />
         )}
       </div>
       {showAcceptance && (
         <RepairAcceptanceForm onClose={() => setShowAcceptance(false)} />
       )}
+      {pickupRepair && <PickupContactDialog repair={pickupRepair}
+        onClose={() => setPickupRepair(null)} />}
+      {safetyRepair && <RepairSafetyDialog repair={safetyRepair}
+        onClose={() => setSafetyRepair(null)} />}
     </section>
   );
 }
@@ -235,9 +245,16 @@ export function RepairRegistry() {
 interface RepairDetailProps {
   repair: DemoRepair;
   onClose: () => void;
+  onPickup: () => void;
+  onSafety: () => void;
 }
 
-function RepairDetail({ repair, onClose }: RepairDetailProps) {
+function RepairDetail({
+  repair,
+  onClose,
+  onPickup,
+  onSafety,
+}: RepairDetailProps) {
   return (
     <aside
       className="repair-detail"
@@ -332,6 +349,21 @@ function RepairDetail({ repair, onClose }: RepairDetailProps) {
           </p>
         )}
       <RepairWorkflow repair={repair} />
+      <div className="detail-section">
+        <h4>Procedure speciali</h4>
+        <div className="dialog-actions">
+          {repair.status === "Collaudata" && <button
+            className="secondary-button" type="button" onClick={onPickup}>
+            Gestisci mancato ritiro
+          </button>}
+          {repair.status !== "Annullata" && <button
+            className="secondary-button" type="button" onClick={onSafety}>
+            {repair.status === "In verifica sicurezza"
+              ? "Chiudi verifica sicurezza"
+              : "Segnala rischio sicurezza"}
+          </button>}
+        </div>
+      </div>
     </aside>
   );
 }
