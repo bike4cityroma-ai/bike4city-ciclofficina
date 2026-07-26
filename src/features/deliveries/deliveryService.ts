@@ -52,6 +52,26 @@ export async function createDelivery(input: {
   return (await callable(input)).data;
 }
 
+export async function recordPickupContact(input: {
+  repairId: string;
+  action:
+    | "ready_notice"
+    | "reminder"
+    | "final_notice"
+    | "open_overdue_review";
+  channel: "phone" | "sms" | "email" | "written" | "internal";
+  note: string;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    repairId: string;
+    action: string;
+    pickupStatus: string;
+    recordedAt: string;
+  }>(functions, "recordPickupContact");
+  return (await callable(input)).data;
+}
+
 function mapDelivery(
   snapshot: QueryDocumentSnapshot<DocumentData>,
 ): DemoDelivery {

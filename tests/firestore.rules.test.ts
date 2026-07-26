@@ -250,6 +250,34 @@ describe("Regole Firestore", () => {
     ));
   });
 
+  it("nega la scrittura client della cronologia di ritiro", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(
+      doc(db, "repairs", "repair-demo", "pickupHistory", "event-demo"),
+      {
+        action: "ready_notice",
+        channel: "phone",
+        note: "Tentativo client dimostrativo.",
+      },
+    ));
+  });
+
+  it("nega la scrittura client della cronologia di sicurezza", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(
+      doc(db, "repairs", "repair-demo", "safetyHistory", "event-demo"),
+      {
+        action: "report",
+        riskType: "damaged_battery",
+        description: "Tentativo client dimostrativo.",
+      },
+    ));
+  });
+
   it("nega scarico ricambi e movimenti diretti dal client", async () => {
     const db = testEnvironment
       .authenticatedContext("manager-demo")

@@ -96,6 +96,7 @@ service cloud.firestore {
         ]);
         allow write: if false;
       }
+
     }
 
     match /bikeDonations/{donationId} {
@@ -124,6 +125,26 @@ service cloud.firestore {
           'workshop_manager',
           'operator',
           'treasurer',
+          'read_only'
+        ]);
+        allow write: if false;
+      }
+
+      match /pickupHistory/{eventId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator',
+          'read_only'
+        ]);
+        allow write: if false;
+      }
+
+      match /safetyHistory/{eventId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator',
           'read_only'
         ]);
         allow write: if false;

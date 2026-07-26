@@ -66,6 +66,16 @@ Documenti di sintesi:
 - [`docs/14-user-manual.md`](docs/14-user-manual.md): manuale operativo del
   prototipo.
 
+Bozze da completare e validare:
+
+- [`docs/15-acceptance-privacy-notice-draft.md`](docs/15-acceptance-privacy-notice-draft.md);
+- [`docs/16-acceptance-service-conditions-draft.md`](docs/16-acceptance-service-conditions-draft.md).
+
+Profilo istituzionale:
+
+- [`docs/17-association-profile.md`](docs/17-association-profile.md):
+  profilo istituzionale versionato.
+
 ## Principi di sicurezza e privacy
 
 - non committare file `.env`, chiavi private o account di servizio;
@@ -282,6 +292,18 @@ evidenza di firma privata, soggetto coerente, copia registrata e assenza di
 anomalie o correzioni pendenti. Il PDF conserva checksum e diventa immutabile;
 con configurazioni fittizie assume `consolidated_demo`. Il seed ordinario
 mantiene ACC-001 e ACC-002 in bozza e quindi blocca il consolidamento.
+
+`ACC-016-v1` disciplina le biciclette non ritirate: prima comunicazione,
+promemoria dopo 15 giorni, preavviso finale al trentesimo giorno e revisione
+amministrativa dopo 45 giorni complessivi. Contatti e passaggi sono auditati;
+non avvengono trasferimenti di proprietà, disposizioni del bene o addebiti
+automatici. La consegna chiude lo stato di attesa del ritiro.
+
+`ACC-017-v1` introduce il blocco `In verifica sicurezza` per batterie
+danneggiate, perdite, componenti instabili e altri rischi. La segnalazione
+conserva stato precedente, misure protettive e ubicazione; soltanto
+responsabile o amministratore possono chiuderla. Il software non classifica
+automaticamente rifiuti e non dispone smaltimenti.
 
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:

@@ -85,6 +85,30 @@ export async function updateRepairWorkflow(input: {
   return (await callable(input)).data;
 }
 
+export async function manageRepairSafetyReview(input: {
+  repairId: string;
+  action: "report" | "resolve";
+  riskType:
+    | "damaged_battery"
+    | "leak"
+    | "unstable_component"
+    | "other_hazard";
+  description: string;
+  protectiveMeasures: string;
+  protectedLocation: string;
+  outcome: "" | "risk_mitigated" | "authorized_provider";
+  documentationReference: string;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    repairId: string;
+    action: string;
+    previousStatus: string;
+    newStatus: string;
+  }>(functions, "manageRepairSafetyReview");
+  return (await callable(input)).data;
+}
+
 export async function authorizeRepairWork(input: {
   repairId: string;
   authorizedWork: string[];

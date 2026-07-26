@@ -184,11 +184,19 @@ Decidere:
 | ACC-013 | Consegna della copia della scheda di accettazione | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | ACC-014 | Correzione e versionamento della scheda di accettazione | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | ACC-015 | Consolidamento definitivo della scheda di accettazione | APS Bike4City ETS | Validata | Dal 26/07/2026 |
+| ACC-016 | Procedura per biciclette non ritirate | APS Bike4City ETS | Validata | Dal 26/07/2026 |
+| ACC-017 | Componenti pericolosi o non recuperabili | APS Bike4City ETS | Validata | Dal 26/07/2026 |
 | LIC-001 | Licenza definitiva | APS Bike4City ETS | Aperta | — |
 
 Lo stato può diventare “validata” soltanto quando esiste un riferimento
 documentato. Le risposte devono poi essere tradotte in configurazioni o
 requisiti senza ampliare autonomamente la decisione ricevuta.
+
+Per `ACC-001` e `ACC-002` sono state predisposte rispettivamente le bozze
+`docs/15-acceptance-privacy-notice-draft.md` e
+`docs/16-acceptance-service-conditions-draft.md`. Restano aperte perché
+contengono dati associativi, durate e procedure da completare e non
+costituiscono ancora un riferimento approvato.
 
 ### Decisione ACC-003
 
@@ -456,3 +464,46 @@ Applicazione tecnica `ACC-015-v1`:
   accettate fuori da un progetto demo;
 - il seed mantiene ACC-001 e ACC-002 in stato `draft`, bloccando normalmente
   il consolidamento.
+
+### Decisione ACC-016
+
+Validazione fornita dall'associazione il 26 luglio 2026.
+
+Applicazione tecnica `ACC-016-v1`:
+
+- ritiro richiesto entro 30 giorni dalla prima comunicazione documentata;
+- promemoria registrabile dopo 15 giorni;
+- preavviso finale al trentesimo giorno con ulteriori 15 giorni;
+- dopo 45 giorni stato `custody_overdue` e revisione manuale;
+- contatti ammessi tramite telefono, SMS, email o comunicazione scritta;
+- i contatti non costituiscono autorizzazione alla lavorazione;
+- responsabile e amministratore registrano i contatti;
+- soltanto l'amministratore apre la revisione oltre termine;
+- nessun trasferimento di proprietà o disposizione automatica del bene;
+- ogni destinazione successiva richiede decisione separata e verifica legale;
+- nessun costo di custodia retroattivo;
+- componenti pericolosi soggetti a una procedura di sicurezza separata;
+- cronologia e audit append-only, senza cancellazione dal client.
+
+### Decisione ACC-017
+
+Validazione fornita dall'associazione il 26 luglio 2026.
+
+Applicazione tecnica `ACC-017-v1`:
+
+- l'operatore segnala immediatamente batterie danneggiate, perdite,
+  componenti instabili o altri rischi;
+- la riparazione assume lo stato `In verifica sicurezza` e la lavorazione è
+  bloccata;
+- vengono registrati rischio, misure protettive e ubicazione;
+- le fotografie tecniche sono facoltative e devono essere minimizzate;
+- durante il blocco non sono autorizzati lavorazione, riutilizzo, consegna o
+  smaltimento;
+- responsabile e amministratore possono chiudere la verifica;
+- alla chiusura viene ripristinato lo stato operativo precedente;
+- il trasferimento a un soggetto autorizzato richiede un riferimento
+  documentale;
+- nessuna classificazione automatica come rifiuto e nessuno smaltimento
+  automatico;
+- le misure di emergenza prevalgono in presenza di pericolo immediato;
+- cronologia e audit sono append-only.

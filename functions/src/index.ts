@@ -1248,6 +1248,120 @@ function requireDeliveryInput(value: unknown) {
   };
 }
 
+const pickupContactActions = [
+  "ready_notice",
+  "reminder",
+  "final_notice",
+  "open_overdue_review",
+] as const;
+const pickupContactChannels = [
+  "phone",
+  "sms",
+  "email",
+  "written",
+  "internal",
+] as const;
+
+function requirePickupContactInput(value: unknown) {
+  if (!value || typeof value !== "object") {
+    throw new HttpsError("invalid-argument", "Dati del contatto mancanti.");
+  }
+  const data = value as Record<string, unknown>;
+  const text = (name: string, max: number) => {
+    const field = data[name];
+    if (typeof field !== "string" || !field.trim() || field.length > max) {
+      throw new HttpsError("invalid-argument", `Il campo ${name} non è valido.`);
+    }
+    return field.trim();
+  };
+  const action = text("action", 40);
+  const channel = text("channel", 20);
+  if (!pickupContactActions.includes(
+    action as typeof pickupContactActions[number],
+  )) {
+    throw new HttpsError("invalid-argument", "Azione di ritiro non valida.");
+  }
+  if (!pickupContactChannels.includes(
+    channel as typeof pickupContactChannels[number],
+  )) {
+    throw new HttpsError("invalid-argument", "Canale di contatto non valido.");
+  }
+  if (action === "open_overdue_review" && channel !== "internal") {
+    throw new HttpsError(
+      "invalid-argument",
+      "La revisione oltre termine richiede il canale interno.",
+    );
+  }
+  if (action !== "open_overdue_review" && channel === "internal") {
+    throw new HttpsError(
+      "invalid-argument",
+      "Un contatto esterno non può usare il canale interno.",
+    );
+  }
+  return {
+    repairId: text("repairId", 160),
+    action: action as typeof pickupContactActions[number],
+    channel: channel as typeof pickupContactChannels[number],
+    note: text("note", 1000),
+    idempotencyKey: text("idempotencyKey", 80),
+  };
+}
+
+function requireSafetyReviewInput(value: unknown) {
+  if (!value || typeof value !== "object") {
+    throw new HttpsError("invalid-argument", "Dati di sicurezza mancanti.");
+  }
+  const data = value as Record<string, unknown>;
+  const text = (name: string, max: number, required = true) => {
+    const field = data[name];
+    if (typeof field !== "string" ||
+        (required && !field.trim()) || field.length > max) {
+      throw new HttpsError("invalid-argument", `Il campo ${name} non è valido.`);
+    }
+    return field.trim();
+  };
+  const action = text("action", 20);
+  if (!["report", "resolve"].includes(action)) {
+    throw new HttpsError("invalid-argument", "Azione di sicurezza non valida.");
+  }
+  const riskType = text("riskType", 50);
+  if (![
+    "damaged_battery",
+    "leak",
+    "unstable_component",
+    "other_hazard",
+  ].includes(riskType)) {
+    throw new HttpsError("invalid-argument", "Tipo di rischio non valido.");
+  }
+  const outcome = text("outcome", 50, false);
+  if (action === "resolve" &&
+      !["risk_mitigated", "authorized_provider"].includes(outcome)) {
+    throw new HttpsError("invalid-argument", "Esito di sicurezza non valido.");
+  }
+  const documentationReference = text(
+    "documentationReference",
+    300,
+    false,
+  );
+  if (outcome === "authorized_provider" && !documentationReference) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Il soggetto autorizzato richiede un riferimento documentale.",
+    );
+  }
+  return {
+    repairId: text("repairId", 160),
+    action: action as "report" | "resolve",
+    riskType,
+    description: text("description", 1000),
+    protectiveMeasures: text("protectiveMeasures", 1000),
+    protectedLocation: text("protectedLocation", 160),
+    outcome: outcome || null,
+    documentationReference: documentationReference || null,
+    idempotencyKey: text("idempotencyKey", 80),
+  };
+}
+
 export const createBike = onCall(
   { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
@@ -3004,6 +3118,335 @@ export const createWorkshopTest = onCall(
   },
 );
 
+export const manageRepairSafetyReview = onCall(
+  { region: "europe-west1", enforceAppCheck: false },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Accesso richiesto.");
+    }
+    const uid = request.auth.uid;
+    const input = requireSafetyReviewInput(request.data);
+    const db = getFirestore();
+    const userRef = db.doc(`users/${uid}`);
+    const repairRef = db.doc(`repairs/${input.repairId}`);
+    const requestRef = db.doc(
+      `idempotencyKeys/safety-review_${uid}_${input.idempotencyKey}`,
+    );
+    const historyRef = repairRef.collection("safetyHistory").doc();
+    const statusHistoryRef = repairRef.collection("statusHistory").doc();
+    const auditRef = db.collection("auditLogs").doc();
+
+    return db.runTransaction(async (transaction) => {
+      const [user, repair, existingRequest] = await Promise.all([
+        transaction.get(userRef),
+        transaction.get(repairRef),
+        transaction.get(requestRef),
+      ]);
+      if (!hasPermittedProfile(user.data())) {
+        throw new HttpsError(
+          "permission-denied",
+          "Ruolo non autorizzato alla segnalazione di sicurezza.",
+        );
+      }
+      const roles = Array.isArray(user.data()?.roles)
+        ? user.data()?.roles as string[]
+        : [];
+      if (input.action === "resolve" &&
+          !roles.some((role) =>
+            role === "admin" || role === "workshop_manager")) {
+        throw new HttpsError(
+          "permission-denied",
+          "Solo responsabile o amministratore possono chiudere la verifica.",
+        );
+      }
+      if (!repair.exists) {
+        throw new HttpsError("not-found", "Riparazione non trovata.");
+      }
+      if (existingRequest.exists) {
+        return existingRequest.data()?.result;
+      }
+      const repairData = repair.data();
+      const previousStatus = String(repairData?.status ?? "");
+      const now = Timestamp.now();
+      let nextStatus = "In verifica sicurezza";
+      let update: Record<string, unknown>;
+
+      if (input.action === "report") {
+        if (["Consegnata", "Annullata"].includes(previousStatus) ||
+            previousStatus === "In verifica sicurezza") {
+          throw new HttpsError(
+            "failed-precondition",
+            "La riparazione non può aprire una nuova verifica di sicurezza.",
+          );
+        }
+        update = {
+          status: nextStatus,
+          safetyReview: {
+            status: "open",
+            previousStatus,
+            riskType: input.riskType,
+            description: input.description,
+            protectiveMeasures: input.protectiveMeasures,
+            protectedLocation: input.protectedLocation,
+            reportedAt: now,
+            reportedBy: uid,
+            photosOptional: true,
+            automaticWasteClassification: false,
+            automaticDisposal: false,
+          },
+          operationalBlock: {
+            type: "safety_review",
+            policyVersion: "ACC-017-v1",
+            blockedAt: now,
+          },
+        };
+      } else {
+        const review = repairData?.safetyReview as
+          Record<string, unknown> | undefined;
+        if (previousStatus !== "In verifica sicurezza" ||
+            review?.status !== "open" ||
+            typeof review.previousStatus !== "string") {
+          throw new HttpsError(
+            "failed-precondition",
+            "Non esiste una verifica di sicurezza aperta.",
+          );
+        }
+        nextStatus = review.previousStatus;
+        update = {
+          status: nextStatus,
+          "safetyReview.status": "resolved",
+          "safetyReview.outcome": input.outcome,
+          "safetyReview.resolutionDescription": input.description,
+          "safetyReview.finalProtectiveMeasures": input.protectiveMeasures,
+          "safetyReview.finalLocation": input.protectedLocation,
+          "safetyReview.documentationReference":
+            input.documentationReference,
+          "safetyReview.resolvedAt": now,
+          "safetyReview.resolvedBy": uid,
+          operationalBlock: null,
+        };
+      }
+
+      update.updatedAt = now;
+      update.updatedBy = uid;
+      update.version = Number(repairData?.version ?? 0) + 1;
+      const result = {
+        repairId: repairRef.id,
+        action: input.action,
+        previousStatus,
+        newStatus: nextStatus,
+      };
+      transaction.update(repairRef, update);
+      transaction.create(historyRef, {
+        action: input.action,
+        riskType: input.riskType,
+        description: input.description,
+        protectiveMeasures: input.protectiveMeasures,
+        protectedLocation: input.protectedLocation,
+        outcome: input.outcome,
+        documentationReference: input.documentationReference,
+        recordedAt: now,
+        recordedBy: uid,
+        policyVersion: "ACC-017-v1",
+      });
+      transaction.create(statusHistoryRef, {
+        from: previousStatus,
+        to: nextStatus,
+        reason: input.action === "report"
+          ? `Verifica sicurezza: ${input.description}`
+          : `Verifica sicurezza chiusa: ${input.description}`,
+        changedAt: now,
+        changedBy: uid,
+      });
+      transaction.create(auditRef, {
+        action: `repair.safety.${input.action}`,
+        entityType: "repair",
+        entityId: repairRef.id,
+        entityCode: String(repairData?.code),
+        actorUid: uid,
+        riskType: input.riskType,
+        policyVersion: "ACC-017-v1",
+        createdAt: now,
+      });
+      transaction.create(requestRef, {
+        result,
+        createdAt: now,
+        createdBy: uid,
+      });
+      return result;
+    });
+  },
+);
+
+export const recordPickupContact = onCall(
+  { region: "europe-west1", enforceAppCheck: false },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Accesso richiesto.");
+    }
+    const uid = request.auth.uid;
+    const input = requirePickupContactInput(request.data);
+    const db = getFirestore();
+    const userRef = db.doc(`users/${uid}`);
+    const repairRef = db.doc(`repairs/${input.repairId}`);
+    const requestRef = db.doc(
+      `idempotencyKeys/pickup-contact_${uid}_${input.idempotencyKey}`,
+    );
+    const historyRef = repairRef.collection("pickupHistory").doc();
+    const auditRef = db.collection("auditLogs").doc();
+
+    return db.runTransaction(async (transaction) => {
+      const [user, repair, existingRequest] = await Promise.all([
+        transaction.get(userRef),
+        transaction.get(repairRef),
+        transaction.get(requestRef),
+      ]);
+      if (!hasDeliveryProfile(user.data())) {
+        throw new HttpsError(
+          "permission-denied",
+          "Ruolo non autorizzato alla gestione del ritiro.",
+        );
+      }
+      const roles = Array.isArray(user.data()?.roles)
+        ? user.data()?.roles as string[]
+        : [];
+      if (input.action === "open_overdue_review" &&
+          !roles.includes("admin")) {
+        throw new HttpsError(
+          "permission-denied",
+          "Solo un amministratore può aprire la revisione oltre termine.",
+        );
+      }
+      if (!repair.exists) {
+        throw new HttpsError("not-found", "Riparazione non trovata.");
+      }
+      if (existingRequest.exists) {
+        return existingRequest.data()?.result;
+      }
+      const repairData = repair.data();
+      if (repairData?.status !== "Collaudata") {
+        throw new HttpsError(
+          "failed-precondition",
+          "La gestione del ritiro richiede una riparazione collaudata.",
+        );
+      }
+
+      const now = Timestamp.now();
+      const dayMs = 24 * 60 * 60 * 1000;
+      const pickup = repairData?.pickupNotice as
+        Record<string, unknown> | undefined;
+      const firstNotifiedAt = pickup?.firstNotifiedAt instanceof Timestamp
+        ? pickup.firstNotifiedAt
+        : null;
+      const update: Record<string, unknown> = {
+        updatedAt: now,
+        updatedBy: uid,
+        version: Number(repairData?.version ?? 0) + 1,
+      };
+
+      if (input.action === "ready_notice") {
+        if (firstNotifiedAt) {
+          throw new HttpsError(
+            "already-exists",
+            "La prima comunicazione di disponibilità è già registrata.",
+          );
+        }
+        update.pickupStatus = "awaiting_pickup";
+        update.pickupNotice = {
+          firstNotifiedAt: now,
+          firstChannel: input.channel,
+          reminderDueAt: Timestamp.fromMillis(now.toMillis() + 15 * dayMs),
+          ordinaryDeadlineAt: Timestamp.fromMillis(
+            now.toMillis() + 30 * dayMs,
+          ),
+          finalDeadlineAt: Timestamp.fromMillis(now.toMillis() + 45 * dayMs),
+        };
+      } else {
+        if (!firstNotifiedAt) {
+          throw new HttpsError(
+            "failed-precondition",
+            "Registrare prima la comunicazione di disponibilità.",
+          );
+        }
+        const elapsedMs = now.toMillis() - firstNotifiedAt.toMillis();
+        if (input.action === "reminder") {
+          if (elapsedMs < 15 * dayMs) {
+            throw new HttpsError(
+              "failed-precondition",
+              "Il promemoria è ammesso dopo 15 giorni.",
+            );
+          }
+          update["pickupNotice.remindedAt"] = now;
+          update["pickupNotice.reminderChannel"] = input.channel;
+        }
+        if (input.action === "final_notice") {
+          if (elapsedMs < 30 * dayMs) {
+            throw new HttpsError(
+              "failed-precondition",
+              "Il preavviso finale è ammesso dopo 30 giorni.",
+            );
+          }
+          update.pickupStatus = "final_notice";
+          update["pickupNotice.finalNotifiedAt"] = now;
+          update["pickupNotice.finalChannel"] = input.channel;
+        }
+        if (input.action === "open_overdue_review") {
+          if (!(pickup?.finalNotifiedAt instanceof Timestamp) ||
+              elapsedMs < 45 * dayMs) {
+            throw new HttpsError(
+              "failed-precondition",
+              "La revisione richiede il preavviso finale e 45 giorni totali.",
+            );
+          }
+          update.pickupStatus = "custody_overdue";
+          update.uncollectedReview = {
+            status: "open",
+            openedAt: now,
+            openedBy: uid,
+            ownershipTransferred: false,
+            automaticDisposition: false,
+            custodyChargesApplied: false,
+          };
+        }
+      }
+
+      const result = {
+        repairId: repairRef.id,
+        action: input.action,
+        pickupStatus: String(
+          update.pickupStatus ?? repairData?.pickupStatus ?? "awaiting_pickup",
+        ),
+        recordedAt: now.toDate().toISOString(),
+      };
+      transaction.update(repairRef, update);
+      transaction.create(historyRef, {
+        action: input.action,
+        channel: input.channel,
+        note: input.note,
+        recordedAt: now,
+        recordedBy: uid,
+        policyVersion: "ACC-016-v1",
+        workAuthorization: false,
+      });
+      transaction.create(auditRef, {
+        action: `pickup.${input.action}`,
+        entityType: "repair",
+        entityId: repairRef.id,
+        entityCode: String(repairData?.code),
+        actorUid: uid,
+        policyVersion: "ACC-016-v1",
+        createdAt: now,
+      });
+      transaction.create(requestRef, {
+        result,
+        createdAt: now,
+        createdBy: uid,
+      });
+      return result;
+    });
+  },
+);
+
 export const createDelivery = onCall(
   { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
@@ -3110,6 +3553,7 @@ export const createDelivery = onCall(
       });
       transaction.update(repairRef, {
         status: "Consegnata",
+        pickupStatus: "delivered",
         deliveryId: deliveryRef.id,
         deliveredAt: now,
         updatedAt: now,

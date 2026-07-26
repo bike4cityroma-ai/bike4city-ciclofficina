@@ -1291,6 +1291,174 @@ describe("createDelivery", () => {
   }, 20_000);
 });
 
+describe("recordPickupContact", () => {
+  it("applica il percorso 30 + 15 senza disposizione automatica", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-MANCATO-RITIRO",
+      bikeLabel: "Bicicletta mancato ritiro demo",
+      status: "Collaudata",
+      version: 1,
+    });
+    const firstResponse = await invokeFunction("recordPickupContact", {
+      repairId: repairRef.id,
+      action: "ready_notice",
+      channel: "phone",
+      note: "Prima comunicazione dimostrativa di disponibilità.",
+      idempotencyKey: `pickup-ready-${crypto.randomUUID()}`,
+    });
+    expect(firstResponse.status).toBe(200);
+    const firstBody = await firstResponse.json() as {
+      result: { pickupStatus: string };
+    };
+    expect(firstBody.result.pickupStatus).toBe("awaiting_pickup");
+
+    const fortySixDaysAgo = Timestamp.fromMillis(
+      Date.now() - 46 * 24 * 60 * 60 * 1000,
+    );
+    await repairRef.update({
+      "pickupNotice.firstNotifiedAt": fortySixDaysAgo,
+      "pickupNotice.reminderDueAt": Timestamp.fromMillis(
+        fortySixDaysAgo.toMillis() + 15 * 24 * 60 * 60 * 1000,
+      ),
+      "pickupNotice.ordinaryDeadlineAt": Timestamp.fromMillis(
+        fortySixDaysAgo.toMillis() + 30 * 24 * 60 * 60 * 1000,
+      ),
+      "pickupNotice.finalDeadlineAt": Timestamp.fromMillis(
+        fortySixDaysAgo.toMillis() + 45 * 24 * 60 * 60 * 1000,
+      ),
+    });
+    const reminderResponse = await invokeFunction("recordPickupContact", {
+      repairId: repairRef.id,
+      action: "reminder",
+      channel: "sms",
+      note: "Promemoria dimostrativo dopo quindici giorni.",
+      idempotencyKey: `pickup-reminder-${crypto.randomUUID()}`,
+    });
+    expect(reminderResponse.status).toBe(200);
+    const finalResponse = await invokeFunction("recordPickupContact", {
+      repairId: repairRef.id,
+      action: "final_notice",
+      channel: "written",
+      note: "Preavviso finale dimostrativo con ulteriori quindici giorni.",
+      idempotencyKey: `pickup-final-${crypto.randomUUID()}`,
+    });
+    expect(finalResponse.status).toBe(200);
+
+    const deniedResponse = await invokeFunction("recordPickupContact", {
+      repairId: repairRef.id,
+      action: "open_overdue_review",
+      channel: "internal",
+      note: "Tentativo del responsabile dimostrativo.",
+      idempotencyKey: `pickup-review-denied-${crypto.randomUUID()}`,
+    });
+    expect(deniedResponse.status).toBe(403);
+
+    const reviewResponse = await invokeFunction(
+      "recordPickupContact",
+      {
+        repairId: repairRef.id,
+        action: "open_overdue_review",
+        channel: "internal",
+        note: "Apertura amministrativa della revisione dimostrativa.",
+        idempotencyKey: `pickup-review-${crypto.randomUUID()}`,
+      },
+      adminToken,
+    );
+    expect(reviewResponse.status).toBe(200);
+    const repair = (await repairRef.get()).data();
+    expect(repair?.pickupStatus).toBe("custody_overdue");
+    expect(repair?.uncollectedReview).toMatchObject({
+      status: "open",
+      ownershipTransferred: false,
+      automaticDisposition: false,
+      custodyChargesApplied: false,
+    });
+    expect((await repairRef.collection("pickupHistory").get()).size).toBe(4);
+  }, 30_000);
+});
+
+describe("manageRepairSafetyReview", () => {
+  it("blocca e ripristina la lavorazione con storico ACC-017", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-SICUREZZA",
+      bikeLabel: "Bicicletta sicurezza demo",
+      status: "In lavorazione",
+      version: 1,
+    });
+    const reportResponse = await invokeFunction("manageRepairSafetyReview", {
+      repairId: repairRef.id,
+      action: "report",
+      riskType: "damaged_battery",
+      description: "Batteria dimostrativa deformata e non utilizzabile.",
+      protectiveMeasures: "Lavorazione sospesa e componente isolato.",
+      protectedLocation: "Area sicurezza demo",
+      outcome: "",
+      documentationReference: "",
+      idempotencyKey: `safety-report-${crypto.randomUUID()}`,
+    });
+    expect(reportResponse.status).toBe(200);
+    expect((await repairRef.get()).data()).toMatchObject({
+      status: "In verifica sicurezza",
+      operationalBlock: {
+        type: "safety_review",
+        policyVersion: "ACC-017-v1",
+      },
+      safetyReview: {
+        status: "open",
+        previousStatus: "In lavorazione",
+        automaticWasteClassification: false,
+        automaticDisposal: false,
+      },
+    });
+
+    const deniedResponse = await invokeFunction(
+      "manageRepairSafetyReview",
+      {
+        repairId: repairRef.id,
+        action: "resolve",
+        riskType: "damaged_battery",
+        description: "Tentativo di chiusura non autorizzato.",
+        protectiveMeasures: "Nessuna misura applicata.",
+        protectedLocation: "Area sicurezza demo",
+        outcome: "risk_mitigated",
+        documentationReference: "",
+        idempotencyKey: `safety-denied-${crypto.randomUUID()}`,
+      },
+      volunteerToken,
+    );
+    expect(deniedResponse.status).toBe(403);
+
+    const resolveResponse = await invokeFunction(
+      "manageRepairSafetyReview",
+      {
+        repairId: repairRef.id,
+        action: "resolve",
+        riskType: "damaged_battery",
+        description: "Rischio dimostrativo rimosso in sicurezza.",
+        protectiveMeasures: "Componente rimosso dalla zona di lavoro.",
+        protectedLocation: "Area sicurezza demo",
+        outcome: "authorized_provider",
+        documentationReference: "VER-SIC-DEMO-001",
+        idempotencyKey: `safety-resolve-${crypto.randomUUID()}`,
+      },
+      adminToken,
+    );
+    expect(resolveResponse.status).toBe(200);
+    expect((await repairRef.get()).data()).toMatchObject({
+      status: "In lavorazione",
+      operationalBlock: null,
+      safetyReview: {
+        status: "resolved",
+        outcome: "authorized_provider",
+        documentationReference: "VER-SIC-DEMO-001",
+      },
+    });
+    expect((await repairRef.collection("safetyHistory").get()).size).toBe(2);
+  }, 30_000);
+});
+
 function createInput(idempotencyKey: string) {
   return {
     idempotencyKey,
