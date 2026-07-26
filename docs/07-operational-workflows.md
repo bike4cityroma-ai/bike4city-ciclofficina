@@ -135,6 +135,77 @@ Nel prototipo la diagnosi è separata dall'accettazione: il passaggio
 proposto e motivazione. I passaggi successivi sono applicati dal backend e
 registrati nello storico della riparazione e nell'audit.
 
+Decisione organizzativa `ACC-003-v1`, validata il 26 luglio 2026: la richiesta
+registrata all'accettazione non autorizza la lavorazione. Dopo la diagnosi la
+riparazione passa a `In attesa autorizzazione`; soltanto la callable
+`authorizeRepairWork` può registrare gli interventi autorizzati e avviare la
+lavorazione o l'attesa ricambi. Interventi non presenti nella diagnosi sono
+rifiutati e richiedono una nuova proposta e una nuova conferma.
+
+Decisione `ACC-004-v1`, validata il 26 luglio 2026: soltanto modulo firmato,
+firma su dispositivo o email esplicita sono modalità valide operativamente.
+Telefono e conferme generiche non sbloccano la lavorazione. Il sistema registra
+il riferimento all'evidenza ma non ne determina il valore legale.
+
+Decisione `ACC-005-v1`, validata il 26 luglio 2026: autorizza esclusivamente la
+persona registrata all'accettazione come proprietario o soggetto avente
+disponibilità oppure il referente indicato da un'organizzazione. Il soggetto è
+fissato all'accettazione e non può essere sostituito durante l'autorizzazione.
+
+Decisione `ACC-006-v1`, validata il 26 luglio 2026: sono ammesse soltanto
+evidenza di modulo firmato o firma grafica su dispositivo; l'email è esclusa.
+Il file privato deve essere archiviato e verificato prima che
+`authorizeRepairWork` possa produrre `valid_operational`.
+
+Decisione `ACC-007-v1`, validata il 26 luglio 2026: dopo il consolidamento
+l'operatore non consulta l'evidenza. Amministratore e responsabile accedono
+soltanto tramite backend con audit. Gli originali cartacei richiedono
+ubicazione, custode e data; fuori dall'ambiente demo il flusso è bloccato senza
+una retention approvata.
+
+Decisione `ACC-008-v1`, validata il 26 luglio 2026: le evidenze sono conservate
+per 24 mesi dal consolidamento e poi sottoposte a revisione manuale. La
+scadenza non determina cancellazione automatica. Modulo firmato acquisito e
+firma grafica costituiscono evidenze operative; il software non attribuisce
+loro automaticamente equivalenza con una firma elettronica qualificata.
+
+Decisione `ACC-009-v1`, validata il 26 luglio 2026: da 30 giorni prima della
+scadenza il responsabile può proporre l'esito della revisione; soltanto
+l'amministratore può confermarlo. Gli esiti sono proroga, restituzione,
+distruzione riservata o assenza di originale cartaceo. Ogni passaggio è
+auditato e non elimina il file digitale.
+
+Decisione `ACC-010-v1`, validata il 26 luglio 2026: restituzione e distruzione
+richiedono rispettivamente ricevuta firmata o verbale, con data e soggetto
+strutturati. Il file PDF/JPEG/PNG è privato, non sovrascrivibile, verificato dal
+backend e conservato per 24 mesi prima di una nuova revisione manuale.
+
+Decisione `ACC-011-v1`, validata il 26 luglio 2026: amministratore e
+responsabile accedono alle prove soltanto tramite backend con audit.
+L'esportazione genera una copia PDF identificata; una correzione crea una nuova
+versione confermata dall'amministratore e conserva quella sostituita.
+
+Decisione `ACC-012-v1`, validata il 26 luglio 2026: file mancante, checksum
+errato, metadati incoerenti o file illeggibile bloccano accesso e conferma.
+L'anomalia viene segnalata e auditata; soltanto l'amministratore apre e chiude
+l'incidente con esito recuperato, sostituito o non recuperabile.
+
+Decisione `ACC-013-v1`, validata il 26 luglio 2026: dopo la firma si registra
+la consegna cartacea, il download in sede oppure il rifiuto della copia. Il
+soggetto deve coincidere con quello fissato all'accettazione. Ristampe e
+download sono auditati e marcati come copia; nessun invio email è previsto.
+
+Decisione `ACC-014-v1`, validata il 26 luglio 2026: una correzione produce una
+nuova versione collegata, mentre la precedente resta `superseded`. Operatore
+propone e responsabile o amministratore confermano. Se cambia il soggetto
+autorizzante, il backend blocca la pratica fino a nuova autorizzazione.
+
+Decisione `ACC-015-v1`, validata il 26 luglio 2026: il consolidamento è
+riservato a responsabile e amministratore e richiede policy ACC-001/ACC-002
+attive, firma, copia registrata e assenza di anomalie o correzioni. Il backend
+calcola SHA-256 e rende il record immutabile. Le policy demo producono soltanto
+`consolidated_demo`.
+
 ## Lavorazione e ricambi
 
 1. Assegnare attività a operatori o volontari.

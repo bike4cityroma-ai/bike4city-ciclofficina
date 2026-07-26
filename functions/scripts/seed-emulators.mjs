@@ -41,6 +41,68 @@ await db.doc(`users/${user.uid}`).set({
   updatedAt: Timestamp.now(),
 });
 
+await db.doc("members/member-demo-0104").set({
+  membershipNumber: "SOC-2026-0104",
+  displayLabel: "Ada Demo",
+  joinedOn: "2026-01-15",
+  expiresOn: "2026-12-31",
+  status: "Attivo",
+  privacyConsent: true,
+  demo: true,
+  createdAt: Timestamp.now(),
+  createdBy: user.uid,
+  updatedAt: Timestamp.now(),
+  updatedBy: user.uid,
+  archivedAt: null,
+  version: 1,
+});
+await db.doc("memberPrivateProfiles/member-demo-0104").set({
+  firstName: "Ada",
+  lastName: "Demo",
+  email: "ada.demo@example.test",
+  phone: "+39 000 000 0104",
+  demo: true,
+  updatedAt: Timestamp.now(),
+  updatedBy: user.uid,
+});
+await db.doc("counters/members-2026").set({
+  lastValue: 104,
+  updatedAt: Timestamp.now(),
+}, { merge: true });
+await db.doc("settings/authorization-evidence-retention").set({
+  type: "retention",
+  key: "authorization-evidence",
+  status: "active",
+  retentionMonths: 24,
+  policyVersion: "ACC-008-v1",
+  approvalReference: "ACC-008",
+  reviewMode: "manual",
+  automaticDeletion: false,
+  demo: true,
+  updatedAt: Timestamp.now(),
+  updatedBy: user.uid,
+});
+await db.doc("settings/acceptance-privacy-policy").set({
+  type: "document-policy",
+  key: "acceptance-privacy",
+  status: "draft",
+  version: null,
+  approvalReference: "ACC-001",
+  demo: true,
+  updatedAt: Timestamp.now(),
+  updatedBy: user.uid,
+});
+await db.doc("settings/acceptance-service-conditions").set({
+  type: "document-policy",
+  key: "acceptance-service-conditions",
+  status: "draft",
+  version: null,
+  approvalReference: "ACC-002",
+  demo: true,
+  updatedAt: Timestamp.now(),
+  updatedBy: user.uid,
+});
+
 await deleteTestArtifacts();
 
 const now = Timestamp.now();
@@ -95,6 +157,29 @@ for (const bike of demoBikes) {
 await batch.commit();
 
 const demoRepairs = [
+  {
+    id: "repair-demo-0010",
+    code: "RIP-2026-0010",
+    customerType: "Socio",
+    customerLabel: "Socio Demo 310",
+    bikeLabel: "City bike blu · telaio M",
+    frameNumber: "DEMO-R10",
+    declaredIssue: "La ruota posteriore produce un rumore.",
+    diagnosis: "Raggiatura non uniforme rilevata al controllo.",
+    proposedWork: ["Centratura ruota posteriore"],
+    requestedWork: ["Controllo ruota posteriore"],
+    authorizedWork: [],
+    completedWork: [],
+    parts: [],
+    partUsages: [],
+    assignedTo: [],
+    assignedUserIds: [],
+    minutesSpent: 0,
+    expectedDeliveryAt: null,
+    status: "In attesa autorizzazione",
+    activityClassification: "Da classificare",
+    notes: "Riparazione fittizia in attesa di autorizzazione separata.",
+  },
   {
     id: "repair-demo-0009",
     code: "RIP-2026-0009",
@@ -169,6 +254,30 @@ const repairBatch = db.batch();
 for (const repair of demoRepairs) {
   repairBatch.set(db.doc(`repairs/${repair.id}`), {
     ...repair,
+    organizationName: null,
+    authorizationSubject: {
+      type: "registered_holder",
+      label: repair.customerLabel,
+      organizationName: null,
+      policyVersion: "ACC-005-v1",
+    },
+    visibleCondition:
+      "Condizioni visibili dimostrative registrate all'accettazione.",
+    deliveredAccessories: [],
+    acceptanceSnapshot: {
+      modelVersion: "acceptance-demo-v1",
+      approvalStatus: "not_approved",
+      privacyTextVersion: "privacy-demo-v1",
+      serviceConditionsVersion: "service-demo-v1",
+      additionalWorkPolicy: "separate_confirmation_required",
+      signatureMethod: "graphic_space_only",
+    },
+    additionalWorkAuthorization: {
+      status: "pending",
+      policy: "separate_confirmation_required",
+      authorizedAt: null,
+      authorizedBy: null,
+    },
     acceptedAt: now,
     createdAt: now,
     createdBy: user.uid,
@@ -195,6 +304,35 @@ repairBatch.set(db.doc("tests/test-demo-positive-0007"), {
   performedAt: now,
   performedBy: user.uid,
   operatorLabel: "Giulia Demo",
+  createdAt: now,
+  createdBy: user.uid,
+  updatedAt: now,
+  updatedBy: user.uid,
+  version: 1,
+});
+repairBatch.set(db.doc("deliveries/delivery-demo-0004"), {
+  code: "CON-2026-0004",
+  type: "Cessione gratuita dimostrativa",
+  repairId: "repair-demo-tested-0007",
+  repairCode: "RIP-2026-0007",
+  testId: "test-demo-positive-0007",
+  testCode: "COL-2026-0007",
+  bikeId: null,
+  bikeCode: null,
+  bikeLabel: "Trekking blu · telaio L",
+  recipientType: "Ente",
+  recipientLabel: "Ente Sociale Demo",
+  conditionSnapshot: "Bicicletta collaudata, dati interamente fittizi.",
+  accessories: ["Campanello"],
+  contributionAmount: null,
+  receiptCode: null,
+  documentCode: "VER-2026-0004",
+  deliveredAt: now,
+  deliveredBy: user.uid,
+  deliveredByLabel: "Giulia Demo",
+  classificationLabel: "Da classificare",
+  declarations: ["Dichiarazione dimostrativa non approvata."],
+  notes: "Consegna fittizia per il prototipo documentale.",
   createdAt: now,
   createdBy: user.uid,
   updatedAt: now,
@@ -304,11 +442,16 @@ await Promise.all(
     "updateBikeStatus",
     "createRepair",
     "updateRepairWorkflow",
+    "authorizeRepairWork",
+    "accessAuthorizationEvidence",
     "useRepairPart",
     "createPart",
     "recordPartMovement",
     "createWorkshopTest",
     "createDelivery",
+    "saveMember",
+    "manageUserAccess",
+    "createOperationalDocument",
   ].map(warmFunction),
 );
 

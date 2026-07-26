@@ -40,6 +40,109 @@ direttamente contatori, movimenti di magazzino, collaudi, consegne o audit.
 
 ## Moduli realizzati
 
+### Soci, utenti e ruoli
+
+Il registro soci separa i dati associativi (`members`) dai dati identificativi
+e di contatto (`memberPrivateProfiles`). Il progressivo `SOC-AAAA-NNNN` è
+assegnato in transazione; sospensione e archiviazione sono stati applicativi,
+mai cancellazioni fisiche. Ogni modifica richiede una motivazione e produce
+audit.
+
+Gli amministratori possono aggiornare ruoli, revocare o riattivare un account
+tramite backend. L'operazione sincronizza Authentication, custom claims e
+Firestore. Le Rules vietano modifiche dirette a soci, profili privati e
+autorizzazioni.
+
+Il modello resta limitato a dati fittizi. Prima di dati reali l'associazione
+deve approvare finalità, campi necessari, tempi di conservazione, processo di
+revisione degli accessi e ammissibilità dei ruoli multipli.
+
+### Documenti operativi
+
+La prima infrastruttura documentale genera PDF A4 lato backend per
+accettazione, collaudo e consegna. Il backend assegna progressivi annuali
+separati, crea metadati in `documents`, salva il file in Storage privato e
+registra audit e idempotenza.
+
+Poiché testi, intestazione e firme non sono ancora validati, ogni PDF riporta
+in modo permanente `BOZZA DIMOSTRATIVA — TESTI NON APPROVATI`, ha stato
+`draft`, versione `demo-v1` e validità `not_approved`. Le linee di firma sono
+solo spazi grafici e non rappresentano firme elettroniche. Il client può
+leggere i file autorizzati ma non crearli, sovrascriverli o cancellarli.
+
+La liberatoria di donazione sarà collegata soltanto dopo l'introduzione del
+record strutturato `bikeDonations`; non vengono creati documenti orfani o
+basati su dati personali improvvisati.
+
+La decisione `ACC-003-v1`, validata dall'associazione il 26 luglio 2026,
+stabilisce che la richiesta iniziale non autorizza i lavori. Diagnosi e
+interventi proposti portano la pratica in attesa; una Function separata
+registra autorizzazione, modalità ed evidenza prima di consentire lavorazione
+o attesa ricambi. Il controllo è applicato nel backend e coperto da test
+negativi.
+
+La successiva decisione `ACC-004-v1` limita le modalità valide operativamente
+a modulo firmato, firma su dispositivo ed email esplicita. Telefono e
+conferme generiche sono rifiutati dal backend; il record conserva il
+riferimento all'evidenza e dichiara esplicitamente che il valore legale non è
+determinato dal software.
+
+`ACC-005-v1` fissa inoltre il soggetto autorizzante all'accettazione. Per
+persone fisiche coincide con il proprietario o soggetto avente disponibilità
+registrato; per associazioni, enti o aziende coincide con il referente
+indicato insieme al nome dell'organizzazione. Il backend non accetta un
+soggetto libero nella fase successiva e blocca le pratiche storiche prive
+della fotografia richiesta.
+
+`ACC-006-v1` introduce l'evidenza obbligatoria in Storage ed esclude l'email.
+Il client può creare una sola volta moduli PDF/JPEG/PNG o firme grafiche PNG
+nel percorso vincolato a riparazione e utente. Il backend verifica esistenza,
+percorso, MIME, dimensione e metadati, calcola SHA-256 e conserva il
+collegamento nell'autorizzazione. Sovrascrittura e cancellazione client sono
+vietate; la firma su dispositivo non raccoglie dinamiche biometriche.
+
+`ACC-007-v1` sposta percorso, checksum, note e custodia in
+`authorizationEvidence`, leggibile soltanto da amministratore e responsabile.
+Storage non consente lettura diretta: visualizzazione ed esportazione passano
+da `accessAuthorizationEvidence` e generano audit. In un progetto non demo
+`authorizeRepairWork` rifiuta il consolidamento se manca una retention attiva.
+
+`ACC-008-v1` configura 24 mesi dal consolidamento, registra la scadenza e
+richiede revisione manuale senza eliminazioni automatiche. Il valore legale
+resta `not_determined`: le evidenze sono trattate come operative e non come
+firme elettroniche qualificate.
+
+`ACC-009-v1` aggiunge `reviewAuthorizationEvidence`: responsabile e
+amministratore propongono l'esito nei 30 giorni precedenti la scadenza, mentre
+la conferma è riservata all'amministratore. Il flusso è idempotente, auditato e
+non cancella il file digitale.
+
+`ACC-010-v1` aggiunge la prova documentale privata per restituzione e
+distruzione: Storage impedisce lettura diretta e sovrascrittura, mentre il
+backend verifica l'allegato, calcola SHA-256 e applica una nuova scadenza di 24
+mesi. Il test integrato verifica anche la separazione tra proponente e
+amministratore confermante.
+
+`ACC-011-v1` introduce accesso auditato, export PDF marcato e sostituzione
+amministrativa versionata delle prove. `proofVersionHistory` conserva le
+versioni precedenti e le scritture dirette del client restano vietate.
+
+`ACC-012-v1` aggiunge verifica del checksum in lettura e il registro
+`documentIncidents`, con separazione tra segnalazione operativa e gestione
+amministrativa. Le anomalie bloccano il flusso senza eliminare i file.
+
+`ACC-013-v1` sostituisce il download Storage dei PDF con accesso backend
+auditato e introduce `recordAcceptanceCopy` con storico append-only. Le copie
+sono marcate, mentre le bozze restano non consolidabili.
+
+`ACC-014-v1` introduce `correctAcceptanceDocument`, storico append-only e
+collegamenti tra versioni. La correzione del soggetto invalida operativamente
+l'autorizzazione precedente e blocca l'avanzamento fino alla nuova conferma.
+
+`ACC-015-v1` completa il percorso tecnico dell'accettazione con consolidamento
+backend, firma privata, checksum e immutabilità. I test coprono il blocco
+ordinario e il percorso `consolidated_demo` con policy fittizie attive.
+
 ### Autenticazione e ruoli
 
 L'accesso demo usa Firebase Auth Emulator. La Function verifica sia il token
@@ -128,11 +231,11 @@ minificati. Prima della produzione sarà opportuno introdurre code splitting.
 
 Il prototipo non è pronto per la produzione. Restano almeno:
 
-- anagrafica soci con modello privacy approvato;
-- gestione completa di utenti, ruoli e revoche;
+- approvazione del modello privacy dell'anagrafica soci;
+- approvazione organizzativa di ruoli multipli e revisione periodica accessi;
 - autorizzazioni e classificazioni amministrative validate;
 - ricevute, annullamenti e progressivi contabili;
-- generazione PDF, firme e conservazione dei verbali;
+- approvazione dei testi PDF, valore delle firme e tempi di conservazione;
 - fotografie e documenti Storage con flussi completi;
 - collegamento strutturato delle biciclette esterne;
 - esportazioni, backup e ripristino provati;

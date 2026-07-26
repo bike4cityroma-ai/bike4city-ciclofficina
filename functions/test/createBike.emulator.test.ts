@@ -1,7 +1,9 @@
 import { deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { PDFDocument } from "pdf-lib";
 
 const projectId =
   process.env.GCLOUD_PROJECT || "demo-bike4city-ciclofficina";
@@ -15,6 +17,8 @@ const email = "responsabile-functions@example.test";
 const password = "Demo-Functions-2026!";
 let idToken = "";
 let volunteerToken = "";
+let adminToken = "";
+let managerUid = "";
 
 beforeAll(async () => {
   let user;
@@ -31,6 +35,7 @@ beforeAll(async () => {
     active: true,
     roles: ["workshop_manager"],
   });
+  managerUid = user.uid;
   await db.doc(`users/${user.uid}`).set({
     displayName: "Responsabile Functions Demo",
     active: true,
@@ -96,6 +101,46 @@ beforeAll(async () => {
     throw new Error("Token volontario Auth Emulator non disponibile.");
   }
   volunteerToken = volunteerResult.idToken;
+
+  const adminEmail = "amministratore-functions@example.test";
+  let admin;
+  try {
+    admin = await auth.getUserByEmail(adminEmail);
+  } catch {
+    admin = await auth.createUser({
+      email: adminEmail,
+      password,
+      displayName: "Amministratore Functions Demo",
+    });
+  }
+  await auth.setCustomUserClaims(admin.uid, {
+    active: true,
+    roles: ["admin"],
+  });
+  await db.doc(`users/${admin.uid}`).set({
+    displayName: "Amministratore Functions Demo",
+    active: true,
+    roles: ["admin"],
+    demo: true,
+    updatedAt: Timestamp.now(),
+  });
+  const adminResponse = await fetch(
+    `http://${authHost}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: adminEmail,
+        password,
+        returnSecureToken: true,
+      }),
+    },
+  );
+  const adminResult = (await adminResponse.json()) as { idToken?: string };
+  if (!adminResult.idToken) {
+    throw new Error("Token amministratore Auth Emulator non disponibile.");
+  }
+  adminToken = adminResult.idToken;
 }, 20_000);
 
 afterAll(async () => {
@@ -106,7 +151,7 @@ describe("createBike", () => {
   it("nega una richiesta non autenticata", async () => {
     const response = await invoke(createInput("senza-auth"), false);
     expect(response.status).toBe(401);
-  }, 15_000);
+  }, 30_000);
 
   it("nega uno stato iniziale diverso da Da valutare", async () => {
     const response = await invokeFunction("createBike", {
@@ -155,6 +200,406 @@ describe("createBike", () => {
     };
     expect(repeatedResult.result).toEqual(results[0].result);
   }, 30_000);
+});
+
+describe("reviewAuthorizationEvidence", () => {
+  it("separa proposta e conferma amministrativa con audit", async () => {
+    const evidenceRef = db.collection("authorizationEvidence").doc();
+    const repairRef = db.doc("repairs/repair-review-demo");
+    await repairRef.set({
+      workAuthorization: {
+        authorizedByLabel: "Socio Autorizzante Demo",
+      },
+      demo: true,
+    });
+    await evidenceRef.set({
+      repairId: repairRef.id,
+      retentionStatus: "active_until_review",
+      reviewDueAt: Timestamp.fromMillis(
+        Date.now() + 20 * 24 * 60 * 60 * 1000,
+      ),
+      originalPaperRetained: true,
+      originalFinalDisposition: "pending_manual_review",
+      version: 1,
+      demo: true,
+    });
+    const proofId = crypto.randomUUID();
+    const proofStoragePath =
+      `authorizationReviewEvidence/${evidenceRef.id}/${managerUid}/${proofId}`;
+    const proofPdf = await PDFDocument.create();
+    proofPdf.addPage([300, 200]);
+    await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
+      .file(proofStoragePath)
+      .save(Buffer.from(await proofPdf.save()), {
+        contentType: "application/pdf",
+        metadata: {
+          metadata: {
+            evidenceId: evidenceRef.id,
+            uploaderUid: managerUid,
+            outcome: "return_paper",
+          },
+        },
+      });
+    const proposal = {
+      evidenceId: evidenceRef.id,
+      action: "propose",
+      outcome: "return_paper",
+      reason: "Restituzione proposta al soggetto registrato.",
+      details: "Ricevuta di restituzione da acquisire.",
+      newReviewDate: null,
+      actionDate: "2026-07-26",
+      subjectLabel: "Socio Autorizzante Demo",
+      proofStoragePath,
+      idempotencyKey: `review-propose-${crypto.randomUUID()}`,
+    };
+    const proposed = await invokeFunction(
+      "reviewAuthorizationEvidence",
+      proposal,
+    );
+    expect(proposed.status).toBe(200);
+    expect((await evidenceRef.get()).data()?.retentionStatus)
+      .toBe("review_proposed");
+
+    const deniedConfirmation = await invokeFunction(
+      "reviewAuthorizationEvidence",
+      {
+        ...proposal,
+        action: "confirm",
+        reason: "Conferma tentata dal responsabile ciclofficina.",
+        idempotencyKey: `review-denied-${crypto.randomUUID()}`,
+      },
+    );
+    expect(deniedConfirmation.status).toBe(403);
+
+    const confirmation = {
+      ...proposal,
+      action: "confirm",
+      reason: "Restituzione confermata con ricevuta registrata.",
+      details: "Ricevuta demo firmata dal destinatario.",
+      idempotencyKey: `review-confirm-${crypto.randomUUID()}`,
+    };
+    const confirmed = await invokeFunction(
+      "reviewAuthorizationEvidence",
+      confirmation,
+      adminToken,
+    );
+    expect(confirmed.status).toBe(200);
+    const evidence = await evidenceRef.get();
+    expect(evidence.data()?.retentionStatus).toBe("review_completed");
+    expect(evidence.data()?.reviewOutcome).toBe("return_paper");
+    expect(evidence.data()?.originalFinalDisposition).toBe("returned");
+    expect(evidence.data()?.reviewPolicyVersion).toBe("ACC-009-v1");
+    expect(evidence.data()?.reviewProof.policyVersion).toBe("ACC-010-v1");
+    expect(evidence.data()?.reviewProof.checksumSha256)
+      .toMatch(/^[a-f0-9]{64}$/);
+    expect(evidence.data()?.reviewProof.retentionMonths).toBe(24);
+    const exported = await invokeFunction(
+      "accessAuthorizationReviewEvidence",
+      { evidenceId: evidenceRef.id, action: "export" },
+    );
+    expect(exported.status).toBe(200);
+    const exportedBody = await exported.json() as {
+      result: { contentType: string; dataBase64: string };
+    };
+    expect(exportedBody.result.contentType).toBe("application/pdf");
+    expect(Buffer.from(exportedBody.result.dataBase64, "base64")
+      .subarray(0, 4).toString()).toBe("%PDF");
+    const deniedExport = await invokeFunction(
+      "accessAuthorizationReviewEvidence",
+      { evidenceId: evidenceRef.id, action: "export" },
+      volunteerToken,
+    );
+    expect(deniedExport.status).toBe(403);
+
+    const replacementId = crypto.randomUUID();
+    const replacementPath =
+      `authorizationReviewEvidence/${evidenceRef.id}/` +
+      `${(await auth.getUserByEmail("amministratore-functions@example.test")).uid}/` +
+      replacementId;
+    const adminUid =
+      (await auth.getUserByEmail("amministratore-functions@example.test")).uid;
+    await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
+      .file(replacementPath)
+      .save(Buffer.from(await proofPdf.save()), {
+        contentType: "application/pdf",
+        metadata: {
+          metadata: {
+            evidenceId: evidenceRef.id,
+            uploaderUid: adminUid,
+            outcome: "return_paper",
+          },
+        },
+      });
+    const replaced = await invokeFunction(
+      "replaceAuthorizationReviewEvidence",
+      {
+        evidenceId: evidenceRef.id,
+        storagePath: replacementPath,
+        reason: "Sostituzione della ricevuta con versione corretta.",
+        idempotencyKey: `proof-replace-${crypto.randomUUID()}`,
+      },
+      adminToken,
+    );
+    expect(replaced.status).toBe(200);
+    expect((await evidenceRef.get()).data()?.reviewProof.version).toBe(2);
+    expect((await evidenceRef.collection("proofVersionHistory").get()).size)
+      .toBe(1);
+    const repeated = await invokeFunction(
+      "reviewAuthorizationEvidence",
+      confirmation,
+      adminToken,
+    );
+    expect((await repeated.json()).result)
+      .toEqual((await confirmed.json()).result);
+  }, 90_000);
+
+  it("blocca una prova con checksum errato e registra l'anomalia", async () => {
+    const evidenceRef = db.collection("authorizationEvidence").doc();
+    const proofPath =
+      `authorizationReviewEvidence/${evidenceRef.id}/${managerUid}/` +
+      crypto.randomUUID();
+    await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
+      .file(proofPath)
+      .save(Buffer.from("prova dimostrativa non integra"), {
+        contentType: "image/png",
+      });
+    await evidenceRef.set({
+      reviewProof: {
+        storagePath: proofPath,
+        contentType: "image/png",
+        checksumSha256: "0".repeat(64),
+        proofId: "proof-bad-checksum",
+      },
+      version: 1,
+      demo: true,
+    });
+    const response = await invokeFunction(
+      "accessAuthorizationReviewEvidence",
+      { evidenceId: evidenceRef.id, action: "view" },
+    );
+    expect(response.ok).toBe(false);
+    expect((await evidenceRef.get()).data()?.documentAnomaly.status)
+      .toBe("detected");
+    expect((await evidenceRef.get()).data()?.documentAnomaly.incidentType)
+      .toBe("checksum_mismatch");
+  }, 20_000);
+
+  it("separa segnalazione, apertura e chiusura dell'incidente", async () => {
+    const evidenceRef = db.collection("authorizationEvidence").doc();
+    await evidenceRef.set({ version: 1, demo: true });
+    const report = await invokeFunction(
+      "manageAuthorizationEvidenceIncident",
+      {
+        evidenceId: evidenceRef.id,
+        action: "report",
+        incidentType: "missing_file",
+        reason: "File dimostrativo non disponibile durante la verifica.",
+        idempotencyKey: `incident-report-${crypto.randomUUID()}`,
+      },
+    );
+    expect(report.status).toBe(200);
+    const reportBody = await report.json() as {
+      result: { incidentId: string };
+    };
+    const incidentId = reportBody.result.incidentId;
+    const deniedOpen = await invokeFunction(
+      "manageAuthorizationEvidenceIncident",
+      {
+        evidenceId: evidenceRef.id,
+        incidentId,
+        action: "open",
+        incidentType: "missing_file",
+        reason: "Tentativo di apertura da parte del responsabile.",
+        idempotencyKey: `incident-denied-${crypto.randomUUID()}`,
+      },
+    );
+    expect(deniedOpen.status).toBe(403);
+    const opened = await invokeFunction(
+      "manageAuthorizationEvidenceIncident",
+      {
+        evidenceId: evidenceRef.id,
+        incidentId,
+        action: "open",
+        incidentType: "missing_file",
+        reason: "Apertura amministrativa per ricerca nel backup.",
+        idempotencyKey: `incident-open-${crypto.randomUUID()}`,
+      },
+      adminToken,
+    );
+    expect(opened.status).toBe(200);
+    const resolved = await invokeFunction(
+      "manageAuthorizationEvidenceIncident",
+      {
+        evidenceId: evidenceRef.id,
+        incidentId,
+        action: "resolve",
+        incidentType: "missing_file",
+        resolution: "recovered",
+        reason: "Documento recuperato dal backup dimostrativo verificato.",
+        idempotencyKey: `incident-resolve-${crypto.randomUUID()}`,
+      },
+      adminToken,
+    );
+    expect(resolved.status).toBe(200);
+    expect((await evidenceRef.get()).data()?.documentAnomaly.status)
+      .toBe("resolved");
+  }, 60_000);
+});
+
+describe("createOperationalDocument", () => {
+  it("genera un PDF privato, metadati e audit in modo idempotente", async () => {
+    const repairRef = db.collection("repairs").doc();
+    await repairRef.set({
+      code: "RIP-DEMO-PDF",
+      customerLabel: "Socio PDF Demo",
+      bikeLabel: "Bicicletta PDF Demo",
+      declaredIssue: "Controllo generale dimostrativo.",
+      notes: "Dati esclusivamente fittizi.",
+      authorizationSubject: {
+        type: "registered_holder",
+        label: "Socio PDF Demo",
+      },
+    });
+    const data = {
+      type: "acceptance",
+      entityId: repairRef.id,
+      idempotencyKey: `document-${crypto.randomUUID()}`,
+    };
+    const response = await invokeFunction("createOperationalDocument", data);
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      result: { id: string; code: string; storagePath: string };
+    };
+    expect(body.result.code).toMatch(/^ACC-\d{4}-\d{4}$/);
+    const metadata = await db.doc(`documents/${body.result.id}`).get();
+    expect(metadata.data()?.status).toBe("draft");
+    expect(metadata.data()?.legalValidity).toBe("not_approved");
+    const [pdf] = await getStorage(app)
+      .bucket(`${projectId}.firebasestorage.app`)
+      .file(body.result.storagePath).download();
+    expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+    const accessed = await invokeFunction("accessOperationalDocument", {
+      documentId: body.result.id,
+      action: "view",
+    });
+    expect(accessed.status).toBe(200);
+    const copyRecorded = await invokeFunction("recordAcceptanceCopy", {
+      documentId: body.result.id,
+      outcome: "delivered",
+      method: "paper",
+      recipientLabel: "Socio PDF Demo",
+      reason: "Copia cartacea dimostrativa consegnata al soggetto registrato.",
+      idempotencyKey: `acceptance-copy-${crypto.randomUUID()}`,
+    });
+    expect(copyRecorded.status).toBe(200);
+    expect((await db.doc(`documents/${body.result.id}`).get())
+      .data()?.latestCopyEvent.method).toBe("paper");
+    expect((await db.doc(`documents/${body.result.id}`)
+      .collection("copyHistory").get()).size).toBe(1);
+    await db.doc("settings/acceptance-privacy-policy").set({
+      status: "draft", version: null, demo: true,
+    });
+    await db.doc("settings/acceptance-service-conditions").set({
+      status: "draft", version: null, demo: true,
+    });
+    const blockedConsolidation = await invokeFunction(
+      "consolidateAcceptanceDocument",
+      {
+        documentId: body.result.id,
+        signatureMethod: "Modulo firmato",
+        signatureStoragePath: "non-disponibile",
+        reason: "Tentativo con testi ancora non approvati.",
+        idempotencyKey: `consolidate-blocked-${crypto.randomUUID()}`,
+      },
+    );
+    expect(blockedConsolidation.status).toBe(400);
+    await db.doc("settings/acceptance-privacy-policy").set({
+      status: "active", version: "privacy-demo-v1", demo: true,
+    });
+    await db.doc("settings/acceptance-service-conditions").set({
+      status: "active", version: "conditions-demo-v1", demo: true,
+    });
+    const signaturePath =
+      `acceptanceSignatureEvidence/${body.result.id}/${managerUid}/` +
+      crypto.randomUUID();
+    await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
+      .file(signaturePath)
+      .save(Buffer.from("%PDF-1.7 firma dimostrativa"), {
+        contentType: "application/pdf",
+        metadata: {
+          metadata: {
+            documentId: body.result.id,
+            uploaderUid: managerUid,
+            method: "Modulo firmato",
+          },
+        },
+      });
+    const consolidated = await invokeFunction(
+      "consolidateAcceptanceDocument",
+      {
+        documentId: body.result.id,
+        signatureMethod: "Modulo firmato",
+        signatureStoragePath: signaturePath,
+        reason: "Consolidamento dimostrativo con policy fittizie attive.",
+        idempotencyKey: `consolidate-${crypto.randomUUID()}`,
+      },
+    );
+    expect(consolidated.status).toBe(200);
+    expect((await db.doc(`documents/${body.result.id}`).get()).data()?.status)
+      .toBe("consolidated_demo");
+    expect((await db.doc(`documents/${body.result.id}`).get())
+      .data()?.checksumSha256).toMatch(/^[a-f0-9]{64}$/);
+    const repeated = await invokeFunction("createOperationalDocument", data);
+    expect((await repeated.json()).result).toEqual(body.result);
+    const correction = {
+      documentId: body.result.id,
+      correctedFields: ["Soggetto registrato"],
+      correctionSummary:
+        "Correzione dimostrativa del soggetto indicato all'accettazione.",
+      subjectChanged: true,
+      correctedSubjectLabel: "Socio Corretto Demo",
+      reason: "Correzione richiesta per un dato anagrafico errato.",
+    };
+    const proposedCorrection = await invokeFunction(
+      "correctAcceptanceDocument",
+      {
+        ...correction,
+        action: "propose",
+        idempotencyKey: `correction-propose-${crypto.randomUUID()}`,
+      },
+    );
+    expect(proposedCorrection.status).toBe(200);
+    const confirmedCorrection = await invokeFunction(
+      "correctAcceptanceDocument",
+      {
+        ...correction,
+        action: "confirm",
+        idempotencyKey: `correction-confirm-${crypto.randomUUID()}`,
+      },
+    );
+    expect(confirmedCorrection.status).toBe(200);
+    const correctionBody = await confirmedCorrection.json() as {
+      result: { newDocumentId: string };
+    };
+    expect((await db.doc(`documents/${body.result.id}`).get()).data()?.status)
+      .toBe("superseded");
+    expect((await db.doc(
+      `documents/${correctionBody.result.newDocumentId}`,
+    ).get()).data()?.status).toBe("draft");
+    expect((await db.doc(`documents/${body.result.id}`)
+      .collection("correctionHistory").get()).size).toBe(1);
+    expect((await repairRef.get()).data()?.authorizationBlock.status)
+      .toBe("reauthorization_required");
+  }, 90_000);
+
+  it("nega la generazione al volontario", async () => {
+    const response = await invokeFunction("createOperationalDocument", {
+      type: "acceptance",
+      entityId: "repair-demo",
+      idempotencyKey: `document-denied-${crypto.randomUUID()}`,
+    }, volunteerToken);
+    expect(response.status).toBe(403);
+  }, 15_000);
 });
 
 describe("updateBikeStatus", () => {
@@ -256,6 +701,8 @@ describe("createRepair", () => {
       bikeLabel: "City bike demo verde",
       frameNumber: "DEMO-501",
       declaredIssue: "Freno posteriore poco efficace.",
+      visibleCondition: "Pattini visibilmente consumati; telaio senza danni evidenti.",
+      deliveredAccessories: ["Chiave lucchetto demo"],
       requestedWork: ["Controllo impianto frenante"],
       expectedDeliveryDate: "2026-08-01",
       notes: "Dati esclusivamente fittizi.",
@@ -269,12 +716,41 @@ describe("createRepair", () => {
     const repair = await db.doc(`repairs/${body.result.id}`).get();
     expect(repair.data()?.status).toBe("Accettata");
     expect(repair.data()?.createdBy).toBeTruthy();
+    expect(repair.data()?.acceptanceSnapshot.approvalStatus)
+      .toBe("not_approved");
+    expect(repair.data()?.additionalWorkAuthorization.status).toBe("pending");
     const repeated = await invokeFunction("createRepair", data);
     expect((await repeated.json()).result).toEqual(body.result);
     const audits = await db.collection("auditLogs")
       .where("entityId", "==", body.result.id).get();
     expect(audits.docs.some((item) =>
       item.data().action === "repair.create")).toBe(true);
+  }, 20_000);
+
+  it("fissa il referente autorizzante di un'organizzazione", async () => {
+    const response = await invokeFunction("createRepair", {
+      idempotencyKey: `repair-org-${crypto.randomUUID()}`,
+      customerType: "Organizzazione",
+      customerLabel: "Referente Organizzazione Demo",
+      organizationName: "Associazione Esempio Demo",
+      bikeLabel: "Cargo bike dimostrativa",
+      frameNumber: "DEMO-ORG-01",
+      declaredIssue: "Controllo generale richiesto.",
+      visibleCondition: "Condizioni visibili dimostrative.",
+      deliveredAccessories: [],
+      requestedWork: ["Controllo generale"],
+      expectedDeliveryDate: null,
+      notes: "Dati esclusivamente fittizi.",
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { result: { id: string } };
+    const repair = await db.doc(`repairs/${body.result.id}`).get();
+    expect(repair.data()?.authorizationSubject).toEqual({
+      type: "organization_contact",
+      label: "Referente Organizzazione Demo",
+      organizationName: "Associazione Esempio Demo",
+      policyVersion: "ACC-005-v1",
+    });
   }, 20_000);
 
   it("nega la creazione al volontario", async () => {
@@ -285,6 +761,8 @@ describe("createRepair", () => {
       bikeLabel: "Bicicletta Demo",
       frameNumber: null,
       declaredIssue: "Controllo generale richiesto.",
+      visibleCondition: "Condizioni visibili dimostrative.",
+      deliveredAccessories: [],
       requestedWork: ["Controllo generale"],
       expectedDeliveryDate: null,
       notes: "Dati fittizi.",
@@ -299,13 +777,19 @@ describe("updateRepairWorkflow", () => {
     await repairRef.set({
       code: "RIP-DEMO-DIAGNOSI",
       status: "Accettata",
+      authorizationSubject: {
+        type: "registered_holder",
+        label: "Socio Autorizzante Demo",
+        organizationName: null,
+        policyVersion: "ACC-005-v1",
+      },
       version: 1,
       createdAt: Timestamp.now(),
       createdBy: "demo",
     });
     const data = {
       repairId: repairRef.id,
-      newStatus: "Diagnosticata",
+      newStatus: "In attesa autorizzazione",
       diagnosis: "Cambio posteriore danneggiato e non registrabile.",
       proposedWork: ["Sostituzione cambio posteriore"],
       reason: "Diagnosi tecnica completata in officina.",
@@ -313,7 +797,8 @@ describe("updateRepairWorkflow", () => {
     };
     const response = await invokeFunction("updateRepairWorkflow", data);
     expect(response.status).toBe(200);
-    expect((await repairRef.get()).data()?.status).toBe("Diagnosticata");
+    expect((await repairRef.get()).data()?.status)
+      .toBe("In attesa autorizzazione");
     expect((await repairRef.get()).data()?.diagnosis).toContain("danneggiato");
     const history = await repairRef.collection("statusHistory").get();
     expect(history.size).toBe(1);
@@ -321,7 +806,7 @@ describe("updateRepairWorkflow", () => {
     expect(repeated.status).toBe(200);
     expect((await repairRef.collection("statusHistory").get()).size).toBe(1);
 
-    const startResponse = await invokeFunction("updateRepairWorkflow", {
+    const directStartResponse = await invokeFunction("updateRepairWorkflow", {
       repairId: repairRef.id,
       newStatus: "In lavorazione",
       diagnosis: "",
@@ -329,13 +814,136 @@ describe("updateRepairWorkflow", () => {
       completedWork: [],
       minutesSpent: 0,
       noPartsUsed: false,
-      reason: "Lavorazione autorizzata e avviata.",
+      reason: "Tentativo senza registrare l'autorizzazione.",
       idempotencyKey: `start-${crypto.randomUUID()}`,
     });
-    expect(startResponse.status).toBe(200);
+    expect(directStartResponse.status).toBe(400);
+
+    const evidenceStoragePath =
+      `authorizationEvidence/${repairRef.id}/${managerUid}/${crypto.randomUUID()}`;
+    await getStorage(app)
+      .bucket(`${projectId}.firebasestorage.app`)
+      .file(evidenceStoragePath)
+      .save(Buffer.from("%PDF-1.7 autorizzazione dimostrativa"), {
+        contentType: "application/pdf",
+        metadata: {
+          metadata: {
+            repairId: repairRef.id,
+            uploaderUid: managerUid,
+            method: "Modulo firmato",
+            originalPaperRetained: "true",
+            physicalLocationCode: "ARCH-DEMO-01",
+            custodianLabel: "Responsabile Archivio Demo",
+            depositedOn: "2026-07-26",
+          },
+        },
+      });
+
+    const telephoneResponse = await invokeFunction(
+      "authorizeRepairWork",
+      {
+        repairId: repairRef.id,
+        authorizedWork: ["Sostituzione cambio posteriore"],
+        method: "Telefono",
+        evidenceNote: "Telefonata dimostrativa.",
+        evidenceStoragePath,
+        nextStatus: "In lavorazione",
+        reason: "Tentativo con modalità non valida operativamente.",
+        idempotencyKey: `authorize-phone-${crypto.randomUUID()}`,
+      },
+    );
+    expect(telephoneResponse.status).toBe(400);
+
+    const unauthorizedWorkResponse = await invokeFunction(
+      "authorizeRepairWork",
+      {
+        repairId: repairRef.id,
+        authorizedWork: ["Intervento mai proposto"],
+        method: "Modulo firmato",
+        evidenceNote: "Telefonata dimostrativa.",
+        evidenceStoragePath,
+        nextStatus: "In lavorazione",
+        reason: "Tentativo di autorizzare un lavoro non diagnosticato.",
+        idempotencyKey: `authorize-invalid-${crypto.randomUUID()}`,
+      },
+    );
+    expect(unauthorizedWorkResponse.status).toBe(400);
+
+    const authorizationData = {
+      repairId: repairRef.id,
+      authorizedWork: ["Sostituzione cambio posteriore"],
+      method: "Modulo firmato",
+      evidenceNote: "Modulo dimostrativo archiviato in Storage.",
+      evidenceStoragePath,
+      nextStatus: "In lavorazione",
+      reason: "Autorizzazione separata registrata dopo la diagnosi.",
+      idempotencyKey: `authorize-${crypto.randomUUID()}`,
+    };
+    const authorizationResponse = await invokeFunction(
+      "authorizeRepairWork", authorizationData,
+    );
+    expect(authorizationResponse.status).toBe(200);
     expect((await repairRef.get()).data()?.assignedTo).toContain(
       "Responsabile Functions Demo",
     );
+    expect(
+      (await repairRef.get()).data()?.workAuthorization
+        .evidenceMethodPolicyVersion,
+    )
+      .toBe("ACC-004-v1");
+    expect(
+      (await repairRef.get()).data()?.workAuthorization
+        .evidenceStoragePolicyVersion,
+    )
+      .toBe("ACC-006-v1");
+    expect(
+      (await repairRef.get()).data()?.workAuthorization.subjectPolicyVersion,
+    )
+      .toBe("ACC-005-v1");
+    expect((await repairRef.get()).data()?.workAuthorization.status)
+      .toBe("valid_operational");
+    const authorizedRepair = await repairRef.get();
+    const evidenceId = authorizedRepair.data()?.workAuthorization.evidenceId;
+    expect(evidenceId).toBeTruthy();
+    expect(authorizedRepair.data()?.workAuthorization.evidenceStoragePath)
+      .toBeUndefined();
+    const evidence = await db.doc(`authorizationEvidence/${evidenceId}`).get();
+    expect(evidence.data()?.checksumSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(evidence.data()?.physicalLocationCode).toBe("ARCH-DEMO-01");
+    expect(evidence.data()?.accessPolicyVersion).toBe("ACC-007-v1");
+    expect(evidence.data()?.retentionStatus).toBe("active_until_review");
+    expect(evidence.data()?.retentionMonths).toBe(24);
+    expect(evidence.data()?.retentionPolicyVersion).toBe("ACC-008-v1");
+    expect(evidence.data()?.reviewDueAt).toBeInstanceOf(Timestamp);
+    expect(evidence.data()?.reviewOutcome).toBeNull();
+    expect(evidence.data()?.originalFinalDisposition)
+      .toBe("pending_manual_review");
+    expect(evidence.data()?.legalValidity).toBe("not_determined");
+    const accessResponse = await invokeFunction(
+      "accessAuthorizationEvidence",
+      { evidenceId, action: "view" },
+    );
+    expect(accessResponse.status).toBe(200);
+    const accessResult = await accessResponse.json() as {
+      result: { dataBase64: string; checksumSha256: string };
+    };
+    expect(Buffer.from(accessResult.result.dataBase64, "base64")
+      .subarray(0, 4).toString()).toBe("%PDF");
+    expect(accessResult.result.checksumSha256)
+      .toBe(evidence.data()?.checksumSha256);
+    const deniedAccess = await invokeFunction(
+      "accessAuthorizationEvidence",
+      { evidenceId, action: "export" },
+      volunteerToken,
+    );
+    expect(deniedAccess.status).toBe(403);
+    expect((await repairRef.get()).data()?.workAuthorization.authorizedByLabel)
+      .toBe("Socio Autorizzante Demo");
+    const repeatedAuthorization = await invokeFunction(
+      "authorizeRepairWork", authorizationData,
+    );
+    expect((await repeatedAuthorization.json()).result)
+      .toEqual((await authorizationResponse.json()).result);
 
     const incomplete = await invokeFunction("updateRepairWorkflow", {
       repairId: repairRef.id,
@@ -363,7 +971,7 @@ describe("updateRepairWorkflow", () => {
     });
     expect(complete.status).toBe(200);
     expect((await repairRef.get()).data()?.minutesSpent).toBe(45);
-  }, 20_000);
+  }, 45_000);
 
   it("nega il salto diretto da Accettata a In lavorazione", async () => {
     const repairRef = db.collection("repairs").doc();

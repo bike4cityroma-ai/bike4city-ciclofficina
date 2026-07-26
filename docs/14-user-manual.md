@@ -155,6 +155,19 @@ Esito:
 Un collaudo negativo resta nello storico. La riparazione può essere lavorata
 nuovamente e sottoposta a un nuovo collaudo.
 
+### Autorizzare una lavorazione diagnosticata
+
+1. Aprire una riparazione `In attesa autorizzazione`.
+2. Verificare gli interventi proposti.
+3. Selezionare **Modulo firmato** oppure **Firma su dispositivo**.
+4. Caricare il PDF/JPEG/PNG firmato oppure acquisire la firma grafica.
+5. Registrare il riferimento fittizio dell'evidenza.
+6. Scegliere `In lavorazione` o `In attesa ricambi`.
+7. Inserire la motivazione e premere **Registra autorizzazione**.
+
+Email e telefono non sono modalità ammesse. In sviluppo non usare firme,
+moduli o identità reali.
+
 ## Consegne
 
 1. Verificare che la riparazione sia `Collaudata`.
@@ -171,6 +184,19 @@ riparazione a `Consegnata`.
 
 Il riferimento `VER-…` non è un PDF firmato. L'eventuale contributo non produce
 automaticamente una ricevuta.
+
+## Documenti operativi
+
+1. Aprire **Documenti**.
+2. Premere **Genera bozza PDF**.
+3. Scegliere scheda di accettazione, scheda di collaudo o verbale di consegna.
+4. Selezionare il record dimostrativo collegato.
+5. Premere **Genera e archivia**.
+6. Usare **Apri PDF** per consultare o stampare il file autorizzato.
+
+Tutti i PDF di questa fase sono bozze dimostrative con testi non approvati.
+Gli spazi per le firme non costituiscono firme elettroniche. I file non devono
+essere utilizzati con dati reali né come documenti definitivi.
 
 ## Messaggi e problemi comuni
 

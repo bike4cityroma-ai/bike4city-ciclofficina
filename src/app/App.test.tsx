@@ -2,6 +2,11 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
+async function openSection(name: string) {
+  fireEvent.click(await screen.findByRole("button", { name }));
+  await screen.findByRole("heading", { name }, { timeout: 5_000 });
+}
+
 describe("App", () => {
   it("mostra il login dimostrativo all'avvio", () => {
     render(<App />);
@@ -35,9 +40,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Biciclette" }),
-    );
+    await openSection("Biciclette");
 
     expect(
       screen.getByRole("heading", { name: "Biciclette" }),
@@ -71,9 +74,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Biciclette" }),
-    );
+    await openSection("Biciclette");
     fireEvent.click(
       screen.getByRole("button", { name: "Registra bicicletta" }),
     );
@@ -92,9 +93,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Biciclette" }),
-    );
+    await openSection("Biciclette");
     fireEvent.click(
       screen.getByRole("button", {
         name: "Apri scheda BICI-2026-0014",
@@ -121,15 +120,13 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
 
     expect(
       screen.getByRole("heading", { name: "Riparazioni" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: "5 interventi trovati" }),
+      screen.getByRole("status", { name: "6 interventi trovati" }),
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Utente"), {
@@ -157,9 +154,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
     fireEvent.click(
       screen.getByRole("button", { name: "Nuova riparazione" }),
     );
@@ -170,6 +165,19 @@ describe("App", () => {
     expect(
       screen.getByText(/nominativi e riferimenti fittizi/i),
     ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Condizioni visibili all’accettazione"),
+    ).toBeRequired();
+    expect(screen.getByText(/Nessun intervento ulteriore/))
+      .toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Tipologia utente"), {
+      target: { value: "Organizzazione" },
+    });
+    expect(
+      screen.getByLabelText("Referente dell’organizzazione fittizio"),
+    ).toBeRequired();
+    expect(screen.getByLabelText("Nome organizzazione fittizia"))
+      .toBeRequired();
   });
 
   it("mostra la diagnosi per una riparazione accettata", async () => {
@@ -177,14 +185,14 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
     fireEvent.click(
       screen.getByRole("button", { name: "Apri intervento RIP-2026-0009" }),
     );
     expect(screen.getByLabelText("Diagnosi tecnica")).toBeInTheDocument();
-    expect(screen.getByLabelText("Nuovo stato")).toHaveValue("Diagnosticata");
+    expect(screen.getByLabelText("Nuovo stato")).toHaveValue(
+      "In attesa autorizzazione",
+    );
     expect(
       screen.getByRole("button", { name: "Registra diagnosi" }),
     ).toBeInTheDocument();
@@ -195,9 +203,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
     fireEvent.click(
       screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
     );
@@ -217,14 +223,45 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("richiede un'autorizzazione tracciata dopo la diagnosi", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Riparazioni");
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Apri intervento RIP-2026-0010",
+      }),
+    );
+    expect(screen.getByText(/Policy approvata ACC-003/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Modalità dell’autorizzazione"))
+      .toHaveValue("Modulo firmato");
+    expect(
+      screen.queryByRole("option", { name: "Telefono" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Email esplicita" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("File firmato")).toBeRequired();
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Originale cartaceo conservato" }),
+    );
+    expect(screen.getByLabelText("Codice ubicazione dell’originale"))
+      .toBeRequired();
+    expect(screen.getByLabelText("Responsabile della custodia fittizio"))
+      .toBeRequired();
+    expect(
+      screen.getByRole("button", { name: "Registra autorizzazione" }),
+    ).toBeDisabled();
+  });
+
   it("mostra l'inserimento ricambi durante la lavorazione", async () => {
     render(<App />);
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
     fireEvent.click(
       screen.getByRole("button", { name: "Apri intervento RIP-2026-0008" }),
     );
@@ -244,9 +281,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Riparazioni" }),
-    );
+    await openSection("Riparazioni");
     fireEvent.click(
       screen.getByRole("button", { name: "Apri intervento RIP-2026-0007" }),
     );
@@ -265,7 +300,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
+    await openSection("Ricambi");
 
     expect(
       screen.getByRole("heading", { name: "Ricambi" }),
@@ -298,7 +333,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
+    await openSection("Ricambi");
     fireEvent.click(
       screen.getByRole("button", { name: "Registra ricambio" }),
     );
@@ -316,7 +351,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Ricambi" }));
+    await openSection("Ricambi");
     fireEvent.click(
       screen.getByRole("button", { name: "Apri ricambio RIC-2026-0042" }),
     );
@@ -335,7 +370,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Collaudi" }));
+    await openSection("Collaudi");
 
     expect(
       screen.getByRole("heading", { name: "Collaudi" }),
@@ -365,7 +400,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Collaudi" }));
+    await openSection("Collaudi");
     fireEvent.click(
       screen.getByRole("button", { name: "Nuovo collaudo" }),
     );
@@ -384,7 +419,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Consegne" }));
+    await openSection("Consegne");
 
     expect(
       screen.getByRole("heading", { name: "Consegne" }),
@@ -417,7 +452,7 @@ describe("App", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Entra nel prototipo" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Consegne" }));
+    await openSection("Consegne");
     fireEvent.click(
       screen.getByRole("button", { name: "Nuova consegna" }),
     );
@@ -432,5 +467,49 @@ describe("App", () => {
     expect(
       screen.getByRole("button", { name: "Registra consegna" }),
     ).toBeDisabled();
+  });
+
+  it("filtra i soci e apre la registrazione minimizzata", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Soci");
+    expect(screen.getByRole("heading", { name: "Soci" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "2 soci trovati" }),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Stato"), {
+      target: { value: "Scaduto" },
+    });
+    expect(
+      screen.getByRole("status", { name: "1 soci trovati" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Registra socio" }));
+    expect(
+      screen.getByRole("dialog", { name: "Registra socio" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Motivazione")).toBeRequired();
+  });
+
+  it("apre i documenti e distingue le bozze non approvate", async () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Documenti");
+    expect(screen.getByText("Bozza non approvata")).toBeInTheDocument();
+    expect(screen.getByText(/non costituiscono documenti consolidati/i))
+      .toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Genera bozza PDF" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Genera bozza PDF" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Tipo documento")).toHaveValue("acceptance");
+    expect(
+      screen.getByRole("button", { name: "Genera e archivia" }),
+    ).toBeInTheDocument();
   });
 });

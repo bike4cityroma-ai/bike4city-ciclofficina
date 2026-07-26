@@ -62,6 +62,10 @@ beforeEach(async () => {
       active: false,
       roles: ["workshop_manager"],
     });
+    await setDoc(doc(adminDb, "users", "operator-demo"), {
+      active: true,
+      roles: ["operator"],
+    });
     await setDoc(doc(adminDb, "bikes", "bike-demo"), {
       code: "BICI-DEMO-0001",
       status: "Da valutare",
@@ -70,6 +74,9 @@ beforeEach(async () => {
     });
     await setDoc(doc(adminDb, "members", "member-demo"), {
       membershipNumber: "DEMO-001",
+    });
+    await setDoc(doc(adminDb, "memberPrivateProfiles", "member-demo"), {
+      email: "socio@example.test",
     });
     await setDoc(doc(adminDb, "repairs", "repair-demo"), {
       code: "RIP-DEMO-0001",
@@ -81,6 +88,20 @@ beforeEach(async () => {
       code: "RIC-DEMO-0001",
       quantityOnHand: 3,
     });
+    await setDoc(doc(adminDb, "authorizationEvidence", "evidence-demo"), {
+      repairId: "repair-demo",
+      storagePath:
+        "authorizationEvidence/repair-demo/manager-demo/evidence-demo",
+      checksumSha256: "demo-checksum",
+    });
+    await uploadBytes(
+      ref(
+        context.storage(),
+        "documents/acceptance/repair-demo/document-demo.pdf",
+      ),
+      new TextEncoder().encode("%PDF-1.7 demo"),
+      { contentType: "application/pdf" },
+    );
   });
 });
 
@@ -109,6 +130,49 @@ describe("Regole Firestore", () => {
       .firestore();
 
     await assertFails(getDoc(doc(db, "members", "member-demo")));
+  });
+
+  it("nega al tesoriere i contatti privati del socio", async () => {
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "users", "treasurer-demo"), {
+        active: true,
+        roles: ["treasurer"],
+      });
+    });
+    const db = testEnvironment
+      .authenticatedContext("treasurer-demo")
+      .firestore();
+    await assertSucceeds(getDoc(doc(db, "members", "member-demo")));
+    await assertFails(
+      getDoc(doc(db, "memberPrivateProfiles", "member-demo")),
+    );
+  });
+
+  it("nega al responsabile le scritture dirette sui soci", async () => {
+    const db = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    await assertFails(setDoc(doc(db, "members", "member-new"), {
+      membershipNumber: "SOC-2026-9999",
+    }));
+    await assertFails(updateDoc(doc(db, "members", "member-demo"), {
+      status: "Sospeso",
+    }));
+  });
+
+  it("limita i metadati delle evidenze al responsabile", async () => {
+    const managerDb = testEnvironment
+      .authenticatedContext("manager-demo")
+      .firestore();
+    const operatorDb = testEnvironment
+      .authenticatedContext("operator-demo")
+      .firestore();
+    await assertSucceeds(getDoc(doc(
+      managerDb, "authorizationEvidence", "evidence-demo",
+    )));
+    await assertFails(getDoc(doc(
+      operatorDb, "authorizationEvidence", "evidence-demo",
+    )));
   });
 
   it("nega ogni accesso operativo a un account disattivato", async () => {
@@ -255,6 +319,140 @@ describe("Regole Storage", () => {
     },
     20_000,
   );
+
+  it("nega la lettura diretta del PDF anche al responsabile", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    await assertFails(getBytes(ref(
+      storage,
+      "documents/acceptance/repair-demo/document-demo.pdf",
+    )));
+  });
+
+  it("nega la scrittura diretta dei PDF operativi", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    await assertFails(uploadBytes(
+      ref(storage, "documents/acceptance/repair-demo/client-write.pdf"),
+      new TextEncoder().encode("%PDF-1.7 tentativo"),
+      { contentType: "application/pdf" },
+    ));
+  });
+
+  it("consente un modulo firmato nel percorso vincolato all'utente", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    await assertSucceeds(uploadBytes(
+      ref(
+        storage,
+        `authorizationEvidence/repair-demo/manager-demo/${crypto.randomUUID()}`,
+      ),
+      new TextEncoder().encode("%PDF-1.7 modulo dimostrativo"),
+      {
+        contentType: "application/pdf",
+        customMetadata: {
+          repairId: "repair-demo",
+          uploaderUid: "manager-demo",
+          method: "Modulo firmato",
+          originalPaperRetained: "true",
+        },
+      },
+    ));
+  });
+
+  it("nega email e percorsi di evidenza appartenenti ad altri utenti", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    await assertFails(uploadBytes(
+      ref(
+        storage,
+        "authorizationEvidence/repair-demo/other-user/email-demo",
+      ),
+      new TextEncoder().encode("From: demo@example.test"),
+      {
+        contentType: "message/rfc822",
+        customMetadata: {
+          repairId: "repair-demo",
+          uploaderUid: "other-user",
+          method: "Email esplicita",
+          originalPaperRetained: "false",
+        },
+      },
+    ));
+  });
+
+  it("consente ricevute di revisione private e non sovrascrivibili", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    const proofRef = ref(
+      storage,
+      `authorizationReviewEvidence/evidence-demo/manager-demo/${crypto.randomUUID()}`,
+    );
+    const options = {
+      contentType: "application/pdf",
+      customMetadata: {
+        evidenceId: "evidence-demo",
+        uploaderUid: "manager-demo",
+        outcome: "return_paper",
+      },
+    };
+    await assertSucceeds(uploadBytes(
+      proofRef,
+      new TextEncoder().encode("%PDF-1.7 ricevuta demo"),
+      options,
+    ));
+    await assertFails(uploadBytes(
+      proofRef,
+      new TextEncoder().encode("%PDF-1.7 sovrascrittura"),
+      options,
+    ));
+  });
+
+  it("consente un'evidenza di firma accettazione senza lettura diretta", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+    const evidenceRef = ref(
+      storage,
+      `acceptanceSignatureEvidence/document-demo/manager-demo/${crypto.randomUUID()}`,
+    );
+    await assertSucceeds(uploadBytes(
+      evidenceRef,
+      new TextEncoder().encode("%PDF-1.7 firma accettazione demo"),
+      {
+        contentType: "application/pdf",
+        customMetadata: {
+          documentId: "document-demo",
+          uploaderUid: "manager-demo",
+          method: "Modulo firmato",
+        },
+      },
+    ));
+    await assertFails(getBytes(evidenceRef));
+  });
 
   it(
     "rifiuta tipi di file non ammessi",

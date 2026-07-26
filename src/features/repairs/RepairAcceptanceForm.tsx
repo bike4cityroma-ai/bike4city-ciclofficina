@@ -6,11 +6,14 @@ interface Props {
 }
 
 const initialValues = {
-  customerType: "Socio" as "Socio" | "Non socio",
+  customerType: "Socio" as "Socio" | "Non socio" | "Organizzazione",
   customerLabel: "",
+  organizationName: "",
   bikeLabel: "",
   frameNumber: "",
   declaredIssue: "",
+  visibleCondition: "",
+  deliveredAccessories: "",
   requestedWork: "",
   expectedDeliveryDate: "",
   notes: "Accettazione dimostrativa con dati interamente fittizi.",
@@ -31,8 +34,15 @@ export function RepairAcceptanceForm({ onClose }: Props) {
         ...values,
         idempotencyKey: idempotencyKey.current,
         frameNumber: values.frameNumber.trim() || null,
+        organizationName: values.customerType === "Organizzazione"
+          ? values.organizationName.trim()
+          : null,
         expectedDeliveryDate: values.expectedDeliveryDate || null,
         requestedWork: values.requestedWork
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        deliveredAccessories: values.deliveredAccessories
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
@@ -83,14 +93,24 @@ export function RepairAcceptanceForm({ onClose }: Props) {
             <select value={values.customerType} onChange={(event) =>
               setValues((current) => ({
                 ...current,
-                customerType: event.target.value as "Socio" | "Non socio",
+                customerType: event.target.value as
+                  "Socio" | "Non socio" | "Organizzazione",
               }))}>
               <option>Socio</option><option>Non socio</option>
+              <option>Organizzazione</option>
             </select>
           </label>
-          <label>Riferimento utente fittizio
+          <label>
+            {values.customerType === "Organizzazione"
+              ? "Referente dell’organizzazione fittizio"
+              : "Proprietario o soggetto avente disponibilità fittizio"}
             <input {...field("customerLabel")} required maxLength={160} />
           </label>
+          {values.customerType === "Organizzazione" && (
+            <label>Nome organizzazione fittizia
+              <input {...field("organizationName")} required maxLength={160} />
+            </label>
+          )}
           <label>Descrizione bicicletta
             <input {...field("bikeLabel")} required maxLength={160} />
           </label>
@@ -100,12 +120,29 @@ export function RepairAcceptanceForm({ onClose }: Props) {
           <label className="wide-field">Problema dichiarato
             <textarea {...field("declaredIssue")} required maxLength={1000} />
           </label>
+          <label className="wide-field">Condizioni visibili all’accettazione
+            <textarea {...field("visibleCondition")} required maxLength={1000}
+              placeholder="Descrivere soltanto condizioni osservabili, senza formulare la diagnosi." />
+          </label>
+          <label className="wide-field">
+            Accessori consegnati, separati da virgola
+            <input {...field("deliveredAccessories")} maxLength={1000}
+              placeholder="Esempio: chiave lucchetto, borsa laterale" />
+          </label>
           <label className="wide-field">Interventi richiesti, separati da virgola
             <input {...field("requestedWork")} required maxLength={1000} />
           </label>
           <label>Consegna prevista
             <input {...field("expectedDeliveryDate")} type="date" />
           </label>
+          <div className="wide-field notice-banner" role="note">
+            <strong>Lavori aggiuntivi non autorizzati</strong>
+            <span>
+              La bozza applica “richiedere conferma separata”. Nessun
+              intervento ulteriore viene considerato autorizzato da questa
+              registrazione.
+            </span>
+          </div>
           <label className="wide-field">Note
             <textarea {...field("notes")} required maxLength={1000} />
           </label>

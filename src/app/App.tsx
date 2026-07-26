@@ -5,7 +5,8 @@ import { observeDemoSession, signOutDemo } from "../features/auth/authService";
 
 export interface DemoUser {
   name: string;
-  role: "Responsabile ciclofficina";
+  role: string;
+  roles: string[];
 }
 
 export function App() {

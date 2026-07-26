@@ -1,11 +1,31 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { DemoUser } from "../../app/App";
-import { BikeRegistry } from "../bikes/BikeRegistry";
-import { DeliveryRegistry } from "../deliveries/DeliveryRegistry";
-import { PartRegistry } from "../parts/PartRegistry";
-import { RepairRegistry } from "../repairs/RepairRegistry";
-import { TestRegistry } from "../tests/TestRegistry";
 import { demoActivities, demoMetrics } from "./demoData";
+
+const BikeRegistry = lazy(() => import("../bikes/BikeRegistry").then(
+  (module) => ({ default: module.BikeRegistry }),
+));
+const DeliveryRegistry = lazy(() => import("../deliveries/DeliveryRegistry").then(
+  (module) => ({ default: module.DeliveryRegistry }),
+));
+const PartRegistry = lazy(() => import("../parts/PartRegistry").then(
+  (module) => ({ default: module.PartRegistry }),
+));
+const RepairRegistry = lazy(() => import("../repairs/RepairRegistry").then(
+  (module) => ({ default: module.RepairRegistry }),
+));
+const TestRegistry = lazy(() => import("../tests/TestRegistry").then(
+  (module) => ({ default: module.TestRegistry }),
+));
+const MemberRegistry = lazy(() => import("../members/MemberRegistry").then(
+  (module) => ({ default: module.MemberRegistry }),
+));
+const UserAccessRegistry = lazy(() => import("../users/UserAccessRegistry").then(
+  (module) => ({ default: module.UserAccessRegistry }),
+));
+const DocumentRegistry = lazy(() => import("../documents/DocumentRegistry").then(
+  (module) => ({ default: module.DocumentRegistry }),
+));
 
 interface DashboardProps {
   user: DemoUser;
@@ -18,22 +38,30 @@ type AppSection =
   | "repairs"
   | "parts"
   | "tests"
-  | "deliveries";
+  | "deliveries"
+  | "members"
+  | "documents"
+  | "users";
 
-const navigationItems: Array<{
+const baseNavigationItems: Array<{
   id: AppSection | "disabled";
   label: string;
 }> = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "members", label: "Soci" },
   { id: "bikes", label: "Biciclette" },
   { id: "repairs", label: "Riparazioni" },
   { id: "parts", label: "Ricambi" },
   { id: "tests", label: "Collaudi" },
   { id: "deliveries", label: "Consegne" },
+  { id: "documents", label: "Documenti" },
 ];
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [section, setSection] = useState<AppSection>("dashboard");
+  const navigationItems = user.roles.includes("admin")
+    ? [...baseNavigationItems, { id: "users" as const, label: "Utenti e ruoli" }]
+    : baseNavigationItems;
 
   return (
     <div className="app-shell">
@@ -113,11 +141,22 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         </section>
 
         {section === "dashboard" && <DashboardOverview />}
-        {section === "bikes" && <BikeRegistry />}
-        {section === "repairs" && <RepairRegistry />}
-        {section === "parts" && <PartRegistry />}
-        {section === "tests" && <TestRegistry />}
-        {section === "deliveries" && <DeliveryRegistry />}
+        {section !== "dashboard" && (
+          <Suspense fallback={
+            <p className="module-loading" role="status">
+              Caricamento del modulo…
+            </p>
+          }>
+            {section === "members" && <MemberRegistry />}
+            {section === "users" && <UserAccessRegistry />}
+            {section === "bikes" && <BikeRegistry />}
+            {section === "repairs" && <RepairRegistry />}
+            {section === "parts" && <PartRegistry />}
+            {section === "tests" && <TestRegistry />}
+            {section === "deliveries" && <DeliveryRegistry />}
+            {section === "documents" && <DocumentRegistry />}
+          </Suspense>
+        )}
       </main>
     </div>
   );

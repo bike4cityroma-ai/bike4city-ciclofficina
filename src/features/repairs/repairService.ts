@@ -9,16 +9,20 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { db, functions } from "../../firebase/client";
+import { ref, uploadBytes } from "firebase/storage";
+import { auth, db, functions, storage } from "../../firebase/client";
 import type { DemoRepair } from "./demoRepairs";
 
 export interface NewRepairInput {
   idempotencyKey: string;
-  customerType: "Socio" | "Non socio";
+  customerType: "Socio" | "Non socio" | "Organizzazione";
   customerLabel: string;
+  organizationName: string | null;
   bikeLabel: string;
   frameNumber: string | null;
   declaredIssue: string;
+  visibleCondition: string;
+  deliveredAccessories: string[];
   requestedWork: string[];
   expectedDeliveryDate: string | null;
   notes: string;
@@ -78,6 +82,144 @@ export async function updateRepairWorkflow(input: {
     previousStatus: string;
     newStatus: string;
   }>(functions, "updateRepairWorkflow");
+  return (await callable(input)).data;
+}
+
+export async function authorizeRepairWork(input: {
+  repairId: string;
+  authorizedWork: string[];
+  method: "Modulo firmato" | "Firma su dispositivo";
+  evidenceNote: string;
+  evidenceStoragePath: string;
+  nextStatus: "In lavorazione" | "In attesa ricambi";
+  reason: string;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    repairId: string;
+    previousStatus: string;
+    newStatus: string;
+  }>(functions, "authorizeRepairWork");
+  return (await callable(input)).data;
+}
+
+export async function uploadRepairAuthorizationEvidence(input: {
+  repairId: string;
+  method: "Modulo firmato" | "Firma su dispositivo";
+  file: File;
+  originalPaperRetained: boolean;
+  physicalLocationCode: string;
+  custodianLabel: string;
+  depositedOn: string;
+}) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Accesso richiesto.");
+  const evidenceId = crypto.randomUUID();
+  const storagePath =
+    `authorizationEvidence/${input.repairId}/${uid}/${evidenceId}`;
+  await uploadBytes(ref(storage, storagePath), input.file, {
+    contentType: input.file.type,
+    customMetadata: {
+      repairId: input.repairId,
+      uploaderUid: uid,
+      method: input.method,
+      originalPaperRetained: String(input.originalPaperRetained),
+      physicalLocationCode: input.physicalLocationCode,
+      custodianLabel: input.custodianLabel,
+      depositedOn: input.depositedOn,
+    },
+  });
+  return storagePath;
+}
+
+export async function uploadAuthorizationReviewEvidence(input: {
+  evidenceId: string;
+  outcome: "return_paper" | "destroy_paper";
+  file: File;
+}) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Accesso richiesto.");
+  const proofId = crypto.randomUUID();
+  const storagePath =
+    `authorizationReviewEvidence/${input.evidenceId}/${uid}/${proofId}`;
+  await uploadBytes(ref(storage, storagePath), input.file, {
+    contentType: input.file.type,
+    customMetadata: {
+      evidenceId: input.evidenceId,
+      uploaderUid: uid,
+      outcome: input.outcome,
+    },
+  });
+  return storagePath;
+}
+
+export async function reviewAuthorizationEvidence(input: {
+  evidenceId: string;
+  action: "propose" | "confirm";
+  outcome: "extend" | "return_paper" | "destroy_paper" | "no_paper";
+  reason: string;
+  details: string;
+  newReviewDate: string | null;
+  actionDate: string | null;
+  subjectLabel: string | null;
+  proofStoragePath: string | null;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    evidenceId: string;
+    action: string;
+    outcome: string;
+  }>(functions, "reviewAuthorizationEvidence");
+  return (await callable(input)).data;
+}
+
+export async function accessAuthorizationReviewEvidence(input: {
+  evidenceId: string;
+  action: "view" | "export";
+}) {
+  const callable = httpsCallable<typeof input, {
+    evidenceId: string;
+    contentType: string;
+    fileName: string;
+    dataBase64: string;
+    checksumSha256: string;
+    sourceChecksumSha256: string;
+  }>(functions, "accessAuthorizationReviewEvidence");
+  return (await callable(input)).data;
+}
+
+export async function replaceAuthorizationReviewEvidence(input: {
+  evidenceId: string;
+  storagePath: string;
+  reason: string;
+  incidentId?: string;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    evidenceId: string;
+    version: number;
+  }>(functions, "replaceAuthorizationReviewEvidence");
+  return (await callable(input)).data;
+}
+
+export async function manageAuthorizationEvidenceIncident(input: {
+  evidenceId: string;
+  incidentId?: string;
+  action: "report" | "open" | "resolve";
+  incidentType:
+    | "missing_file"
+    | "checksum_mismatch"
+    | "metadata_mismatch"
+    | "unreadable_file";
+  resolution?: "recovered" | "replaced" | "unrecoverable";
+  reason: string;
+  idempotencyKey: string;
+}) {
+  const callable = httpsCallable<typeof input, {
+    evidenceId: string;
+    incidentId: string;
+    status: string;
+  }>(functions, "manageAuthorizationEvidenceIncident");
   return (await callable(input)).data;
 }
 

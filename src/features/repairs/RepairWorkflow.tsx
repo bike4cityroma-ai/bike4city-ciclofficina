@@ -1,23 +1,23 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { DemoRepair, RepairStatus } from "./demoRepairs";
 import {
+  authorizeRepairWork,
   observeRepairStatusHistory,
   updateRepairWorkflow,
+  uploadRepairAuthorizationEvidence,
   type RepairStatusEvent,
 } from "./repairService";
 
 const transitions: Partial<Record<RepairStatus, RepairStatus[]>> = {
-  Accettata: ["Diagnosticata"],
-  Diagnosticata: [
-    "In attesa autorizzazione",
-    "In attesa ricambi",
-    "In lavorazione",
-  ],
-  "In attesa autorizzazione": [
-    "In attesa ricambi",
-    "In lavorazione",
-    "Annullata",
-  ],
+  Accettata: ["In attesa autorizzazione"],
+  Diagnosticata: ["In attesa autorizzazione"],
+  "In attesa autorizzazione": ["Annullata"],
   "In attesa ricambi": ["In lavorazione"],
   "In lavorazione": ["In attesa ricambi", "Pronta"],
   Pronta: ["In lavorazione"],
@@ -78,6 +78,9 @@ export function RepairWorkflow({ repair }: { repair: DemoRepair }) {
   return (
     <div className="detail-section repair-workflow">
       <h4>Avanzamento riparazione</h4>
+      {repair.status === "In attesa autorizzazione" && (
+        <RepairAuthorizationForm repair={repair} />
+      )}
       {nextStatuses.length > 0 ? (
         <form onSubmit={submit}>
           {repair.status === "Accettata" && <>
@@ -155,4 +158,203 @@ export function RepairWorkflow({ repair }: { repair: DemoRepair }) {
       </ul> : <p>Nessun avanzamento registrato.</p>}
     </div>
   );
+}
+
+function RepairAuthorizationForm({ repair }: { repair: DemoRepair }) {
+  const [authorizedWork, setAuthorizedWork] = useState(
+    repair.proposedWork.join(", "),
+  );
+  const [method, setMethod] = useState<
+    "Modulo firmato" | "Firma su dispositivo"
+  >("Modulo firmato");
+  const [evidenceNote, setEvidenceNote] = useState("");
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [originalPaperRetained, setOriginalPaperRetained] = useState(false);
+  const [physicalLocationCode, setPhysicalLocationCode] = useState("");
+  const [custodianLabel, setCustodianLabel] = useState("");
+  const [depositedOn, setDepositedOn] = useState("");
+  const [nextStatus, setNextStatus] = useState<
+    "In lavorazione" | "In attesa ricambi"
+  >("In lavorazione");
+  const [reason, setReason] = useState("");
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  const key = useRef(crypto.randomUUID());
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setPending(true); setMessage("");
+    try {
+      if (!evidenceFile) {
+        setMessage("Acquisire o selezionare l’evidenza prima di continuare.");
+        return;
+      }
+      const evidenceStoragePath = await uploadRepairAuthorizationEvidence({
+        repairId: repair.id,
+        method,
+        file: evidenceFile,
+        originalPaperRetained,
+        physicalLocationCode,
+        custodianLabel,
+        depositedOn,
+      });
+      await authorizeRepairWork({
+        repairId: repair.id,
+        authorizedWork: authorizedWork.split(",")
+          .map((item) => item.trim()).filter(Boolean),
+        method,
+        evidenceNote,
+        evidenceStoragePath,
+        nextStatus,
+        reason,
+        idempotencyKey: key.current,
+      });
+      key.current = crypto.randomUUID();
+      setMessage("Autorizzazione registrata nell’audit.");
+    } catch {
+      setMessage(
+        "Autorizzazione non registrata. Usare soltanto interventi proposti.",
+      );
+    } finally { setPending(false); }
+  }
+  return <form className="authorization-form" onSubmit={submit}>
+    <p className="workflow-note">
+      Policy approvata ACC-003: la richiesta iniziale non autorizza i lavori.
+    </p>
+    <p className="workflow-note">
+      ACC-004-v1: sono valide operativamente soltanto le tre modalità elencate.
+      Il software non attribuisce valore legale all’evidenza.
+    </p>
+    <label>Interventi autorizzati, separati da virgola
+      <input value={authorizedWork} required maxLength={1000}
+        onChange={(event) => setAuthorizedWork(event.target.value)} />
+    </label>
+    <label>Modalità dell’autorizzazione
+      <select value={method} onChange={(event) => {
+        setMethod(event.target.value as typeof method);
+        setEvidenceFile(null);
+        setOriginalPaperRetained(false);
+        setPhysicalLocationCode("");
+        setCustodianLabel("");
+        setDepositedOn("");
+      }}>
+        <option>Modulo firmato</option>
+        <option>Firma su dispositivo</option>
+      </select>
+    </label>
+    {method === "Modulo firmato" ? <>
+      <label>File firmato
+        <input type="file" required accept="application/pdf,image/jpeg,image/png"
+          onChange={(event) => setEvidenceFile(event.target.files?.[0] ?? null)}
+        />
+      </label>
+      <label className="checkbox-field">
+        <input type="checkbox" checked={originalPaperRetained}
+          onChange={(event) => setOriginalPaperRetained(event.target.checked)} />
+        Originale cartaceo conservato
+      </label>
+      {originalPaperRetained && <>
+        <label>Codice ubicazione dell’originale
+          <input value={physicalLocationCode} required maxLength={80}
+            onChange={(event) => setPhysicalLocationCode(event.target.value)} />
+        </label>
+        <label>Responsabile della custodia fittizio
+          <input value={custodianLabel} required maxLength={160}
+            onChange={(event) => setCustodianLabel(event.target.value)} />
+        </label>
+        <label>Data di deposito
+          <input value={depositedOn} type="date" required
+            onChange={(event) => setDepositedOn(event.target.value)} />
+        </label>
+      </>}
+    </> : <SignaturePad onChange={setEvidenceFile} />}
+    <p className="workflow-note">
+      Il soggetto autorizzante è quello fissato all’accettazione secondo
+      ACC-005-v1 e non può essere sostituito in questa fase.
+    </p>
+    <label>Riferimento dell’evidenza
+      <textarea value={evidenceNote} required minLength={5} maxLength={500}
+        onChange={(event) => setEvidenceNote(event.target.value)} />
+    </label>
+    <small>
+      In questa fase inserire solo riferimenti fittizi. L’acquisizione o
+      l’allegato dell’evidenza sarà implementato nel flusso Storage.
+    </small>
+    <label>Stato dopo l’autorizzazione
+      <select value={nextStatus} onChange={(event) => setNextStatus(
+        event.target.value as typeof nextStatus,
+      )}>
+        <option>In lavorazione</option><option>In attesa ricambi</option>
+      </select>
+    </label>
+    <label>Motivazione della registrazione
+      <textarea value={reason} required minLength={10} maxLength={500}
+        onChange={(event) => setReason(event.target.value)} />
+    </label>
+    {message && <p role="status">{message}</p>}
+    <button className="primary-action" disabled={
+      pending || reason.trim().length < 10 || !evidenceFile
+    }>{pending ? "Registrazione…" : "Registra autorizzazione"}</button>
+  </form>;
+}
+
+function SignaturePad({ onChange }: { onChange: (file: File | null) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const point = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    const canvas = event.currentTarget;
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x: (event.clientX - bounds.left) * (canvas.width / bounds.width),
+      y: (event.clientY - bounds.top) * (canvas.height / bounds.height),
+    };
+  };
+  const start = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    drawing.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const context = event.currentTarget.getContext("2d");
+    const current = point(event);
+    context?.beginPath();
+    context?.moveTo(current.x, current.y);
+  };
+  const move = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (!drawing.current) return;
+    const context = event.currentTarget.getContext("2d");
+    const current = point(event);
+    if (context) {
+      context.lineWidth = 2.5;
+      context.lineCap = "round";
+      context.strokeStyle = "#18332b";
+      context.lineTo(current.x, current.y);
+      context.stroke();
+    }
+  };
+  const finish = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (!drawing.current) return;
+    drawing.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    event.currentTarget.toBlob((blob) => {
+      onChange(blob
+        ? new File([blob], "firma-grafica.png", { type: "image/png" })
+        : null);
+    }, "image/png");
+  };
+  const clear = () => {
+    const canvas = canvasRef.current;
+    canvas?.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+    onChange(null);
+  };
+  return <fieldset className="signature-field">
+    <legend>Firma grafica su dispositivo</legend>
+    <p>
+      Viene salvata soltanto l’immagine, senza pressione, velocità o altri
+      dati biometrici dinamici.
+    </p>
+    <canvas ref={canvasRef} width={700} height={220}
+      aria-label="Area firma grafica"
+      onPointerDown={start} onPointerMove={move}
+      onPointerUp={finish} onPointerCancel={finish} />
+    <button className="text-button" type="button" onClick={clear}>
+      Cancella firma
+    </button>
+  </fieldset>;
 }

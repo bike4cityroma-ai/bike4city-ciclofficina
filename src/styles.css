@@ -20,7 +20,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -143,6 +144,19 @@ select {
   border-radius: 0.7rem;
   color: #18332b;
   background: white;
+}
+
+textarea {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #b7c5c0;
+  border-radius: 0.7rem;
+  color: #18332b;
+  background: white;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  min-height: auto;
 }
 
 .primary-button,
@@ -1064,6 +1078,30 @@ nav ul,
   padding: 4rem 1rem;
   color: #657a73;
   text-align: center;
+}
+
+.module-loading {
+  padding: 2rem;
+  color: #526760;
+  text-align: center;
+}
+
+.signature-field {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid #c3d1cc;
+  border-radius: 0.8rem;
+}
+
+.signature-field canvas {
+  width: 100%;
+  max-width: 44rem;
+  height: 10rem;
+  border: 1px dashed #71827d;
+  border-radius: 0.5rem;
+  background: #fff;
+  touch-action: none;
 }
 
 .empty-state strong {

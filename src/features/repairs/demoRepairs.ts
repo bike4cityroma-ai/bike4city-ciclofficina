@@ -12,7 +12,7 @@ export interface DemoRepair {
   id: string;
   code: string;
   acceptedLabel: string;
-  customerType: "Socio" | "Non socio";
+  customerType: "Socio" | "Non socio" | "Organizzazione";
   customerLabel: string;
   bikeLabel: string;
   frameNumber: string | null;
@@ -41,6 +41,26 @@ export const repairStatuses: RepairStatus[] = [
 ];
 
 export const demoRepairs: DemoRepair[] = [
+  {
+    id: "repair-demo-0010",
+    code: "RIP-2026-0010",
+    acceptedLabel: "25 luglio 2026",
+    customerType: "Socio",
+    customerLabel: "Socio Demo 310",
+    bikeLabel: "City bike blu · telaio M",
+    frameNumber: "DEMO-R10",
+    declaredIssue: "La ruota posteriore produce un rumore.",
+    diagnosis: "Raggiatura non uniforme rilevata al controllo.",
+    proposedWork: ["Centratura ruota posteriore"],
+    requestedWork: ["Controllo ruota posteriore"],
+    completedWork: [],
+    parts: [],
+    assignedTo: [],
+    minutesSpent: 0,
+    expectedDeliveryLabel: "30 luglio 2026",
+    status: "In attesa autorizzazione",
+    activityClassification: "Da classificare",
+  },
   {
     id: "repair-demo-0009",
     code: "RIP-2026-0009",

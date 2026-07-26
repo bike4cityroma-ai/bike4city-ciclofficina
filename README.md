@@ -174,6 +174,115 @@ positivo. `createDelivery` genera `CON-AAAA-NNNN` e il riferimento verbale
 `VER-AAAA-NNNN`, consolida condizioni, accessori e ricevente fittizio, quindi
 porta la riparazione a `Consegnata` con storico, audit e idempotenza.
 
+Il modulo Soci mantiene tessera, scadenza, stato e consenso in `members` e
+separa nomi e contatti in `memberPrivateProfiles`. Creazione, aggiornamento,
+sospensione e archiviazione logica passano da `saveMember`, con progressivo
+`SOC-AAAA-NNNN`, idempotenza e audit. I dati dimostrativi usano esclusivamente
+nomi e recapiti fittizi.
+
+La gestione Utenti e ruoli è disponibile agli amministratori. La callable
+`manageUserAccess` sincronizza stato e ruoli tra Authentication, custom claims
+e `users`, disabilita gli account revocati e registra ogni variazione
+nell'audit. Le scritture dirette del client sono vietate.
+
+Il modulo Documenti genera lato backend PDF A4 per scheda di accettazione,
+scheda di collaudo e verbale di consegna. In questa fase ogni file è marcato
+`BOZZA DIMOSTRATIVA — TESTI NON APPROVATI`, usa semplici spazi grafici per le
+firme ed è salvato in Storage privato senza possibilità di sovrascrittura dal
+client. Metadati, versione del modello, collegamento e audit sono conservati in
+Firestore. La liberatoria di donazione resta predisposta a livello di modello
+ma non viene generata finché manca il flusso strutturato `bikeDonations`.
+
+Il backend documentale usa `FIREBASE_STORAGE_BUCKET`; un esempio non sensibile
+è disponibile in `functions/.env.example`.
+
+La scheda di accettazione `acceptance-demo-v1` separa problema dichiarato,
+condizioni visibili, accessori consegnati e interventi richiesti. La policy
+provvisoria impone una conferma separata per qualsiasi lavoro aggiuntivo:
+l'accettazione non produce autorizzazioni implicite. Testi privacy, condizioni
+del servizio e firme restano bozze da approvare.
+
+La decisione associativa `ACC-003-v1`, validata il 26 luglio 2026, impone inoltre
+la sequenza richiesta, diagnosi, autorizzazione tracciata e lavorazione.
+`authorizeRepairWork` registra modalità, soggetto, evidenza e interventi
+autorizzati; il backend rifiuta il salto diretto alla lavorazione e gli
+interventi non presenti nella diagnosi.
+
+`ACC-004-v1`, validata il 26 luglio 2026, riconosce come valide
+operativamente soltanto modulo firmato, firma su dispositivo ed email
+esplicita. Il backend rifiuta telefono e modalità generiche, richiede un
+riferimento all'evidenza e registra `valid_operational`. Valore legale,
+acquisizione della firma e conservazione delle evidenze restano aperti in
+`ACC-006`.
+
+`ACC-005-v1`, validata il 26 luglio 2026, fissa il soggetto autorizzante
+all'accettazione: persona registrata come proprietario o soggetto avente
+disponibilità oppure referente indicato da un'organizzazione. Il soggetto non
+è più un campo libero nell'autorizzazione. Deleghe e consegnatari diversi non
+sono previsti dalla policy approvata.
+
+`ACC-006-v1` elimina l'email dalle evidenze ammesse. L'autorizzazione richiede
+un modulo firmato PDF/JPEG/PNG oppure una firma grafica PNG acquisita sul
+dispositivo. Storage limita tipo e dimensione a 10 MB; il backend verifica
+file e metadati, calcola SHA-256 e sblocca la lavorazione soltanto dopo
+l'archiviazione. Non vengono raccolte dinamiche biometriche della firma.
+
+`ACC-007-v1` separa i metadati riservati dalla riparazione tecnica. Dopo il
+consolidamento l'operatore non legge l'evidenza; amministratore e responsabile
+accedono tramite backend con audit. Gli originali cartacei richiedono
+ubicazione codificata, custode e data. Gli ambienti non demo restano bloccati
+senza una retention attiva.
+
+`ACC-008-v1` fissa una conservazione di 24 mesi dal consolidamento
+dell'autorizzazione. Alla scadenza l'evidenza richiede una revisione manuale:
+non sono previste cancellazioni, restituzioni o distruzioni automatiche. La
+firma grafica e il modulo acquisito restano evidenze operative e il software
+mantiene `legalValidity: not_determined`, senza equipararli a una firma
+elettronica qualificata.
+
+`ACC-009-v1` apre la revisione 30 giorni prima della scadenza. Il responsabile
+può proporre proroga, restituzione, distruzione riservata o assenza
+dell'originale; soltanto l'amministratore conferma l'esito. Proposta e conferma
+sono auditate e idempotenti. Il file digitale non viene cancellato o
+anonimizzato in attesa della policy generale `PRI-001`.
+
+`ACC-010-v1` richiede una ricevuta firmata per la restituzione o un verbale per
+la distruzione riservata. Il documento deve precedere la conferma, resta
+privato e non sovrascrivibile, conserva checksum SHA-256 e segue una nuova
+retention di 24 mesi. Destinatario e incaricato sono strutturati; chi propone
+la distruzione non può confermarla come amministratore.
+
+`ACC-011-v1` limita visualizzazione ed esportazione delle prove ad
+amministratore e responsabile tramite backend auditato. L'esportazione produce
+una copia PDF marcata con evidenza, data e utente. La sostituzione è riservata
+all'amministratore, richiede motivazione e conserva la versione precedente
+nello storico; Storage continua a vietare lettura diretta e sovrascrittura.
+
+`ACC-012-v1` blocca l'accesso quando file, metadati o checksum non risultano
+coerenti e registra `documentAnomaly`. Responsabile e amministratore possono
+segnalare; apertura e chiusura dell'incidente sono amministrative. Recupero,
+sostituzione o mancato recupero restano auditati senza cancellare lo storico e
+senza qualificazioni automatiche come violazione privacy.
+
+`ACC-013-v1` registra consegna o rifiuto della copia della scheda di
+accettazione. Sono ammesse copia cartacea e download sul dispositivo
+dell'interessato in sede; ristampe e download passano dal backend, producono
+audit e una copia PDF marcata. Storage non consente più lettura diretta dei PDF
+operativi. Il consolidamento resta bloccato fino ad ACC-001 e ACC-002.
+
+`ACC-014-v1` versiona le correzioni della scheda di accettazione: l'operatore
+propone, responsabile o amministratore confermano, la versione precedente
+diventa `superseded` senza essere cancellata. La nuova bozza richiede nuova
+firma e nuova consegna della copia. La correzione del soggetto imposta un
+blocco di riautorizzazione prima di ulteriori lavorazioni.
+
+`ACC-015-v1` consolida la scheda soltanto lato backend e solo per responsabile
+o amministratore. Sono obbligatori policy privacy e condizioni attive,
+evidenza di firma privata, soggetto coerente, copia registrata e assenza di
+anomalie o correzioni pendenti. Il PDF conserva checksum e diventa immutabile;
+con configurazioni fittizie assume `consolidated_demo`. Il seed ordinario
+mantiene ACC-001 e ACC-002 in bozza e quindi blocca il consolidamento.
+
 Per avviare gli emulatori, eseguire automaticamente test delle regole e test
 Functions (autorizzazione, concorrenza e idempotenza), quindi arrestare tutto:
 

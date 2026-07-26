@@ -133,6 +133,7 @@ export function RepairRegistry() {
             <option>Tutti gli utenti</option>
             <option>Socio</option>
             <option>Non socio</option>
+            <option>Organizzazione</option>
           </select>
         </div>
         <div className="result-count" role="status" aria-label={resultLabel}>

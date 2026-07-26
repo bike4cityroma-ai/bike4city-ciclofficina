@@ -49,6 +49,88 @@ Controlli:
 - copia collegata alla riparazione;
 - versione del testo conservata.
 
+Implementazione dimostrativa `acceptance-demo-v1`:
+
+- problema dichiarato, condizioni visibili e diagnosi restano campi distinti;
+- gli accessori consegnati sono registrati come elenco;
+- gli interventi richiesti non autorizzano attività ulteriori;
+- la policy provvisoria è `separate_confirmation_required`;
+- privacy e condizioni usano riferimenti di versione non approvati;
+- le linee di firma sono soltanto spazi grafici;
+- il PDF resta `draft` e `not_approved`.
+
+Prima del consolidamento devono essere approvati testo privacy, condizioni del
+servizio, modalità di autorizzazione successiva, soggetti firmatari e valore
+della firma.
+
+La modalità di autorizzazione successiva è stata validata come `ACC-004-v1`:
+modulo firmato, firma su dispositivo o email esplicita producono lo stato
+`valid_operational`. Il valore legale, l'acquisizione delle firme e la
+conservazione delle evidenze restano aperti in `ACC-006`.
+
+`ACC-005-v1` limita il soggetto autorizzante alla persona registrata
+all'accettazione come proprietario o soggetto avente disponibilità oppure, per
+un'organizzazione, al referente indicato dall'organizzazione. Il riferimento
+viene fissato all'accettazione e non è un testo libero nell'autorizzazione.
+
+`ACC-006-v1` limita le evidenze a modulo firmato e firma grafica su
+dispositivo, escludendo l'email. L'evidenza deve essere archiviata in Storage
+prima dell'avvio; il backend verifica file e metadati e registra SHA-256. La
+firma grafica non raccoglie dinamiche biometriche. Durata concreta, valore
+legale e destinazione finale degli originali restano aperti in `ACC-008`.
+
+`ACC-007-v1` separa i metadati riservati dell'evidenza dalla riparazione,
+limita consultazione ed esportazione ad amministratore e responsabile tramite
+backend auditato e richiede i dati di custodia dell'originale cartaceo. Gli
+ambienti non demo sono bloccati senza retention attiva. Durata concreta e
+valore legale restano aperti in `ACC-008`.
+
+`ACC-008-v1` applica 24 mesi dal consolidamento e registra `reviewDueAt`.
+Alla scadenza è obbligatoria una decisione manuale tracciata; non avvengono
+cancellazioni, restituzioni o distruzioni automatiche. L'eventuale originale
+cartaceo resta `pending_manual_review`. Le evidenze hanno valore operativo,
+mentre `legalValidity` resta `not_determined` e non viene dichiarata
+l'equivalenza con una firma elettronica qualificata.
+
+`ACC-009-v1` disciplina la revisione manuale: finestra operativa da 30 giorni
+prima di `reviewDueAt`, proposta del responsabile e conferma riservata
+all'amministratore. Proroga, restituzione, distruzione riservata e assenza di
+originale sono storicizzate tramite audit. La cancellazione o anonimizzazione
+del file digitale resta sospesa fino all'approvazione di `PRI-001`.
+
+`ACC-010-v1` rende obbligatorio un allegato PDF/JPEG/PNG per confermare
+restituzione o distruzione. La ricevuta riporta data e destinatario registrato;
+il verbale riporta data e incaricato. Il backend verifica percorso, MIME,
+dimensione e metadati, calcola SHA-256 e applica 24 mesi dalla decisione
+finale. I file non sono leggibili direttamente né sovrascrivibili dal client.
+
+`ACC-011-v1` riserva l'accesso a responsabile e amministratore tramite callable
+auditata. L'export converte la prova in una copia PDF recante ID evidenza,
+timestamp e UID del richiedente, senza modificare l'originale. La sostituzione
+è amministrativa, motivata e append-only tramite `proofVersionHistory`.
+
+`ACC-012-v1` verifica SHA-256 durante l'accesso. Un errore produce
+`documentAnomaly`, blocca visualizzazione, esportazione e conferma e apre il
+flusso `documentIncidents`. Il recupero da backup è preferito; una sostituzione
+deve essere versionata e collegata all'incidente.
+
+`ACC-013-v1` aggiunge `copyHistory` append-only per consegna cartacea, download
+in sede o rifiuto. Il backend verifica il soggetto registrato, marca ristampe e
+download come copia e scrive audit. Il PDF originale resta immutato, in stato
+`draft` e `not_approved` fino all'approvazione di ACC-001 e ACC-002.
+
+`ACC-014-v1` aggiunge proposta e conferma della correzione,
+`correctionHistory`, `replacesDocumentId` e `supersededByDocumentId`. La nuova
+versione resta `draft`, richiede nuova firma e nuova registrazione della copia.
+La correzione del soggetto crea `authorizationBlock:
+reauthorization_required`.
+
+`ACC-015-v1` introduce `consolidateAcceptanceDocument`. Il file firmato è
+acquisito separatamente in Storage privato, verificato e collegato con
+checksum. Il documento registra versioni privacy e condizioni, firma, soggetto,
+consegna copia, attore e data; diventa immutabile e mantiene
+`legalValidity: not_determined`.
+
 ## Scheda di collaudo
 
 Finalità: documentare i controlli tecnici finali.

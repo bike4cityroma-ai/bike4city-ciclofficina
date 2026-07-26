@@ -40,16 +40,34 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if activeUser()
         && (request.auth.uid == userId || hasRole('admin'));
-      allow create, update: if hasRole('admin');
+      allow create, update: if false;
       allow delete: if false;
     }
 
     match /members/{memberId} {
       allow read: if hasAnyRole(['admin', 'workshop_manager', 'treasurer']);
-      allow create: if hasAnyRole(['admin', 'workshop_manager']);
-      allow update: if hasAnyRole(['admin', 'workshop_manager'])
-        && immutableMetadata();
+      allow create, update: if false;
       allow delete: if false;
+    }
+
+    match /memberPrivateProfiles/{memberId} {
+      allow read: if hasAnyRole(['admin', 'workshop_manager']);
+      allow create, update, delete: if false;
+    }
+
+    match /authorizationEvidence/{evidenceId} {
+      allow read: if hasAnyRole(['admin', 'workshop_manager']);
+      allow create, update, delete: if false;
+
+      match /proofVersionHistory/{versionId} {
+        allow read: if hasAnyRole(['admin', 'workshop_manager']);
+        allow write: if false;
+      }
+
+      match /documentIncidents/{incidentId} {
+        allow read: if hasAnyRole(['admin', 'workshop_manager']);
+        allow write: if false;
+      }
     }
 
     match /bikes/{bikeId} {
@@ -177,6 +195,20 @@ service cloud.firestore {
         'treasurer'
       ]);
       allow write: if false;
+
+      match /copyHistory/{eventId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator'
+        ]);
+        allow write: if false;
+      }
+
+      match /correctionHistory/{eventId} {
+        allow read: if hasAnyRole(['admin', 'workshop_manager']);
+        allow write: if false;
+      }
     }
 
     match /settings/{settingId} {
