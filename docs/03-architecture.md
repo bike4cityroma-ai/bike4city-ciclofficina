@@ -149,6 +149,22 @@ Devono gestire le operazioni che richiedono privilegi, transazioni o una
 sequenza atomica. Le Functions devono rieseguire i controlli di autorizzazione
 senza fidarsi dei dati inviati dal client.
 
+Il backend viene separato progressivamente per dominio, mantenendo
+`functions/src/index.ts` come punto di inizializzazione e composizione delle
+funzioni pubbliche. Il primo dominio estratto è:
+
+```text
+functions/src/
+├── index.ts
+└── modules/
+    └── receipts.ts   validazione, autorizzazione, progressivi, PDF e annullamento
+```
+
+Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
+senza cambiare il contratto delle callable e viene verificato con build,
+Firebase Emulator Suite e test di integrazione prima di estrarre il dominio
+successivo.
+
 ## Ambienti
 
 Sono raccomandati almeno:
