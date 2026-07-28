@@ -52,8 +52,8 @@ resta il riferimento principale per le future misurazioni.
 ## Verifiche manuali ancora aperte
 
 - navigazione completa di tutti i moduli da tablet e smartphone;
-- percorso completo con uso esclusivo da tastiera;
-- contrasto, zoom al 200% e riduzione del movimento;
+- percorso operativo completo con uso esclusivo da tastiera;
+- contrasto e zoom al 200%;
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
 - prove operative per ogni ruolo con tentativi non autorizzati;
@@ -71,6 +71,28 @@ contenitore. I controlli principali hanno altezza di circa 44 px o superiore.
 Il passaggio da tastiera tra i moduli mostra un contorno di focus solido,
 visibile e distinto. Durante il controllo non sono comparsi errori o warning
 nella console del browser.
+
+## Verifica semantica e dialoghi del 28 luglio 2026
+
+Tutti i nove moduli disponibili sono stati caricati e ispezionati
+nell'ambiente locale con dati fittizi. Non sono stati rilevati controlli senza
+nome accessibile, immagini senza testo alternativo, identificatori duplicati,
+dialoghi senza nome o valori positivi di `tabindex`. La validazione nativa del
+modulo Biciclette porta il focus al primo campo obbligatorio non compilato e
+fornisce il messaggio italiano del browser.
+
+Il collaudo ha rilevato che, all'apertura di un dialogo, il focus rimaneva sul
+comando esterno. È stata introdotta una gestione comune che:
+
+- porta il focus al primo controllo del dialogo;
+- mantiene la navigazione Tab e Maiusc+Tab all'interno del dialogo;
+- restituisce il focus al comando di apertura dopo la chiusura.
+
+Il comportamento è stato confermato nel browser sul dialogo di registrazione
+della bicicletta e coperto da un test automatico. Il foglio di stile contiene
+inoltre una regola `prefers-reduced-motion: reduce`; la verifica della
+preferenza attiva con tecnologia assistiva resta parte del collaudo manuale.
+Non sono comparsi errori o warning applicativi nella console.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Dashboard } from "../features/dashboard/Dashboard";
 import { DemoLogin } from "../features/auth/DemoLogin";
 import { observeDemoSession, signOutDemo } from "../features/auth/authService";
+import { useModalFocusManagement } from "./useModalFocusManagement";
 
 export interface DemoUser {
   name: string;
@@ -11,6 +12,7 @@ export interface DemoUser {
 
 export function App() {
   const [user, setUser] = useState<DemoUser | null>(null);
+  useModalFocusManagement();
 
   useEffect(() => observeDemoSession(setUser), []);
 

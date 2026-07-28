@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
@@ -85,6 +91,27 @@ describe("App", () => {
     expect(
       screen.getByText(/Il codice viene assegnato automaticamente\./),
     ).toBeInTheDocument();
+  });
+
+  it("gestisce il focus all'apertura e alla chiusura dei dialoghi", async () => {
+    render(<App />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Entra nel prototipo" }),
+    );
+    await openSection("Biciclette");
+    const openButton = screen.getByRole("button", {
+      name: "Registra bicicletta",
+    });
+    openButton.focus();
+    fireEvent.click(openButton);
+
+    const closeButton = screen.getByRole("button", {
+      name: "Chiudi registrazione",
+    });
+    await waitFor(() => expect(closeButton).toHaveFocus());
+    fireEvent.click(closeButton);
+    await waitFor(() => expect(openButton).toHaveFocus());
   });
 
   it("mostra soltanto gli avanzamenti consentiti nella scheda bici", async () => {
