@@ -1510,6 +1510,111 @@ describe("manageRepairSafetyReview", () => {
   }, 30_000);
 });
 
+describe("members and user access", () => {
+  it("salva il socio separando il profilo privato e resta idempotente",
+    async () => {
+      const idempotencyKey = `member-${crypto.randomUUID()}`;
+      const input = {
+        idempotencyKey,
+        memberId: "",
+        firstName: "Mario",
+        lastName: "Demo",
+        email: "mario.demo@example.test",
+        phone: "0000000000",
+        joinedOn: "2026-07-27",
+        expiresOn: "2027-07-27",
+        status: "Attivo",
+        privacyConsent: true,
+        reason: "Registrazione socio con dati interamente dimostrativi.",
+      };
+      const firstResponse = await invokeFunction(
+        "saveMember",
+        input,
+        adminToken,
+      );
+      expect(firstResponse.status).toBe(200);
+      const firstBody = await firstResponse.json() as {
+        result: { id: string; membershipNumber: string };
+      };
+      expect(firstBody.result.membershipNumber)
+        .toMatch(/^SOC-2026-\d{4}$/);
+
+      const secondResponse = await invokeFunction(
+        "saveMember",
+        input,
+        adminToken,
+      );
+      expect(secondResponse.status).toBe(200);
+      expect((await secondResponse.json()).result).toEqual(firstBody.result);
+
+      const member = (
+        await db.doc(`members/${firstBody.result.id}`).get()
+      ).data();
+      const privateProfile = (
+        await db.doc(`memberPrivateProfiles/${firstBody.result.id}`).get()
+      ).data();
+      expect(member).toMatchObject({
+        membershipNumber: firstBody.result.membershipNumber,
+        status: "Attivo",
+      });
+      expect(member).not.toHaveProperty("email");
+      expect(member).not.toHaveProperty("phone");
+      expect(privateProfile).toMatchObject({
+        firstName: "Mario",
+        lastName: "Demo",
+        email: "mario.demo@example.test",
+        phone: "0000000000",
+      });
+    }, 30_000);
+
+  it("consente soltanto all'admin di aggiornare ruoli e disabilitazione",
+    async () => {
+      const target = await auth.createUser({
+        email: `utente-${crypto.randomUUID()}@example.test`,
+        password,
+        displayName: "Utente Accessi Demo",
+      });
+      await auth.setCustomUserClaims(target.uid, {
+        active: true,
+        roles: ["volunteer"],
+      });
+      await db.doc(`users/${target.uid}`).set({
+        displayName: "Utente Accessi Demo",
+        active: true,
+        roles: ["volunteer"],
+        demo: true,
+        updatedAt: Timestamp.now(),
+      });
+      const input = {
+        targetUid: target.uid,
+        active: false,
+        roles: ["read_only"],
+        reason: "Revoca dimostrativa approvata dall'amministratore.",
+      };
+
+      const denied = await invokeFunction("manageUserAccess", input);
+      expect(denied.status).toBe(403);
+      const response = await invokeFunction(
+        "manageUserAccess",
+        input,
+        adminToken,
+      );
+      expect(response.status).toBe(200);
+      expect((await auth.getUser(target.uid)).disabled).toBe(true);
+      expect((await db.doc(`users/${target.uid}`).get()).data())
+        .toMatchObject({
+          active: false,
+          roles: ["read_only"],
+          accessVersion: 1,
+        });
+      const audit = await db.collection("auditLogs")
+        .where("entityId", "==", target.uid)
+        .where("action", "==", "user.access.revoke")
+        .get();
+      expect(audit.size).toBe(1);
+    }, 30_000);
+});
+
 describe("receipt drafts", () => {
   it("crea una bozza progressiva e consente l'annullamento solo all'admin",
     async () => {

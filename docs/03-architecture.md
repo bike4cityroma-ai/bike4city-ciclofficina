@@ -157,7 +157,8 @@ funzioni pubbliche. Il primo dominio estratto è:
 functions/src/
 ├── index.ts
 └── modules/
-    └── receipts.ts   validazione, autorizzazione, progressivi, PDF e annullamento
+    ├── members-and-users.ts   soci, dati separati, ruoli, revoche e audit
+    └── receipts.ts            validazione, progressivi, PDF e annullamento
 ```
 
 Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
