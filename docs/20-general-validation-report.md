@@ -15,7 +15,7 @@
 | Typecheck TypeScript | superato |
 | Build frontend Vite | superata |
 | Build Cloud Functions | superata |
-| Test frontend | 24 su 24 superati |
+| Test frontend | 25 su 25 superati |
 | Test Firestore e Storage Rules | 27 su 27 superati |
 | Suite Functions completa | 32 su 33 superati nella corsa completa |
 | Test ricevute ripetuto isolatamente | superato |
@@ -53,11 +53,11 @@ resta il riferimento principale per le future misurazioni.
 
 - navigazione completa di tutti i moduli da tablet e smartphone;
 - percorso operativo completo con uso esclusivo da tastiera;
-- contrasto e zoom al 200%;
+- zoom reale al 200%;
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
 - prove operative complete di ogni modulo per ciascun ruolo;
-- stampa e firme sui PDF generati.
+- prova fisica di stampa e firma sui PDF generati.
 
 ## Verifica responsive e focus del 28 luglio 2026
 
@@ -129,6 +129,32 @@ autenticato. Dopo la disabilitazione in Authentication, la revoca delle custom
 claims e l'impostazione di `active: false` in Firestore, l'interfaccia è tornata
 alla schermata di accesso in circa 0,4 secondi. Un nuovo tentativo con le stesse
 credenziali è stato respinto. Non sono stati utilizzati account o dati reali.
+
+## Verifica contrasto e PDF del 28 luglio 2026
+
+La misurazione dei colori dell'interfaccia ha individuato due testi secondari
+sotto il rapporto WCAG di 4,5:1: il ruolo utente a 4,17:1 e date/note operative
+a 4,05:1. I colori sono stati scuriti senza modificare gerarchia o layout. Le
+misurazioni successive risultano rispettivamente 5,51:1 e 5,65:1.
+
+Sono state generate nell'ambiente locale, scaricate dallo Storage Emulator e
+renderizzate in PNG le tre bozze operative:
+
+- scheda di accettazione `ACC-2026-0001`;
+- scheda di collaudo `SCO-2026-0002`;
+- verbale di consegna `VER-2026-0003`.
+
+Tutti i file sono PDF 1.7 A4 di una pagina, senza campi modulo interattivi,
+mantengono la marcatura permanente `BOZZA DIMOSTRATIVA - TESTI NON APPROVATI`
+e presentano due spazi grafici distinti per le firme. Il rendering non mostra
+testi sovrapposti, tagliati o fuori pagina; il margine testuale minimo rilevato
+è circa 33 punti. La prova su carta e la firma manuale restano da eseguire.
+
+I PDF non contengono una struttura di tag per tecnologie assistive
+(`Tagged: no`). Sono quindi adatti al controllo visivo e alla stampa
+dimostrativa, ma non possono ancora essere considerati accessibili a un
+lettore di schermo. Questo limite deve essere risolto o compensato con un
+formato alternativo accessibile prima della produzione.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.
