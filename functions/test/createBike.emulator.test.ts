@@ -231,6 +231,7 @@ describe("reviewAuthorizationEvidence", () => {
     await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
       .file(proofStoragePath)
       .save(Buffer.from(await proofPdf.save()), {
+        resumable: false,
         contentType: "application/pdf",
         metadata: {
           metadata: {
@@ -321,6 +322,7 @@ describe("reviewAuthorizationEvidence", () => {
     await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
       .file(replacementPath)
       .save(Buffer.from(await proofPdf.save()), {
+        resumable: false,
         contentType: "application/pdf",
         metadata: {
           metadata: {
@@ -361,6 +363,7 @@ describe("reviewAuthorizationEvidence", () => {
     await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
       .file(proofPath)
       .save(Buffer.from("prova dimostrativa non integra"), {
+        resumable: false,
         contentType: "image/png",
       });
     await evidenceRef.set({
@@ -525,6 +528,7 @@ describe("createOperationalDocument", () => {
     await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
       .file(signaturePath)
       .save(Buffer.from("%PDF-1.7 firma dimostrativa"), {
+        resumable: false,
         contentType: "application/pdf",
         metadata: {
           metadata: {
@@ -825,6 +829,7 @@ describe("updateRepairWorkflow", () => {
       .bucket(`${projectId}.firebasestorage.app`)
       .file(evidenceStoragePath)
       .save(Buffer.from("%PDF-1.7 autorizzazione dimostrativa"), {
+        resumable: false,
         contentType: "application/pdf",
         metadata: {
           metadata: {
