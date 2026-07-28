@@ -27,9 +27,11 @@ export function PartRegistry() {
 
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeParts((nextParts) => {
-      setParts(nextParts);
-      setLoadError(false);
+    return observeParts((nextParts, fromCache) => {
+      if (nextParts.length > 0 || !fromCache) {
+        setParts(nextParts);
+      }
+      setLoadError(fromCache);
     }, () => setLoadError(true));
   }, []);
 
@@ -90,7 +92,8 @@ export function PartRegistry() {
       </div>
 
       {loadError && <p className="notice-banner" role="alert">
-        Inventario non disponibile: verifica che gli emulatori siano avviati.
+        Connessione all’inventario non disponibile. I dati visibili possono
+        provenire dalla cache: verifica gli emulatori prima di modificarli.
       </p>}
 
       <div className="registry-toolbar parts-toolbar" role="search">

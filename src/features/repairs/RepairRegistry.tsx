@@ -31,9 +31,11 @@ export function RepairRegistry() {
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
     return observeRepairs(
-      (nextRepairs) => {
-        setRepairs(nextRepairs);
-        setLoadError(false);
+      (nextRepairs, fromCache) => {
+        if (nextRepairs.length > 0 || !fromCache) {
+          setRepairs(nextRepairs);
+        }
+        setLoadError(fromCache);
       },
       () => setLoadError(true),
     );
@@ -95,7 +97,8 @@ export function RepairRegistry() {
 
       {loadError && (
         <p className="notice-banner" role="alert">
-          Registro non disponibile: verifica che gli emulatori siano avviati.
+          Connessione al registro non disponibile. I dati visibili possono
+          provenire dalla cache: verifica gli emulatori prima di modificarli.
         </p>
       )}
 

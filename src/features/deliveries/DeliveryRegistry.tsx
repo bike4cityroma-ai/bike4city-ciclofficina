@@ -24,8 +24,9 @@ export function DeliveryRegistry() {
 
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeDeliveries((items) => {
-      setDeliveries(items); setLoadError(false);
+    return observeDeliveries((items, fromCache) => {
+      if (items.length > 0 || !fromCache) setDeliveries(items);
+      setLoadError(fromCache);
     }, () => setLoadError(true));
   }, []);
 
@@ -79,7 +80,8 @@ export function DeliveryRegistry() {
         </button>
       </div>
       {loadError && <p className="notice-banner" role="alert">
-        Registro consegne non disponibile: verifica gli emulatori.
+        Connessione alle consegne non disponibile. I dati visibili possono
+        provenire dalla cache: verifica gli emulatori prima di modificarli.
       </p>}
 
       <div className="registry-toolbar delivery-toolbar" role="search">

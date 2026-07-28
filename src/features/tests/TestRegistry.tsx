@@ -21,8 +21,9 @@ export function TestRegistry() {
 
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeWorkshopTests((items) => {
-      setTests(items); setLoadError(false);
+    return observeWorkshopTests((items, fromCache) => {
+      if (items.length > 0 || !fromCache) setTests(items);
+      setLoadError(fromCache);
     }, () => setLoadError(true));
   }, []);
 
@@ -66,7 +67,8 @@ export function TestRegistry() {
         </button>
       </div>
       {loadError && <p className="notice-banner" role="alert">
-        Registro collaudi non disponibile: verifica gli emulatori.
+        Connessione ai collaudi non disponibile. I dati visibili possono
+        provenire dalla cache: verifica gli emulatori prima di modificarli.
       </p>}
 
       <div className="registry-toolbar test-toolbar" role="search">

@@ -44,7 +44,7 @@ export interface AvailablePart {
 }
 
 export function observeRepairs(
-  onData: (repairs: DemoRepair[]) => void,
+  onData: (repairs: DemoRepair[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   const repairsQuery = query(
@@ -53,7 +53,8 @@ export function observeRepairs(
   );
   return onSnapshot(
     repairsQuery,
-    (snapshot) => onData(snapshot.docs.map(mapRepair)),
+    (snapshot) =>
+      onData(snapshot.docs.map(mapRepair), snapshot.metadata.fromCache),
     onError,
   );
 }

@@ -56,7 +56,8 @@ resta il riferimento principale per le future misurazioni.
 - zoom reale al 200% su browser fisico; il reflow equivalente è stato
   verificato automaticamente;
 - lettura con tecnologia assistiva;
-- messaggi di errore e recupero dei moduli diversi da accesso e Biciclette;
+- messaggi di errore e recupero dei registri amministrativi e dei moduli
+  secondari;
 - prove operative complete di ogni modulo per ciascun ruolo;
 - prova fisica di stampa e firma sui PDF generati.
 
@@ -224,5 +225,19 @@ invece di presentare una cache vuota come un registro realmente vuoto. Dopo il
 ripristino e il nuovo accesso, l'avviso scompare e il registro torna a mostrare
 i dati confermati dal servizio.
 
-La verifica deve essere estesa agli altri moduli che osservano dati in tempo
-reale e ai rispettivi flussi di scrittura.
+La verifica deve essere estesa ai registri amministrativi, alle liste usate
+nei moduli secondari e ai rispettivi flussi di scrittura.
+
+## Estensione degli avvisi di cache del 28 luglio 2026
+
+La distinzione fra dati confermati e dati provenienti dalla cache è stata
+estesa ai registri Riparazioni, Ricambi, Collaudi e Consegne. Una risposta
+confermata da Firestore aggiorna normalmente il registro e rimuove l'avviso;
+una risposta dalla cache mantiene gli eventuali dati disponibili e mostra un
+avviso con `role="alert"`.
+
+I quattro registri sono stati prima caricati con Firestore disponibile e senza
+avvisi. Dopo l'interruzione controllata dell'emulatore, ciascun registro ha
+conservato i dati fittizi disponibili e ha dichiarato chiaramente che potevano
+provenire dalla cache, invitando a verificare il servizio prima di apportare
+modifiche. Nessun registro ha presentato la cache come dato aggiornato.

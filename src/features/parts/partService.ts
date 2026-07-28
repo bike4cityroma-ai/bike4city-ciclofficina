@@ -29,13 +29,14 @@ export interface NewPartInput {
 }
 
 export function observeParts(
-  onData: (parts: DemoPart[]) => void,
+  onData: (parts: DemoPart[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   const partsQuery = query(collection(db, "parts"), orderBy("code", "desc"));
   return onSnapshot(
     partsQuery,
-    (snapshot) => onData(snapshot.docs.map(mapPart)),
+    (snapshot) =>
+      onData(snapshot.docs.map(mapPart), snapshot.metadata.fromCache),
     onError,
   );
 }

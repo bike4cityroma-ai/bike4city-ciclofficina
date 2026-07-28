@@ -23,12 +23,13 @@ export interface ReadyRepair {
 }
 
 export function observeWorkshopTests(
-  onData: (tests: DemoWorkshopTest[]) => void,
+  onData: (tests: DemoWorkshopTest[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   return onSnapshot(
     query(collection(db, "tests"), orderBy("performedAt", "desc")),
-    (snapshot) => onData(snapshot.docs.map(mapTest)),
+    (snapshot) =>
+      onData(snapshot.docs.map(mapTest), snapshot.metadata.fromCache),
     onError,
   );
 }

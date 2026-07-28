@@ -13,12 +13,14 @@ export interface DeliverableRepair {
 }
 
 export function observeDeliveries(
-  onData: (items: DemoDelivery[]) => void,
+  onData: (items: DemoDelivery[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   return onSnapshot(
     query(collection(db, "deliveries"), orderBy("deliveredAt", "desc")),
-    (snapshot) => onData(snapshot.docs.map(mapDelivery)), onError,
+    (snapshot) =>
+      onData(snapshot.docs.map(mapDelivery), snapshot.metadata.fromCache),
+    onError,
   );
 }
 
