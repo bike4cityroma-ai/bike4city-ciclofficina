@@ -1148,8 +1148,14 @@ nav ul,
     grid-template-columns: 1fr;
   }
 
+  .dashboard {
+    overflow-x: hidden;
+  }
+
   .sidebar {
     position: static;
+    min-width: 0;
+    width: 100%;
     height: auto;
     gap: 1rem;
     padding-bottom: 1rem;
@@ -1157,13 +1163,16 @@ nav ul,
 
   .sidebar nav {
     display: block;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
 
   .sidebar nav ul {
     display: flex;
-    min-width: max-content;
+    width: max-content;
+    min-width: 0;
     gap: 0.4rem;
   }
 
@@ -1209,6 +1218,9 @@ nav ul,
 
   .bike-table-wrap,
   .registry-table-wrap {
+    contain: inline-size;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
   }
 

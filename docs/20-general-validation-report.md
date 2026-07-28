@@ -51,14 +51,26 @@ resta il riferimento principale per le future misurazioni.
 
 ## Verifiche manuali ancora aperte
 
-- navigazione completa da computer, tablet e smartphone;
-- uso esclusivo da tastiera e visibilità del focus;
+- navigazione completa di tutti i moduli da tablet e smartphone;
+- percorso completo con uso esclusivo da tastiera;
 - contrasto, zoom al 200% e riduzione del movimento;
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
 - prove operative per ogni ruolo con tentativi non autorizzati;
 - concorrenza osservata da due sessioni browser;
 - stampa e firme sui PDF generati.
+
+## Verifica responsive e focus del 28 luglio 2026
+
+La dashboard è stata verificata a larghezza desktop, tablet (768 px) e
+smartphone (390 px). Il registro Biciclette è stato controllato anche a 390 px.
+Sono stati corretti due overflow orizzontali: la navigazione mobile ora scorre
+nel proprio contenitore e le tabelle larghe restano confinate nel rispettivo
+contenitore. I controlli principali hanno altezza di circa 44 px o superiore.
+
+Il passaggio da tastiera tra i moduli mostra un contorno di focus solido,
+visibile e distinto. Durante il controllo non sono comparsi errori o warning
+nella console del browser.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.
