@@ -157,6 +157,7 @@ funzioni pubbliche. Il primo dominio estratto è:
 functions/src/
 ├── index.ts
 └── modules/
+    ├── bikes.ts               registrazione, progressivi e transizioni di stato
     ├── members-and-users.ts   soci, dati separati, ruoli, revoche e audit
     └── receipts.ts            validazione, progressivi, PDF e annullamento
 ```
