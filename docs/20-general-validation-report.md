@@ -56,8 +56,8 @@ resta il riferimento principale per le future misurazioni.
 - contrasto e zoom al 200%;
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
-- prove operative per ogni ruolo con tentativi non autorizzati;
-- concorrenza osservata da due sessioni browser;
+- prove operative complete di ogni modulo per ciascun ruolo;
+- revoca di un account mentre la sua sessione è già attiva;
 - stampa e firme sui PDF generati.
 
 ## Verifica responsive e focus del 28 luglio 2026
@@ -93,6 +93,28 @@ della bicicletta e coperto da un test automatico. Il foglio di stile contiene
 inoltre una regola `prefers-reduced-motion: reduce`; la verifica della
 preferenza attiva con tecnologia assistiva resta parte del collaudo manuale.
 Non sono comparsi errori o warning applicativi nella console.
+
+## Verifica ruoli e concorrenza del 28 luglio 2026
+
+Sono stati predisposti negli emulatori account fittizi separati per
+amministratore, responsabile, operatore, volontario, tesoriere e sola lettura,
+oltre a un account operatore disabilitato. L'accesso ha mostrato correttamente
+nome e ruolo di ciascun profilo. Il modulo `Utenti e ruoli` è risultato
+disponibile soltanto all'amministratore e ha elencato coerentemente account,
+ruoli e stato attivo o disabilitato. L'account disabilitato non ha potuto
+accedere.
+
+Un utente con ruolo `read_only` ha potuto consultare il registro Biciclette,
+ma il tentativo di registrazione è stato respinto dal backend e non ha creato
+record. I moduli generali restano visibili ai ruoli non amministrativi in
+attesa dell'approvazione degli ambiti limitati indicati nella matrice dei
+permessi; il software non anticipa questa decisione organizzativa.
+
+Due schede browser autenticate come responsabile hanno inviato
+contemporaneamente due registrazioni con soli dati fittizi. Entrambe sono
+state consolidate e hanno ricevuto progressivi distinti
+`BICI-2026-0015` e `BICI-2026-0016`; i due registri si sono aggiornati fino a
+mostrare quattro biciclette senza conflitti o duplicazioni.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.
