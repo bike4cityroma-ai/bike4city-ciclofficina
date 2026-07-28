@@ -166,6 +166,9 @@ functions/src/
     └── workshop-tests.ts      checklist, prova dinamica ed esito del collaudo
 ```
 
+Il modulo `documents-and-evidence.ts` raccoglie documenti operativi, firme ed
+evidenze riservate, mantenendo `index.ts` come entry point minimale.
+
 Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
 senza cambiare il contratto delle callable e viene verificato con build,
 Firebase Emulator Suite e test di integrazione prima di estrarre il dominio
