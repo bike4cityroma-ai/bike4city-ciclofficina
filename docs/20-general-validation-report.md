@@ -53,7 +53,8 @@ resta il riferimento principale per le future misurazioni.
 
 - navigazione completa di tutti i moduli da tablet e smartphone;
 - percorso operativo completo con uso esclusivo da tastiera;
-- zoom reale al 200%;
+- zoom reale al 200% su browser fisico; il reflow equivalente è stato
+  verificato automaticamente;
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
 - prove operative complete di ogni modulo per ciascun ruolo;
@@ -176,3 +177,26 @@ contenuto principale.
 
 Resta aperta la verifica dell'intero percorso operativo con uso esclusivo della
 tastiera, in particolare per i moduli complessi e per la firma grafica.
+
+## Verifica del reflow equivalente al 200% del 28 luglio 2026
+
+I nove moduli sono stati verificati a una larghezza CSS di 640 px, equivalente
+allo spazio disponibile con zoom al 200% partendo da una finestra desktop di
+1280 px. La prima prova ha rilevato uno scorrimento orizzontale della pagina nei
+registri con tabelle.
+
+La causa era la posizione statica conservata dalle etichette `.sr-only` delle
+tabelle: i testi rimanevano correttamente nascosti e disponibili alle
+tecnologie assistive, ma contribuivano alla larghezza del documento. La tecnica
+CSS è stata completata con coordinate esplicite, margine negativo e
+`clip-path`, senza rimuovere didascalie o nomi accessibili.
+
+Dopo la correzione Dashboard, Soci, Biciclette, Riparazioni, Ricambi, Collaudi,
+Consegne, Ricevute e Documenti mantengono tutti la larghezza del documento
+entro quella della finestra. Le tabelle conservano lo scorrimento nel proprio
+contenitore e la pagina scorre soltanto in verticale quando necessario.
+
+Resta da eseguire una prova manuale con il comando di zoom reale del browser
+fisico al 200%, perché l'ambiente di automazione consente di impostare la
+larghezza equivalente ma non di modificare in modo affidabile lo zoom
+dell'interfaccia del browser.
