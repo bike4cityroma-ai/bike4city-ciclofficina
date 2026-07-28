@@ -160,7 +160,8 @@ functions/src/
     ├── bikes.ts               registrazione, progressivi e transizioni di stato
     ├── members-and-users.ts   soci, dati separati, ruoli, revoche e audit
     ├── parts.ts               inventario, movimenti e utilizzo nelle riparazioni
-    └── receipts.ts            validazione, progressivi, PDF e annullamento
+    ├── receipts.ts            validazione, progressivi, PDF e annullamento
+    └── workshop-tests.ts      checklist, prova dinamica ed esito del collaudo
 ```
 
 Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
