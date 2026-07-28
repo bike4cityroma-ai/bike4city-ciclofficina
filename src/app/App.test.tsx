@@ -32,6 +32,17 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: "Buon lavoro, Giulia" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", {
+      name: "Salta al contenuto principale",
+    })).toHaveAttribute("href", "#main-content");
+    expect(document.querySelector("main")).toHaveAttribute(
+      "id",
+      "main-content",
+    );
+    fireEvent.click(screen.getByRole("link", {
+      name: "Salta al contenuto principale",
+    }));
+    expect(document.querySelector("main")).toHaveFocus();
     expect(screen.getByText("BICI-2026-0014")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Esci" }));

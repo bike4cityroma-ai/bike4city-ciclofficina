@@ -31,7 +31,9 @@ button {
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
   outline: 3px solid #f0a72f;
   outline-offset: 3px;
 }
@@ -204,6 +206,23 @@ input[type="checkbox"] {
   display: grid;
   min-height: 100vh;
   grid-template-columns: 16rem minmax(0, 1fr);
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: white;
+  background: #173f34;
+  font-weight: 800;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .sidebar {

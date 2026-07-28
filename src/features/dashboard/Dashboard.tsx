@@ -70,6 +70,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
   return (
     <div className="app-shell">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+      >
+        Salta al contenuto principale
+      </a>
       <aside className="sidebar" aria-label="Navigazione principale">
         <div className="sidebar-brand">
           <span className="sidebar-logo" aria-hidden="true">
@@ -117,7 +127,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
       </aside>
 
-      <main className="dashboard">
+      <main className="dashboard" id="main-content" tabIndex={-1}>
         <header className="topbar">
           <div>
             <p className="eyebrow">Venerdì 24 luglio 2026</p>

@@ -158,3 +158,21 @@ formato alternativo accessibile prima della produzione.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.
+
+## Verifica del bypass da tastiera del 28 luglio 2026
+
+La struttura principale non offriva un comando rapido per evitare la
+navigazione ripetitiva e raggiungere direttamente il contenuto della pagina.
+
+È stato aggiunto come primo elemento interattivo un collegamento «Salta al
+contenuto principale», visibile quando riceve il focus. L'attivazione
+trasferisce il focus al contenuto principale, reso focalizzabile anche senza
+mouse. Gli indicatori di focus sono stati inoltre estesi ai collegamenti e alle
+aree di testo.
+
+L'ordine semantico degli elementi è stato verificato nel browser e un test
+automatico conferma che l'attivazione del collegamento trasferisca il focus al
+contenuto principale.
+
+Resta aperta la verifica dell'intero percorso operativo con uso esclusivo della
+tastiera, in particolare per i moduli complessi e per la firma grafica.
