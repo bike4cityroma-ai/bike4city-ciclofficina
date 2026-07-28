@@ -1756,6 +1756,31 @@ describe("exportOperationalReport", () => {
         volunteerToken,
       );
       expect(denied.status).toBe(403);
+
+      for (const [format, signature] of [
+        ["xlsx", "PK"],
+        ["pdf", "%PDF"],
+      ] as const) {
+        const fileResponse = await invokeFunction(
+          "exportOperationalReport",
+          {
+            year: 2026,
+            format,
+            idempotencyKey: `report-${format}-${crypto.randomUUID()}`,
+          },
+        );
+        expect(fileResponse.status).toBe(200);
+        const fileBody = await fileResponse.json() as {
+          result: {
+            dataBase64: string;
+            fileName: string;
+          };
+        };
+        const bytes = Buffer.from(fileBody.result.dataBase64, "base64");
+        expect(bytes.subarray(0, signature.length).toString()).toBe(signature);
+        expect(fileBody.result.fileName)
+          .toBe(`report-operativo-2026.${format}`);
+      }
     }, 30_000);
 });
 

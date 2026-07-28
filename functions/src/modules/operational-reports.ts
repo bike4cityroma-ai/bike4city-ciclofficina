@@ -1,5 +1,6 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const permittedRoles = new Set([
   "admin",
@@ -16,7 +17,7 @@ const reportCollections = [
 ] as const;
 
 type ReportCollection = typeof reportCollections[number];
-type ReportFormat = "csv" | "json";
+type ReportFormat = "csv" | "json" | "pdf" | "xlsx";
 
 interface ReportInput {
   year: number;
@@ -37,7 +38,7 @@ function requireReportInput(value: unknown): ReportInput {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     throw new HttpsError("invalid-argument", "Anno del report non valido.");
   }
-  if (format !== "csv" && format !== "json") {
+  if (!["csv", "json", "pdf", "xlsx"].includes(String(format))) {
     throw new HttpsError("invalid-argument", "Formato del report non valido.");
   }
   if (!idempotencyKey || idempotencyKey.length > 80) {
@@ -46,7 +47,7 @@ function requireReportInput(value: unknown): ReportInput {
       "Chiave di idempotenza non valida.",
     );
   }
-  return { year, format, idempotencyKey };
+  return { year, format: format as ReportFormat, idempotencyKey };
 }
 
 function escapeCsv(value: string | number) {
@@ -72,6 +73,15 @@ function createCsv(
   totals: Record<ReportCollection, number>,
   statuses: Record<ReportCollection, Record<string, number>>,
 ) {
+  return createRows(year, totals, statuses)
+    .map((row) => row.map(escapeCsv).join(",")).join("\r\n");
+}
+
+function createRows(
+  year: number,
+  totals: Record<ReportCollection, number>,
+  statuses: Record<ReportCollection, Record<string, number>>,
+) {
   const rows: Array<Array<string | number>> = [
     ["anno", "ambito", "indicatore", "valore", "natura"],
   ];
@@ -81,7 +91,93 @@ function createCsv(
       rows.push([year, collection, status, count, "conteggio"]);
     }
   }
-  return rows.map((row) => row.map(escapeCsv).join(",")).join("\r\n");
+  return rows;
+}
+
+function escapeXml(value: string | number) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+async function createXlsx(rows: Array<Array<string | number>>) {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  const sheetRows = rows.map((row, rowIndex) => {
+    const cells = row.map((value, columnIndex) => {
+      const reference =
+        `${String.fromCharCode(65 + columnIndex)}${rowIndex + 1}`;
+      return typeof value === "number"
+        ? `<c r="${reference}"><v>${value}</v></c>`
+        : `<c r="${reference}" t="inlineStr"><is><t>${escapeXml(value)}</t></is></c>`;
+    }).join("");
+    return `<row r="${rowIndex + 1}">${cells}</row>`;
+  }).join("");
+  zip.file("[Content_Types].xml",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
+    "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
+    "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
+    "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
+    "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
+    "</Types>");
+  zip.file("_rels/.rels",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+    "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>" +
+    "</Relationships>");
+  zip.file("xl/workbook.xml",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" " +
+    "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
+    "<sheets><sheet name=\"Report operativo\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>");
+  zip.file("xl/_rels/workbook.xml.rels",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+    "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>" +
+    "</Relationships>");
+  zip.file("xl/worksheets/sheet1.xml",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+    `<sheetData>${sheetRows}</sheetData></worksheet>`);
+  return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+}
+
+async function createPdf(
+  year: number,
+  rows: Array<Array<string | number>>,
+) {
+  const pdf = await PDFDocument.create();
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  let page = pdf.addPage([595.28, 841.89]);
+  let y = 790;
+  const draw = (text: string, size = 9, useBold = false) => {
+    page.drawText(text.replace(/[^\x20-\x7E]/g, " "), {
+      x: 45,
+      y,
+      size,
+      font: useBold ? bold : regular,
+      color: rgb(0.09, 0.2, 0.17),
+      maxWidth: 505,
+    });
+    y -= size + 8;
+  };
+  draw("APS Bike4City ETS - InControPedale", 12, true);
+  draw(`Report operativo aggregato ${year}`, 18, true);
+  draw("Nessun dato personale. Metriche ambientali non incluse.", 9);
+  y -= 8;
+  for (const row of rows) {
+    if (y < 55) {
+      page = pdf.addPage([595.28, 841.89]);
+      y = 790;
+    }
+    draw(row.map(String).join(" | ").slice(0, 150), 8, row === rows[0]);
+  }
+  return Buffer.from(await pdf.save());
 }
 
 export const exportOperationalReport = onCall(
@@ -147,17 +243,26 @@ export const exportOperationalReport = onCall(
       totals,
       statuses,
     };
+    const rows = createRows(input.year, totals, statuses);
     const content = input.format === "csv"
-      ? createCsv(input.year, totals, statuses)
-      : JSON.stringify(payload, null, 2);
+      ? Buffer.from(createCsv(input.year, totals, statuses), "utf8")
+      : input.format === "json"
+        ? Buffer.from(JSON.stringify(payload, null, 2), "utf8")
+        : input.format === "xlsx"
+          ? await createXlsx(rows)
+          : await createPdf(input.year, rows);
+    const contentTypes: Record<ReportFormat, string> = {
+      csv: "text/csv; charset=utf-8",
+      json: "application/json",
+      pdf: "application/pdf",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    };
     const response = {
       year: input.year,
       format: input.format,
-      contentType: input.format === "csv"
-        ? "text/csv; charset=utf-8"
-        : "application/json",
+      contentType: contentTypes[input.format],
       fileName: `report-operativo-${input.year}.${input.format}`,
-      dataBase64: Buffer.from(content, "utf8").toString("base64"),
+      dataBase64: content.toString("base64"),
       dataScope: payload.dataScope,
     };
 
