@@ -20,7 +20,7 @@ export function DemoLogin({ onLogin }: DemoLoginProps) {
       onLogin(await signInDemo(email, password));
     } catch {
       setError(
-        "Accesso non riuscito. Avvia gli emulatori e carica l’account demo.",
+        "Accesso non riuscito. Controlla le credenziali demo e verifica che gli emulatori e l’account fittizio siano disponibili.",
       );
     } finally {
       setPending(false);

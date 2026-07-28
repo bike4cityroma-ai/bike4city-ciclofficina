@@ -37,13 +37,15 @@ export interface BikeStatusEvent {
 }
 
 export function observeBikes(
-  onData: (bikes: DemoBike[]) => void,
+  onData: (bikes: DemoBike[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   const bikesQuery = query(collection(db, "bikes"), orderBy("updatedAt", "desc"));
   return onSnapshot(
     bikesQuery,
-    (snapshot) => onData(snapshot.docs.map(mapBike)),
+    (snapshot) => {
+      onData(snapshot.docs.map(mapBike), snapshot.metadata.fromCache);
+    },
     onError,
   );
 }

@@ -56,7 +56,7 @@ resta il riferimento principale per le future misurazioni.
 - zoom reale al 200% su browser fisico; il reflow equivalente è stato
   verificato automaticamente;
 - lettura con tecnologia assistiva;
-- messaggi di errore e recupero osservati dall'interfaccia;
+- messaggi di errore e recupero dei moduli diversi da accesso e Biciclette;
 - prove operative complete di ogni modulo per ciascun ruolo;
 - prova fisica di stampa e firma sui PDF generati.
 
@@ -200,3 +200,29 @@ Resta da eseguire una prova manuale con il comando di zoom reale del browser
 fisico al 200%, perché l'ambiente di automazione consente di impostare la
 larghezza equivalente ma non di modificare in modo affidabile lo zoom
 dell'interfaccia del browser.
+
+## Verifica di errori e recupero del 28 luglio 2026
+
+Sono stati verificati con dati fittizi tre scenari: credenziali errate,
+salvataggio di una bicicletta durante l'indisponibilità degli emulatori e
+consultazione del registro Biciclette con Firestore non disponibile.
+
+L'errore di accesso viene annunciato con `role="alert"`, riattiva il pulsante e
+consente un nuovo tentativo senza ricaricare la pagina. Il testo è stato reso
+applicabile sia alle credenziali errate sia all'indisponibilità dell'ambiente
+demo. Il tentativo successivo con credenziali corrette ha aperto regolarmente
+la dashboard.
+
+Il salvataggio non riuscito mantiene i dati fittizi nel modulo, mostra un
+avviso accessibile e riattiva il comando di registrazione. Nessun errore
+tecnico o dato sensibile viene esposto all'utente.
+
+Il registro Biciclette ora distingue una risposta proveniente dalla cache da
+una risposta confermata da Firestore. Durante l'interruzione conserva gli
+eventuali dati già disponibili e avvisa che possono essere dati in cache,
+invece di presentare una cache vuota come un registro realmente vuoto. Dopo il
+ripristino e il nuovo accesso, l'avviso scompare e il registro torna a mostrare
+i dati confermati dal servizio.
+
+La verifica deve essere estesa agli altri moduli che osservano dati in tempo
+reale e ai rispettivi flussi di scrittura.

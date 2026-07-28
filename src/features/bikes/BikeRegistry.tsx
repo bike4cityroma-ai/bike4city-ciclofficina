@@ -22,9 +22,11 @@ export function BikeRegistry() {
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
     return observeBikes(
-      (nextBikes) => {
-        setBikes(nextBikes);
-        setLoadError(false);
+      (nextBikes, fromCache) => {
+        if (nextBikes.length > 0 || !fromCache) {
+          setBikes(nextBikes);
+        }
+        setLoadError(fromCache);
       },
       () => setLoadError(true),
     );
@@ -81,7 +83,8 @@ export function BikeRegistry() {
 
       {loadError && (
         <p className="notice-banner" role="alert">
-          Registro non disponibile: verifica che gli emulatori siano avviati.
+          Connessione al registro non disponibile. I dati visibili possono
+          provenire dalla cache: verifica gli emulatori prima di modificarli.
         </p>
       )}
 
