@@ -4,6 +4,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
+import { restoreJsonBackupToEmulator } from "../src/restore-backup.js";
 
 const projectId =
   process.env.GCLOUD_PROJECT || "demo-bike4city-ciclofficina";
@@ -1860,6 +1861,33 @@ describe("createJsonBackup", () => {
         $type: "timestamp",
         value: "2026-07-28T12:00:00.000Z",
       });
+
+      const restoreProjectId =
+        `demo-bike4city-restore-${crypto.randomUUID().slice(0, 8)}`;
+      const restoreApp = initializeApp(
+        { projectId: restoreProjectId },
+        `restore-${crypto.randomUUID()}`,
+      );
+      try {
+        const restoreDb = getFirestore(restoreApp);
+        const result = await restoreJsonBackupToEmulator(
+          restoreDb,
+          restoreProjectId,
+          backup,
+        );
+        expect(result.restoredRecords).toBe(backup.records.length);
+        expect(result.verifiedRecords).toBe(backup.records.length);
+        expect(result.checksumSha256)
+          .toBe(createdBody.result.checksumSha256);
+        const restoredDocument = await restoreDb.doc(sourceRef.path).get();
+        expect(restoredDocument.exists).toBe(true);
+        expect(restoredDocument.data()?.createdAt).toBeInstanceOf(Timestamp);
+        await expect(
+          restoreJsonBackupToEmulator(restoreDb, restoreProjectId, backup),
+        ).rejects.toMatchObject({ code: "already-exists" });
+      } finally {
+        await deleteApp(restoreApp);
+      }
 
       const denied = await invokeFunction(
         "createJsonBackup",

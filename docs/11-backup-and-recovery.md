@@ -94,6 +94,17 @@ Ogni backup dovrebbe avere:
 Il ripristino in produzione è un'operazione distruttiva o sovrascrivente e
 richiede sempre conferma esplicita.
 
+## Prova automatizzata in ambiente isolato
+
+La funzione tecnica `restoreJsonBackupToEmulator` non è esportata come Cloud
+Function e applica tre blocchi: richiede `FIRESTORE_EMULATOR_HOST`, accetta
+soltanto un progetto destinazione con prefisso `demo-` e rifiuta una
+destinazione che contenga già uno dei documenti da ripristinare. Prima della
+scrittura verifica schema, checksum, percorsi e duplicati; dopo la scrittura
+ricontrolla conteggi e presenza di ogni documento.
+
+Questa prova non autorizza né implementa un ripristino in staging o produzione.
+
 ## Verifiche dopo il ripristino
 
 - utenti e ruoli coerenti;
