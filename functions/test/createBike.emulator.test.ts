@@ -1784,6 +1784,92 @@ describe("exportOperationalReport", () => {
     }, 30_000);
 });
 
+describe("createJsonBackup", () => {
+  it("crea, verifica e scarica un backup tipizzato solo come admin",
+    async () => {
+      const sourceRef = db.collection("bikes").doc(
+        `bike-backup-${crypto.randomUUID()}`,
+      );
+      await sourceRef.set({
+        status: "Da valutare",
+        createdAt: Timestamp.fromDate(new Date("2026-07-28T12:00:00Z")),
+        demo: true,
+      });
+      const created = await invokeFunction(
+        "createJsonBackup",
+        { idempotencyKey: `backup-${crypto.randomUUID()}` },
+        adminToken,
+      );
+      expect(created.status).toBe(200);
+      const createdBody = await created.json() as {
+        result: {
+          backupId: string;
+          checksumSha256: string;
+          recordCount: number;
+          status: string;
+        };
+      };
+      expect(createdBody.result.status).toBe("complete");
+      expect(createdBody.result.checksumSha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(createdBody.result.recordCount).toBeGreaterThan(0);
+
+      const verified = await invokeFunction(
+        "accessJsonBackup",
+        {
+          backupId: createdBody.result.backupId,
+          action: "verify",
+        },
+        adminToken,
+      );
+      expect(verified.status).toBe(200);
+      expect((await verified.json()).result.checksumValid).toBe(true);
+
+      const downloaded = await invokeFunction(
+        "accessJsonBackup",
+        {
+          backupId: createdBody.result.backupId,
+          action: "download",
+        },
+        adminToken,
+      );
+      expect(downloaded.status).toBe(200);
+      const downloadedBody = await downloaded.json() as {
+        result: { dataBase64: string };
+      };
+      const backup = JSON.parse(
+        Buffer.from(
+          downloadedBody.result.dataBase64,
+          "base64",
+        ).toString("utf8"),
+      ) as {
+        manifest: {
+          schemaVersion: string;
+          storageFilesIncluded: boolean;
+        };
+        records: Array<{
+          path: string;
+          data: { createdAt?: { $type: string; value: string } };
+        }>;
+      };
+      expect(backup.manifest.schemaVersion).toBe("bike4city-backup-v1");
+      expect(backup.manifest.storageFilesIncluded).toBe(false);
+      const restoredSource = backup.records.find(
+        (record) => record.path === sourceRef.path,
+      );
+      expect(restoredSource?.data.createdAt).toEqual({
+        $type: "timestamp",
+        value: "2026-07-28T12:00:00.000Z",
+      });
+
+      const denied = await invokeFunction(
+        "createJsonBackup",
+        { idempotencyKey: `backup-denied-${crypto.randomUUID()}` },
+        volunteerToken,
+      );
+      expect(denied.status).toBe(403);
+    }, 60_000);
+});
+
 function createInput(idempotencyKey: string) {
   return {
     idempotencyKey,

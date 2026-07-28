@@ -171,6 +171,8 @@ evidenze riservate, mantenendo `index.ts` come entry point minimale.
 Il modulo `operational-reports.ts` produce riepiloghi annuali aggregati CSV,
 JSON, Excel e PDF, senza includere dati personali o stime ambientali non
 ancora approvate.
+Il modulo `backups.ts` crea backup JSON tipizzati con manifesto e checksum,
+archiviati in Storage privato e accessibili soltanto all’amministratore.
 
 Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
 senza cambiare il contratto delle callable e viene verificato con build,
