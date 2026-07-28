@@ -21,6 +21,7 @@ export interface DemoPart {
   condition: string;
   location: string;
   quantityOnHand: number;
+  recommendedPrice: number | null;
   sourceBikeCode: string | null;
   movements: DemoPartMovement[];
   notes: string;
@@ -52,6 +53,7 @@ export const demoParts: DemoPart[] = [
     condition: "Buono",
     location: "Cassettiera F-2",
     quantityOnHand: 4,
+    recommendedPrice: 6.5,
     sourceBikeCode: "BICI-2026-0008",
     movements: [
       {
@@ -86,6 +88,7 @@ export const demoParts: DemoPart[] = [
     condition: "Nuovo",
     location: "Scaffale P-1",
     quantityOnHand: 0,
+    recommendedPrice: 18,
     sourceBikeCode: null,
     movements: [
       {
@@ -120,6 +123,7 @@ export const demoParts: DemoPart[] = [
     condition: "Nuovo",
     location: "Cassettiera T-1",
     quantityOnHand: 2,
+    recommendedPrice: 12,
     sourceBikeCode: null,
     movements: [
       {
@@ -154,6 +158,7 @@ export const demoParts: DemoPart[] = [
     condition: "Da revisionare",
     location: "Rastrelliera R-3",
     quantityOnHand: 1,
+    recommendedPrice: 25,
     sourceBikeCode: "BICI-2026-0007",
     movements: [
       {
@@ -179,6 +184,7 @@ export const demoParts: DemoPart[] = [
     condition: "Buono",
     location: "Cassettiera A-4",
     quantityOnHand: 5,
+    recommendedPrice: null,
     sourceBikeCode: "BICI-2026-0006",
     movements: [
       {
@@ -204,6 +210,7 @@ export const demoParts: DemoPart[] = [
     condition: "Nuovo",
     location: "Vassoio lavori assegnati",
     quantityOnHand: 1,
+    recommendedPrice: 8,
     sourceBikeCode: null,
     movements: [
       {

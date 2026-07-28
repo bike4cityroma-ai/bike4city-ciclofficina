@@ -12,6 +12,7 @@ export function PartRegistrationForm({ onClose }: { onClose: () => void }) {
     condition: "Buono",
     location: "",
     quantity: "1",
+    recommendedPrice: "",
     sourceBikeCode: "",
     reason: "Carico iniziale del ricambio dimostrativo.",
     notes: "Ricambio e dati interamente fittizi.",
@@ -43,6 +44,9 @@ export function PartRegistrationForm({ onClose }: { onClose: () => void }) {
         brand: values.brand.trim() || null,
         sourceBikeCode: values.sourceBikeCode.trim() || null,
         quantity: Number(values.quantity),
+        recommendedPrice: values.recommendedPrice.trim()
+          ? Number(values.recommendedPrice.replace(",", "."))
+          : null,
       });
       onClose();
     } catch {
@@ -84,6 +88,11 @@ export function PartRegistrationForm({ onClose }: { onClose: () => void }) {
           <label>Ubicazione<input {...field("location")} required /></label>
           <label>Quantità iniziale<input {...field("quantity")} type="number"
             min={1} max={100000} required /></label>
+          <label>Prezzo consigliato (€)
+            <input {...field("recommendedPrice")} type="number"
+              min={0} max={1000000} step="0.01"
+              placeholder="Facoltativo" />
+          </label>
           <label>Bicicletta di origine
             <input {...field("sourceBikeCode")} placeholder="BICI-AAAA-NNNN" />
           </label>

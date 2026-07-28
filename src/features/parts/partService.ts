@@ -22,6 +22,7 @@ export interface NewPartInput {
   condition: string;
   location: string;
   quantity: number;
+  recommendedPrice: number | null;
   sourceBikeCode: string | null;
   reason: string;
   notes: string;
@@ -128,6 +129,9 @@ function mapPart(
     condition: String(data.condition),
     location: String(data.location ?? data.locationId ?? "Da assegnare"),
     quantityOnHand: Number(data.quantityOnHand ?? 0),
+    recommendedPrice: Number.isInteger(data.recommendedPriceCents)
+      ? Number(data.recommendedPriceCents) / 100
+      : null,
     sourceBikeCode: typeof data.sourceBikeCode === "string"
       ? data.sourceBikeCode
       : null,

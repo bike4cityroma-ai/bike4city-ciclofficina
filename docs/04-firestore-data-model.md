@@ -219,6 +219,7 @@ Campi principali:
 - `condition: string` obbligatorio;
 - `locationId: string | null`;
 - `quantityOnHand: number` obbligatorio e non negativo;
+- `recommendedPriceCents: number | null` facoltativo, espresso in centesimi;
 - `sourceBikeId: string | null`;
 - metadati comuni.
 
@@ -236,6 +237,10 @@ La registrazione tramite `createPart` richiede quantità iniziale positiva e
 genera nello stesso commit il primo movimento `in`. Il codice progressivo è
 assegnato dal contatore annuale `parts-AAAA`; né il client né l'operatore
 possono scegliere direttamente codice o giacenza.
+
+Il prezzo consigliato è un'indicazione operativa facoltativa: non determina
+automaticamente contributi, ricevute o classificazioni amministrative. Viene
+salvato in centesimi interi per evitare errori di arrotondamento.
 
 I movimenti successivi passano da `recordPartMovement`: `in` e `return`
 incrementano la giacenza, mentre `adjustment` applica una variazione positiva o

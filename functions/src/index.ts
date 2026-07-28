@@ -898,6 +898,21 @@ function requirePartInput(value: unknown) {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100_000) {
     throw new HttpsError("invalid-argument", "Quantità iniziale non valida.");
   }
+  const recommendedPrice = data.recommendedPrice;
+  let recommendedPriceCents: number | null = null;
+  if (recommendedPrice !== null && recommendedPrice !== undefined &&
+      recommendedPrice !== "") {
+    const amount = Number(recommendedPrice);
+    const cents = Math.round(amount * 100);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000 ||
+        Math.abs(amount * 100 - cents) > Number.EPSILON * 100) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Prezzo consigliato non valido.",
+      );
+    }
+    recommendedPriceCents = cents;
+  }
   return {
     idempotencyKey: text("idempotencyKey", 80),
     category: text("category"),
@@ -908,6 +923,7 @@ function requirePartInput(value: unknown) {
     condition: text("condition"),
     location: text("location"),
     quantity,
+    recommendedPriceCents,
     sourceBikeCode: nullableText("sourceBikeCode"),
     reason: text("reason", 500),
     notes: text("notes", 1000),
@@ -2577,6 +2593,7 @@ export const createPart = onCall(
         condition: input.condition,
         location: input.location,
         quantityOnHand: input.quantity,
+        recommendedPriceCents: input.recommendedPriceCents,
         sourceBikeCode: input.sourceBikeCode,
         notes: input.notes,
         createdAt: now,

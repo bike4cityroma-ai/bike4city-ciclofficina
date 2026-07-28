@@ -108,10 +108,12 @@ Se la riparazione è `In attesa ricambi`, prima riportarla in
 
 1. Aprire **Ricambi**.
 2. Premere **Registra ricambio**.
-3. Inserire categoria, descrizione, provenienza, compatibilità, condizione e
+3. Se utile, indicare il **Prezzo consigliato**: è un riferimento interno
+   facoltativo e non genera automaticamente ricevute o movimenti economici.
+4. Inserire categoria, descrizione, provenienza, compatibilità, condizione e
    ubicazione.
-4. Indicare quantità e motivazione.
-5. Premere **Registra e carica**.
+5. Indicare quantità e motivazione.
+6. Premere **Registra e carica**.
 
 Il sistema genera `RIC-AAAA-NNNN` e il movimento iniziale.
 

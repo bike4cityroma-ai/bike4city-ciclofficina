@@ -312,6 +312,16 @@ function PartDetail({ part, onClose }: PartDetailProps) {
           <dd>{part.location}</dd>
         </div>
         <div>
+          <dt>Prezzo consigliato</dt>
+          <dd>{part.recommendedPrice === null
+            ? "Non indicato"
+            : new Intl.NumberFormat("it-IT", {
+                style: "currency",
+                currency: "EUR",
+              }).format(part.recommendedPrice)}
+          </dd>
+        </div>
+        <div>
           <dt>Bicicletta di origine</dt>
           <dd>{part.sourceBikeCode ?? "Non applicabile"}</dd>
         </div>

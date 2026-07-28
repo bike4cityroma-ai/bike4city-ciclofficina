@@ -373,6 +373,7 @@ describe("App", () => {
     expect(screen.getByTestId("part-detail")).toHaveTextContent(
       "RIP-2026-0008",
     );
+    expect(screen.getByTestId("part-detail")).toHaveTextContent("6,50 €");
   });
 
   it("apre la registrazione con carico iniziale del ricambio", async () => {
@@ -388,6 +389,7 @@ describe("App", () => {
       screen.getByRole("dialog", { name: "Registra ricambio" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Quantità iniziale")).toHaveValue(1);
+    expect(screen.getByLabelText("Prezzo consigliato (€)")).toHaveValue(null);
     expect(
       screen.getByRole("button", { name: "Registra e carica" }),
     ).toBeInTheDocument();

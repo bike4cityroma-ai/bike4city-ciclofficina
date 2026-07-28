@@ -1085,6 +1085,7 @@ describe("createPart", () => {
       condition: "Buono",
       location: "Cassettiera test",
       quantity: 3,
+      recommendedPrice: 7.5,
       sourceBikeCode: "BICI-DEMO-ORIGINE",
       reason: "Carico da recupero dimostrativo.",
       notes: "Dati esclusivamente fittizi.",
@@ -1100,6 +1101,7 @@ describe("createPart", () => {
       `partMovements/${body.result.movementId}`,
     ).get();
     expect(part.data()?.quantityOnHand).toBe(3);
+    expect(part.data()?.recommendedPriceCents).toBe(750);
     expect(movement.data()?.quantity).toBe(3);
     expect(movement.data()?.type).toBe("in");
     const repeated = await invokeFunction("createPart", data);
@@ -1117,6 +1119,7 @@ describe("createPart", () => {
       condition: "Nuovo",
       location: "Area test",
       quantity: 1,
+      recommendedPrice: null,
       sourceBikeCode: null,
       reason: "Carico dimostrativo non autorizzato.",
       notes: "Dati fittizi.",
