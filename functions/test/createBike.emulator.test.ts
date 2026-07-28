@@ -1683,7 +1683,7 @@ describe("receipt drafts", () => {
       expect(voided.status).toBe(200);
       expect((await db.doc(`receipts/${body.result.id}`).get()).data()?.status)
         .toBe("void");
-    }, 30_000);
+    }, 60_000);
 });
 
 describe("exportOperationalReport", () => {

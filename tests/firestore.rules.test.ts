@@ -18,6 +18,7 @@ import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 
 const projectId = "demo-bike4city-ciclofficina";
 let testEnvironment: RulesTestEnvironment;
+let environmentInitialized = false;
 
 beforeAll(async () => {
   const storageRules = await readFile(
@@ -41,9 +42,13 @@ beforeAll(async () => {
       rules: storageRules,
     },
   });
+  environmentInitialized = true;
 });
 
 beforeEach(async () => {
+  if (!environmentInitialized) {
+    throw new Error("Ambiente di test delle Rules non inizializzato.");
+  }
   await testEnvironment.clearFirestore();
   await testEnvironment.clearStorage();
 
@@ -106,7 +111,9 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await testEnvironment.cleanup();
+  if (environmentInitialized) {
+    await testEnvironment.cleanup();
+  }
 });
 
 describe("Regole Firestore", () => {
