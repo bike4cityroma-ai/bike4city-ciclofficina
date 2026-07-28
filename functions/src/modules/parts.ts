@@ -305,7 +305,6 @@ export const useRepairPart = onCall(
     });
   },
 );
-
 export const createPart = onCall(
   { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
@@ -503,5 +502,4 @@ export const recordPartMovement = onCall(
     });
   },
 );
-
 
