@@ -57,7 +57,6 @@ resta il riferimento principale per le future misurazioni.
 - lettura con tecnologia assistiva;
 - messaggi di errore e recupero osservati dall'interfaccia;
 - prove operative complete di ogni modulo per ciascun ruolo;
-- revoca di un account mentre la sua sessione è già attiva;
 - stampa e firme sui PDF generati.
 
 ## Verifica responsive e focus del 28 luglio 2026
@@ -115,6 +114,21 @@ contemporaneamente due registrazioni con soli dati fittizi. Entrambe sono
 state consolidate e hanno ricevuto progressivi distinti
 `BICI-2026-0015` e `BICI-2026-0016`; i due registri si sono aggiornati fino a
 mostrare quattro biciclette senza conflitti o duplicazioni.
+
+## Verifica revoca della sessione del 28 luglio 2026
+
+Il collaudo ha rilevato che il profilo applicativo veniva letto soltanto al
+momento dell'accesso: la disabilitazione successiva dell'account non provocava
+quindi l'uscita immediata. Il monitoraggio della sessione è stato corretto per
+osservare in tempo reale `users/{uid}` e chiudere l'autenticazione quando il
+profilo manca, non è leggibile oppure non ha `active: true`. Anche il login
+iniziale ora rifiuta un profilo applicativo mancante o inattivo.
+
+La prova è stata eseguita con l'account fittizio del responsabile già
+autenticato. Dopo la disabilitazione in Authentication, la revoca delle custom
+claims e l'impostazione di `active: false` in Firestore, l'interfaccia è tornata
+alla schermata di accesso in circa 0,4 secondi. Un nuovo tentativo con le stesse
+credenziali è stato respinto. Non sono stati utilizzati account o dati reali.
 
 Questo verbale non sostituisce il collaudo organizzativo, privacy, legale o
 fiscale e non autorizza staging o produzione.
