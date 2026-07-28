@@ -168,6 +168,8 @@ functions/src/
 
 Il modulo `documents-and-evidence.ts` raccoglie documenti operativi, firme ed
 evidenze riservate, mantenendo `index.ts` come entry point minimale.
+Il modulo `operational-reports.ts` produce riepiloghi annuali aggregati CSV e
+JSON, senza includere dati personali o stime ambientali non ancora approvate.
 
 Il refactoring è intenzionalmente incrementale: ogni modulo viene spostato
 senza cambiare il contratto delle callable e viene verificato con build,

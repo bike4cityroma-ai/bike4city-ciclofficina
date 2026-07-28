@@ -1685,6 +1685,80 @@ describe("receipt drafts", () => {
     }, 30_000);
 });
 
+describe("exportOperationalReport", () => {
+  it("esporta aggregati annuali senza dati personali e nega il volontario",
+    async () => {
+      const createdAt = Timestamp.fromDate(
+        new Date("2026-06-15T10:00:00Z"),
+      );
+      await db.collection("bikes").add({
+        status: "Pronta, verificata",
+        createdAt,
+        customerLabel: "Dato personale da non esportare",
+        demo: true,
+      });
+      const idempotencyKey = `report-${crypto.randomUUID()}`;
+      const response = await invokeFunction("exportOperationalReport", {
+        year: 2026,
+        format: "json",
+        idempotencyKey,
+      });
+      expect(response.status).toBe(200);
+      const body = await response.json() as {
+        result: {
+          dataBase64: string;
+          dataScope: string;
+          fileName: string;
+        };
+      };
+      const report = JSON.parse(
+        Buffer.from(body.result.dataBase64, "base64").toString("utf8"),
+      ) as {
+        totals: { bikes: number };
+        environmentalMetrics: { included: boolean };
+      };
+      expect(report.totals.bikes).toBeGreaterThanOrEqual(1);
+      expect(report.environmentalMetrics.included).toBe(false);
+      expect(body.result.dataScope).toBe("aggregated_no_personal_data");
+      expect(body.result.fileName).toBe("report-operativo-2026.json");
+      expect(JSON.stringify(report)).not.toContain(
+        "Dato personale da non esportare",
+      );
+
+      const repeated = await invokeFunction("exportOperationalReport", {
+        year: 2026,
+        format: "json",
+        idempotencyKey,
+      });
+      expect((await repeated.json()).result).toEqual(body.result);
+
+      const csvResponse = await invokeFunction("exportOperationalReport", {
+        year: 2026,
+        format: "csv",
+        idempotencyKey: `report-csv-${crypto.randomUUID()}`,
+      });
+      const csvBody = await csvResponse.json() as {
+        result: { dataBase64: string };
+      };
+      const csv = Buffer.from(
+        csvBody.result.dataBase64,
+        "base64",
+      ).toString("utf8");
+      expect(csv).toContain('"Pronta, verificata"');
+
+      const denied = await invokeFunction(
+        "exportOperationalReport",
+        {
+          year: 2026,
+          format: "json",
+          idempotencyKey: `report-denied-${crypto.randomUUID()}`,
+        },
+        volunteerToken,
+      );
+      expect(denied.status).toBe(403);
+    }, 30_000);
+});
+
 function createInput(idempotencyKey: string) {
   return {
     idempotencyKey,
