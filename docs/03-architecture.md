@@ -159,6 +159,7 @@ functions/src/
 └── modules/
     ├── bikes.ts               registrazione, progressivi e transizioni di stato
     ├── members-and-users.ts   soci, dati separati, ruoli, revoche e audit
+    ├── parts.ts               inventario, movimenti e utilizzo nelle riparazioni
     └── receipts.ts            validazione, progressivi, PDF e annullamento
 ```
 
