@@ -1,5 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  getDocsFromServer,
+  onSnapshot,
+  orderBy,
+  query,
+  type QuerySnapshot,
+} from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "../../firebase/client";
 
@@ -24,9 +31,12 @@ export function UserAccessRegistry() {
   const [selected, setSelected] = useState<UserAccess | null>(null);
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState(false);
-  useEffect(() => onSnapshot(
-    query(collection(db, "users"), orderBy("displayName")),
-    (snapshot) => {
+  useEffect(() => {
+    const usersQuery = query(
+      collection(db, "users"),
+      orderBy("displayName"),
+    );
+    const applySnapshot = (snapshot: QuerySnapshot) => {
       const nextUsers = snapshot.docs.map((item) => ({
         uid: item.id,
         displayName: String(item.data().displayName ?? "Utente senza nome"),
@@ -36,10 +46,23 @@ export function UserAccessRegistry() {
       if (nextUsers.length > 0 || !snapshot.metadata.fromCache) {
         setUsers(nextUsers);
       }
-      setLoadError(snapshot.metadata.fromCache);
-    },
-    () => setLoadError(true),
-  ), []);
+    };
+
+    void getDocsFromServer(usersQuery).then((snapshot) => {
+      applySnapshot(snapshot);
+      setLoadError(false);
+    }).catch(() => setLoadError(true));
+
+    return onSnapshot(
+      usersQuery,
+      { includeMetadataChanges: true },
+      (snapshot) => {
+        applySnapshot(snapshot);
+        if (!snapshot.metadata.fromCache) setLoadError(false);
+      },
+      () => setLoadError(true),
+    );
+  }, []);
   return <section aria-labelledby="users-title">
     <div className="section-heading"><div>
       <p className="eyebrow">Accessi e revoche</p>

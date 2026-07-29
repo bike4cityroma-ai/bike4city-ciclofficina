@@ -4,7 +4,8 @@
 
 - Preparazione locale: avviata
 - Progetto Firebase staging: `bike4city-ciclofficina`
-- Deploy: non autorizzato
+- Deploy applicativo completo: non autorizzato
+- Deploy parziale autorizzato: Firestore Rules e Cloud Functions
 - Dati ammessi: esclusivamente fittizi
 
 Questo documento non autorizza la pubblicazione. Prima di ogni comando Firebase
@@ -183,3 +184,30 @@ nel repository. Il percorso di configurazione e i blocchi contro emulatori e
 build sono coperti da test automatici. Lo scambio effettivo del token dovrà
 essere ricontrollato durante la prima sessione di collaudo integrato dello
 staging, prima dell'enforcement.
+
+## Firestore, Authentication e Functions del 29 luglio 2026
+
+- Authentication email/password abilitata; gli altri provider restano
+  disabilitati;
+- Firestore Standard creato in `europe-west1` in modalità di produzione;
+- regole Firestore pubblicate dopo 27 test Security Rules superati;
+- amministratore fittizio configurato con profilo attivo e custom claims;
+- primo accesso integrato dell'amministratore completato;
+- 29 Cloud Functions v2 Node.js 22 pubblicate in `europe-west1`;
+- piano Blaze attivato dall'associazione per Cloud Build e Functions;
+- immagini di build in Artifact Registry eliminate automaticamente dopo
+  sette giorni;
+- App Check resta in monitoraggio con `enforceAppCheck: false`;
+- Storage applicativo non è ancora inizializzato.
+
+Il client cloud usa il long polling Firestore forzato per tollerare proxy che
+interrompono WebChannel. Il registro utenti esegue inoltre una lettura server
+esplicita: il primo snapshot locale non viene più scambiato per un errore di
+connessione, mentre un fallimento reale continua a mostrare l'avviso.
+
+Il collaudo di `manageUserAccess` ha usato un secondo account esclusivamente
+fittizio. Sono stati verificati attivazione, ruolo `volunteer`, sincronizzazione
+di Authentication, custom claims e Firestore, audit e revoca. Lo stato finale
+dell'account è disabilitato, senza ruoli, e il tentativo di accesso restituisce
+`USER_DISABLED`. Nessuna password, token o UID è riportato nella
+documentazione.

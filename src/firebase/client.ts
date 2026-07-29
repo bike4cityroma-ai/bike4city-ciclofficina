@@ -11,6 +11,7 @@ import {
 import {
   connectFirestoreEmulator,
   getFirestore,
+  initializeFirestore,
   type Firestore,
 } from "firebase/firestore";
 import {
@@ -91,7 +92,11 @@ if (!emulatorsEnabled) {
 }
 
 export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
+export const db: Firestore = emulatorsEnabled
+  ? getFirestore(app)
+  : initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    });
 export const storage: FirebaseStorage = getStorage(app);
 export const functions: Functions = getFunctions(app, "europe-west1");
 
