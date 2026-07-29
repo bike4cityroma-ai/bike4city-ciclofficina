@@ -6,6 +6,16 @@ Le strutture seguenti sono bozze funzionali. Testi, dichiarazioni, riferimenti
 normativi, firme e tempi di conservazione devono essere approvati
 dall'associazione e, quando necessario, da professionisti incaricati.
 
+Decisione associativa `DOC-001` del 30 luglio 2026:
+
+> Modelli documentali, processo di firma operativa, versionamento e
+> conservazione tecnica approvati dall'associazione; testi definitivi e valore
+> giuridico da confermare dal consulente.
+
+L'architettura documentale può quindi essere usata come modello operativo
+interno. I documenti destinati all'uso con dati reali restano subordinati alla
+conferma professionale dei testi e del loro valore giuridico.
+
 ## Regole comuni
 
 Ogni documento dovrebbe contenere:

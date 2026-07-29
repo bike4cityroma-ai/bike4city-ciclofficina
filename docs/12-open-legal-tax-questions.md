@@ -268,14 +268,18 @@ delle evidenze dopo 24 mesi. Restano da sottoporre a valutazione professionale:
 
 ## Firme e documenti digitali
 
-Chiarire:
+Stato approvato dall'associazione il 30 luglio 2026:
 
-- quali documenti richiedono firma;
-- tipo di firma sufficiente;
+> Modelli documentali, processo di firma operativa, versionamento e
+> conservazione tecnica approvati dall'associazione; testi definitivi e valore
+> giuridico da confermare dal consulente.
+
+Sono approvati operativamente i PDF A4 versionati e non sovrascrivibili, la
+firma mediante modulo acquisito o firma grafica sul dispositivo, i checksum,
+lo Storage privato, le copie tracciate e le correzioni tramite nuova versione.
+Restano da confermare professionalmente:
+
 - validità della firma acquisita su carta o dispositivo;
-- conservazione dell'originale;
-- gestione delle versioni;
-- accesso e produzione di copie;
 - valore del PDF generato dal sistema.
 
 ## Conservazione e audit
@@ -318,7 +322,7 @@ Decidere:
 | LEG-001 | Classificazione delle attività | APS Bike4City ETS | Prassi operativa approvata; classificazione professionale da confermare | Dal 30/07/2026 |
 | TAX-001 | Regole delle ricevute | APS Bike4City ETS | Prassi amministrativa e modello operativo approvati; trattamento fiscale e diciture normative da confermare dal consulente | Dal 30/07/2026 |
 | PRI-001 | Dati e tempi di conservazione | APS Bike4City ETS | Misure operative approvate; basi giuridiche, tempi definitivi e procedure privacy da confermare dal consulente | Dal 30/07/2026 |
-| DOC-001 | Testi e firme dei documenti | Da definire | Aperta | — |
+| DOC-001 | Testi e firme dei documenti | APS Bike4City ETS | Modelli e processo operativo approvati; testi definitivi e valore giuridico da confermare dal consulente | Dal 30/07/2026 |
 | ACC-001 | Testo privacy della scheda di accettazione | Da definire | Aperta | — |
 | ACC-002 | Condizioni del servizio e beni non ritirati | Da definire | Aperta | — |
 | ACC-003 | Modalità di autorizzazione dei lavori aggiuntivi | APS Bike4City ETS | Validata | Dal 26/07/2026 |
