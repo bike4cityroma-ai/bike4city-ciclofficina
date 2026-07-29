@@ -352,6 +352,18 @@ repository.
 Le 30 callable Node.js sono configurate con `enforceAppCheck` attivo nel cloud
 e disattivo esclusivamente quando `FUNCTIONS_EMULATOR=true`. Build Functions,
 40 test frontend, build staging e regressione completa con Firebase Emulator
-Suite sono state superate. La configurazione delle callable richiede ancora
-commit, push e deploy esplicitamente autorizzato prima di diventare effettiva
-nello staging.
+Suite sono state superate. La configurazione è stata pubblicata con il commit
+`43fead1` e il successivo deploy esplicitamente autorizzato delle 30 Functions.
+
+Il primo tentativo di deploy si è fermato durante la discovery locale al limite
+predefinito di 10 secondi, senza aggiornare le Functions. Il secondo tentativo
+ha usato temporaneamente `FUNCTIONS_DISCOVERY_TIMEOUT=30`, come previsto dalla
+documentazione Firebase, ed è terminato correttamente per tutte le Functions.
+La variabile non è stata salvata nel progetto.
+
+Uno smoke test dal client di staging ha invocato `createBike` con App Check
+valido. La callable ha risposto e ha creato una bicicletta esclusivamente
+fittizia; al termine sono stati rimossi amministrativamente e in modo puntuale
+la bicicletta, il relativo audit, la chiave d'idempotenza e il contatore
+generati dalla prova. La verifica finale ha rilevato zero biciclette, sessione
+attiva e nessun errore o warning nella console del browser.
