@@ -164,6 +164,14 @@ Classificazioni operative approvate dall'associazione:
 I codici sono stabili; descrizioni, validità e configurazioni fiscali saranno
 versionate.
 
+Stato approvato dall'associazione il 30 luglio 2026:
+
+> Prassi operativa approvata dall'associazione, classificazione professionale
+> da confermare.
+
+Questa approvazione chiude la raccolta associativa di `LEG-001`, ma non
+costituisce validazione legale o fiscale e non abilita ricevute definitive.
+
 ## Ricevute e documenti economici
 
 Chiarire:
@@ -295,7 +303,7 @@ Decidere:
 
 | ID | Questione | Responsabile validazione | Stato | Validità |
 |---|---|---|---|---|
-| LEG-001 | Classificazione delle attività | Da definire | Aperta | — |
+| LEG-001 | Classificazione delle attività | APS Bike4City ETS | Prassi operativa approvata; classificazione professionale da confermare | Dal 30/07/2026 |
 | TAX-001 | Regole delle ricevute | Da definire | Aperta | — |
 | PRI-001 | Dati e tempi di conservazione | Da definire | Aperta | — |
 | DOC-001 | Testi e firme dei documenti | Da definire | Aperta | — |

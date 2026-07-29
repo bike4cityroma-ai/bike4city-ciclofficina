@@ -6,9 +6,9 @@ Compilare esclusivamente ciò che descrive l'attività reale
 dell'associazione. Le colonne legali e fiscali devono essere confermate dai
 referenti competenti: il software non deduce autonomamente il trattamento.
 
-Data di compilazione: `[DA COMPILARE]`
+Data di compilazione: `30/07/2026`
 
-Referente associativo: `[DA COMPILARE]`
+Referente associativo: `APS Bike4City ETS`
 
 Consulente o referente fiscale: `[DA COMPILARE]`
 
@@ -35,6 +35,16 @@ Per ogni attività indicare:
 | Altre attività | `no` | `non applicabile` | `non applicabile` | `nessuno` | Nessun'altra attività economica dichiarata. |
 
 ## B. Validazione LEG-001
+
+Stato associativo approvato il 30 luglio 2026:
+
+> Prassi operativa approvata dall'associazione, classificazione professionale
+> da confermare.
+
+La raccolta delle attività, dei destinatari e delle modalità economiche della
+sezione A è quindi confermata come descrizione della prassi effettiva. Restano
+riservate al professionista incaricato la qualificazione giuridica, i
+riferimenti normativi e il coordinamento con `TAX-001`.
 
 Per ogni riga attiva della sezione A, il referente incaricato deve indicare:
 
