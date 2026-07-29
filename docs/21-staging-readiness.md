@@ -269,5 +269,14 @@ allineata alla matrice Firestore:
   della relativa lettura.
 
 La correzione è coperta da quattro test specifici; typecheck, 36 test frontend
-e build staging sono stati completati. Il nuovo pacchetto non è ancora stato
-pubblicato su Hosting e richiede una conferma esplicita separata.
+e build staging sono stati completati. Il pacchetto è stato pubblicato su
+Hosting dopo conferma esplicita. Il collaudo online senza cache ha mostrato al
+volontario esclusivamente dashboard, biciclette, ricambi e collaudi; al
+termine l'account fittizio è stato nuovamente revocato.
+
+Il primo caricamento dopo il deploy ha inoltre evidenziato che la configurazione
+predefinita di Hosting conservava `index.html` in cache fino a un'ora. Un
+browser già aperto poteva quindi mostrare temporaneamente la versione
+precedente. `firebase.json` richiede ora la rivalidazione tramite
+`Cache-Control: no-cache, max-age=0, must-revalidate`. La configurazione deve
+essere pubblicata con un ulteriore deploy del solo Hosting.
