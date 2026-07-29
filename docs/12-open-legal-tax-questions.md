@@ -174,17 +174,20 @@ costituisce validazione legale o fiscale e non abilita ricevute definitive.
 
 ## Ricevute e documenti economici
 
-Chiarire:
+Stato approvato dall'associazione il 30 luglio 2026:
 
-- quando emettere una ricevuta;
-- numerazioni necessarie e loro separazione;
+> Prassi amministrativa e modello operativo approvati dall'associazione;
+> trattamento fiscale e diciture normative da confermare dal consulente.
+
+La prassi approvata comprende serie annuale unica, emissione al
+pagamento/consegna, contanti e PayPal, stesso modello con descrizioni
+specifiche, soggetti autorizzati e annullamento amministrativo senza
+cancellazione. Restano da confermare professionalmente:
+
 - contenuti obbligatori;
-- soggetti autorizzati all'emissione;
-- modalità di correzione e annullamento;
 - eventuali riferimenti normativi;
 - trattamento di imponibile, aliquota e IVA;
 - casi di esclusione, esenzione o fuori campo;
-- metodi di pagamento da registrare;
 - conservazione e disponibilità dei documenti.
 
 ## Configurazioni temporali
@@ -304,7 +307,7 @@ Decidere:
 | ID | Questione | Responsabile validazione | Stato | Validità |
 |---|---|---|---|---|
 | LEG-001 | Classificazione delle attività | APS Bike4City ETS | Prassi operativa approvata; classificazione professionale da confermare | Dal 30/07/2026 |
-| TAX-001 | Regole delle ricevute | Da definire | Aperta | — |
+| TAX-001 | Regole delle ricevute | APS Bike4City ETS | Prassi amministrativa e modello operativo approvati; trattamento fiscale e diciture normative da confermare dal consulente | Dal 30/07/2026 |
 | PRI-001 | Dati e tempi di conservazione | Da definire | Aperta | — |
 | DOC-001 | Testi e firme dei documenti | Da definire | Aperta | — |
 | ACC-001 | Testo privacy della scheda di accettazione | Da definire | Aperta | — |

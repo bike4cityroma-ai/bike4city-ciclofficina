@@ -82,6 +82,17 @@ configurazione fiscale sarà versionata e collegata al codice operativo.
 Questa sezione deve essere compilata o confermata dal consulente fiscale per
 ciascuna classificazione LEG-001.
 
+Stato associativo approvato il 30 luglio 2026:
+
+> Prassi amministrativa e modello operativo approvati dall'associazione;
+> trattamento fiscale e diciture normative da confermare dal consulente.
+
+Sono quindi approvati come prassi interna la serie annuale unica, il momento
+di emissione, i metodi di pagamento, i soggetti autorizzati, l'annullamento
+senza cancellazione e i dati minimi già raccolti nella tabella seguente.
+Restano bloccate le ricevute definitive fino alla conferma professionale di
+trattamento IVA, regime applicabile, diciture normative, bollo e conservazione.
+
 | Campo | Risposta |
 |---|---|
 | Ricevuta richiesta | `[DA VALIDARE]` |
