@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "demo-bike4city-ciclofficina"
+    "default": "demo-bike4city-ciclofficina",
+    "staging": "bike4city-ciclofficina"
   }
 }

@@ -3,7 +3,7 @@
 ## Stato
 
 - Preparazione locale: avviata
-- Progetto Firebase staging: da creare o indicare
+- Progetto Firebase staging: `bike4city-ciclofficina`
 - Deploy: non autorizzato
 - Dati ammessi: esclusivamente fittizi
 
@@ -66,7 +66,8 @@ Questi comandi non eseguono deploy.
 
 ## Bloccanti tecnici prima del deploy
 
-- creare e associare il progetto Firebase staging;
+- verificare proprietà, regione e servizi del progetto
+  `bike4city-ciclofficina`;
 - compilare `.env.staging.local`;
 - abilitare App Check nel progetto e verificarne i token;
 - sostituire `enforceAppCheck: false` nelle callable con una configurazione
@@ -108,3 +109,35 @@ Questi comandi non eseguono deploy.
 
 La produzione rimane separata e bloccata fino alle revisioni legale, fiscale,
 privacy e organizzativa.
+
+## Associazione locale del 29 luglio 2026
+
+Il progetto indicato dall'associazione è `bike4city-ciclofficina`, con nome
+visualizzato **Bike4city-Ciclofficina**. È stato registrato nell'alias Firebase
+locale `staging`. L'alias `default` resta
+`demo-bike4city-ciclofficina`, così i comandi locali non selezionano
+accidentalmente il progetto cloud.
+
+I parametri pubblici della Web App sono stati salvati esclusivamente nel file
+locale `.env.staging.local`, escluso da Git. La chiave sito App Check rimane
+vuota fino alla configurazione esplicitamente autorizzata del servizio.
+Nessun deploy è stato eseguito.
+
+## Verifica in console del 29 luglio 2026
+
+La console Firebase è stata verificata in sola lettura:
+
+- nome progetto: **Bike4city-Ciclofficina**;
+- project ID: `bike4city-ciclofficina`;
+- numero progetto: `167027102568`;
+- tipo di ambiente: `Non specificato`;
+- Web App registrata: **Bike4city Ciclofficina Staging**;
+- App ID: `1:167027102568:web:0bdc9942e4eec677e1fcdd`;
+- collegamento a Firebase Hosting: non attivato;
+- stream Google Analytics: non creato.
+
+La Web App è stata registrata dopo conferma esplicita dell'associazione.
+Sono stati recuperati soltanto i parametri pubblici della configurazione web;
+non sono state create o scaricate chiavi private o credenziali amministrative.
+Il prossimo intervento cloud da autorizzare separatamente è la configurazione
+di App Check per la Web App.
