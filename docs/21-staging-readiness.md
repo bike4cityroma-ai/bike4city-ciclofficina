@@ -198,7 +198,17 @@ staging, prima dell'enforcement.
 - immagini di build in Artifact Registry eliminate automaticamente dopo
   sette giorni;
 - App Check resta in monitoraggio con `enforceAppCheck: false`;
-- Storage applicativo non è ancora inizializzato.
+- bucket Storage predefinito
+  `bike4city-ciclofficina.firebasestorage.app` creato in `europe-west1`,
+  in modalità di produzione e inizialmente vuoto;
+- prevenzione dell'accesso pubblico imposta esplicitamente su `enforced`;
+- regole Storage applicative compilate e pubblicate dopo 27 test Security
+  Rules complessivi Firestore + Storage superati;
+- collaudo Storage cloud completato con un file esclusivamente fittizio:
+  caricamento anonimo negato (`403`) e caricamento amministratore consentito
+  (`200`);
+- il file fittizio di collaudo è stato eliminato amministrativamente al
+  termine della prova e il bucket è tornato vuoto.
 
 Il client cloud usa il long polling Firestore forzato per tollerare proxy che
 interrompono WebChannel. Il registro utenti esegue inoltre una lettura server
