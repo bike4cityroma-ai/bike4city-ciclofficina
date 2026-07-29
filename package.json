@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:staging": "npm.cmd run staging:check && tsc -b && vite build --mode staging",
+    "staging:check": "node scripts/check-staging-readiness.mjs",
     "functions:build": "npm.cmd --prefix functions run build",
     "emulators:seed": "npm.cmd run functions:build && npm.cmd --prefix functions run seed",
     "emulators": "node scripts/firebase-emulators.mjs start",

@@ -1,5 +1,9 @@
 import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
 import {
+  initializeAppCheck,
+  ReCaptchaV3Provider,
+} from "firebase/app-check";
+import {
   connectAuthEmulator,
   getAuth,
   type Auth,
@@ -65,6 +69,17 @@ function useEmulators() {
 const app = getApps().length === 0
   ? initializeApp(getFirebaseOptions())
   : getApp();
+
+if (!useEmulators()) {
+  const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY;
+  if (!appCheckSiteKey) {
+    throw new Error("Configurazione App Check mancante.");
+  }
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(appCheckSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);

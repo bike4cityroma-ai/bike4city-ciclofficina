@@ -6,6 +6,9 @@ Questa è una procedura preparatoria. Non autorizza alcun deploy. I comandi
 effettivi verranno definiti dopo la configurazione Firebase e mostrati prima
 dell'esecuzione.
 
+La checklist operativa per il primo ambiente con soli dati fittizi è in
+`docs/21-staging-readiness.md`.
+
 ## Ambienti
 
 | Ambiente | Dati | Finalità |

@@ -96,6 +96,23 @@ Modello economico in attesa di validazione:
 - applicare cancellazione logica e audit invece di eliminare dati reali;
 - verificare build, test, regole, variabili e backup prima di ogni deploy.
 
+## Preparazione staging
+
+Lo staging deve usare un progetto Firebase separato e soltanto dati fittizi.
+La checklist è in `docs/21-staging-readiness.md`.
+
+Per verificare la configurazione senza eseguire deploy:
+
+```powershell
+Copy-Item .env.staging.example .env.staging.local
+npm.cmd run staging:check
+npm.cmd run build:staging
+```
+
+Il file `.env.staging.local` è escluso da Git. Il controllo fallisce
+intenzionalmente se il progetto è demo, gli emulatori sono attivi o manca la
+configurazione App Check.
+
 ## Avvio dello sviluppo
 
 Requisito: Node.js 22.12 o successivo.
