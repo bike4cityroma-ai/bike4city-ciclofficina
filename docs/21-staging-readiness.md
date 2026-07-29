@@ -243,3 +243,31 @@ App Check resta in monitoraggio e non è ancora imposto sulle API. Lo staging
 rimane quindi limitato a dati e account esclusivamente fittizi; questo deploy
 non costituisce autorizzazione alla produzione o all'inserimento di dati
 personali reali.
+
+## Collaudo online dei ruoli del 29 luglio 2026
+
+Un unico account fittizio è stato attivato in sequenza come responsabile
+ciclofficina, operatore, volontario, tesoriere e sola lettura. Per ogni ruolo
+sono stati verificati:
+
+- lettura del proprio profilo;
+- accesso consentito o negato, secondo matrice, a soci, biciclette, ricevute,
+  documenti e audit.
+
+Tutti i 30 controlli di lettura hanno restituito lo stato HTTP previsto. Al
+termine di ogni passaggio il ruolo è stato revocato; lo stato finale
+dell'account è disabilitato, senza ruoli, e il login è nuovamente rifiutato.
+
+Il collaudo manuale dell'interfaccia ha rilevato che un volontario vedeva anche
+moduli non autorizzati. Le Security Rules negavano correttamente i dati, ma il
+menu esponeva sezioni e azioni inutilizzabili. La navigazione è stata quindi
+allineata alla matrice Firestore:
+
+- volontario: dashboard, biciclette, ricambi e collaudi;
+- utenti e ruoli: soltanto amministratore;
+- soci, ricevute e documenti: visibili esclusivamente ai ruoli che dispongono
+  della relativa lettura.
+
+La correzione è coperta da quattro test specifici; typecheck, 36 test frontend
+e build staging sono stati completati. Il nuovo pacchetto non è ancora stato
+pubblicato su Hosting e richiede una conferma esplicita separata.

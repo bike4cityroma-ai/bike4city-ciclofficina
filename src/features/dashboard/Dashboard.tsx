@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { DemoUser } from "../../app/App";
 import { demoActivities, demoMetrics } from "./demoData";
 
@@ -47,26 +47,113 @@ type AppSection =
   | "receipts"
   | "users";
 
-const baseNavigationItems: Array<{
-  id: AppSection | "disabled";
+type NavigationItem = {
+  id: AppSection;
   label: string;
-}> = [
+  roles?: string[];
+};
+
+const baseNavigationItems: NavigationItem[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "members", label: "Soci" },
-  { id: "bikes", label: "Biciclette" },
-  { id: "repairs", label: "Riparazioni" },
-  { id: "parts", label: "Ricambi" },
-  { id: "tests", label: "Collaudi" },
-  { id: "deliveries", label: "Consegne" },
-  { id: "receipts", label: "Ricevute" },
-  { id: "documents", label: "Documenti" },
+  {
+    id: "members",
+    label: "Soci",
+    roles: ["admin", "workshop_manager", "treasurer"],
+  },
+  {
+    id: "bikes",
+    label: "Biciclette",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "volunteer",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "repairs",
+    label: "Riparazioni",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "parts",
+    label: "Ricambi",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "volunteer",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "tests",
+    label: "Collaudi",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "volunteer",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "deliveries",
+    label: "Consegne",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "receipts",
+    label: "Ricevute",
+    roles: [
+      "admin",
+      "workshop_manager",
+      "operator",
+      "treasurer",
+      "read_only",
+    ],
+  },
+  {
+    id: "documents",
+    label: "Documenti",
+    roles: ["admin", "workshop_manager", "operator", "treasurer"],
+  },
 ];
+
+export function navigationItemsForRoles(roles: string[]) {
+  const items = baseNavigationItems.filter((item) =>
+    item.roles === undefined || item.roles.some((role) => roles.includes(role))
+  );
+  return roles.includes("admin")
+    ? [...items, { id: "users" as const, label: "Utenti e ruoli" }]
+    : items;
+}
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [section, setSection] = useState<AppSection>("dashboard");
-  const navigationItems = user.roles.includes("admin")
-    ? [...baseNavigationItems, { id: "users" as const, label: "Utenti e ruoli" }]
-    : baseNavigationItems;
+  const navigationItems = navigationItemsForRoles(user.roles);
+
+  useEffect(() => {
+    if (!navigationItems.some((item) => item.id === section)) {
+      setSection("dashboard");
+    }
+  }, [navigationItems, section]);
 
   return (
     <div className="app-shell">
@@ -101,17 +188,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   }
                   type="button"
                   aria-current={item.id === section ? "page" : undefined}
-                  disabled={item.id === "disabled"}
-                  title={
-                    item.id === "disabled"
-                      ? "Modulo non ancora disponibile"
-                      : ""
-                  }
-                  onClick={() => {
-                    if (item.id !== "disabled") {
-                      setSection(item.id);
-                    }
-                  }}
+                  onClick={() => setSection(item.id)}
                 >
                   <span aria-hidden="true">{index + 1}</span>
                   {item.label}
