@@ -2,10 +2,11 @@
 
 ## Stato
 
-- Preparazione locale: avviata
+- Preparazione locale: completata per il primo deploy staging
 - Progetto Firebase staging: `bike4city-ciclofficina`
-- Deploy applicativo completo: non autorizzato
-- Deploy parziale autorizzato: Firestore Rules e Cloud Functions
+- Deploy applicativo staging: completato il 29 luglio 2026
+- Componenti pubblicati: Firestore Rules, Storage Rules, Cloud Functions e
+  Firebase Hosting
 - Dati ammessi: esclusivamente fittizi
 
 Questo documento non autorizza la pubblicazione. Prima di ogni comando Firebase
@@ -221,3 +222,24 @@ di Authentication, custom claims e Firestore, audit e revoca. Lo stato finale
 dell'account è disabilitato, senza ruoli, e il tentativo di accesso restituisce
 `USER_DISABLED`. Nessuna password, token o UID è riportato nella
 documentazione.
+
+## Primo deploy Firebase Hosting del 29 luglio 2026
+
+- commit applicativo pubblicato: `9f69fac`;
+- destinazione: progetto staging `bike4city-ciclofficina`;
+- URL: `https://bike4city-ciclofficina.web.app`;
+- pubblicato esclusivamente il contenuto di `dist` tramite Firebase Hosting;
+- controllo staging, TypeScript e build Vite completati;
+- 32 test frontend superati;
+- build TypeScript delle Cloud Functions completata senza nuovo deploy;
+- pacchetto verificato senza riferimenti a emulatori, localhost, progetto demo
+  o debug token App Check;
+- pagina di accesso e fallback SPA verificati online;
+- login e logout dell'amministratore fittizio verificati senza creare o
+  modificare record;
+- nessun errore rilevato nella console del browser durante il collaudo.
+
+App Check resta in monitoraggio e non è ancora imposto sulle API. Lo staging
+rimane quindi limitato a dati e account esclusivamente fittizi; questo deploy
+non costituisce autorizzazione alla produzione o all'inserimento di dati
+personali reali.
