@@ -144,6 +144,12 @@ sostituisce autenticazione o autorizzazione. Deve essere verificato prima
 dell'ambiente produttivo e attivato progressivamente dopo aver controllato
 metriche ed effetti sui client legittimi.
 
+Per le prove locali contro lo staging è ammesso soltanto un debug token
+registrato e revocabile. Il token deve essere fornito come variabile temporanea
+della sessione o tramite il secret store CI, non deve essere salvato nei file
+`.env` e non deve comparire nelle build. Gli emulatori non usano App Check e
+`localhost` non deve essere aggiunto ai domini reCAPTCHA autorizzati.
+
 ## Dati personali e privacy
 
 - raccogliere soltanto campi con finalità approvata;

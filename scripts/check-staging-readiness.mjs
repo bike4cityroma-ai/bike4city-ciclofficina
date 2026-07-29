@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 const root = process.cwd();
 const envPath = resolve(root, ".env.staging.local");
+const allowDebug = process.argv.includes("--allow-debug");
 const requiredFiles = [
   "firebase.json",
   "firestore.rules",
@@ -33,6 +34,10 @@ if (!existsSync(envPath)) {
   );
 } else {
   const variables = parseEnv(readFileSync(envPath, "utf8"));
+  const fileDebugToken =
+    variables.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim() ?? "";
+  const sessionDebugToken =
+    process.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN?.trim() ?? "";
 
   for (const name of requiredVariables) {
     if (!variables[name]) errors.push(`Variabile staging mancante: ${name}`);
@@ -46,6 +51,25 @@ if (!existsSync(envPath)) {
   if (variables.VITE_USE_FIREBASE_EMULATORS !== "false") {
     errors.push(
       "VITE_USE_FIREBASE_EMULATORS deve essere false nello staging.",
+    );
+  }
+
+  if (fileDebugToken) {
+    errors.push(
+      "Il debug token App Check non deve essere salvato in .env.staging.local.",
+    );
+  }
+
+  if (allowDebug && !sessionDebugToken) {
+    errors.push(
+      "Impostare VITE_FIREBASE_APPCHECK_DEBUG_TOKEN soltanto nella sessione " +
+        "prima di avviare lo staging locale.",
+    );
+  }
+
+  if (!allowDebug && sessionDebugToken) {
+    errors.push(
+      "Il debug token App Check non è ammesso nel controllo o nella build staging.",
     );
   }
 
@@ -72,7 +96,8 @@ if (errors.length > 0) {
 
 console.info(
   "Controllo staging superato: configurazione presente, progetto non demo, " +
-    "emulatori disattivati e App Check configurato.",
+    "emulatori disattivati e App Check configurato" +
+    (allowDebug ? " con debug token temporaneo." : "."),
 );
 
 function parseEnv(content) {

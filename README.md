@@ -113,6 +113,19 @@ Il file `.env.staging.local` è escluso da Git. Il controllo fallisce
 intenzionalmente se il progetto è demo, gli emulatori sono attivi o manca la
 configurazione App Check.
 
+Per provare lo staging da `localhost` usare esclusivamente un debug token
+registrato in App Check e passato nella sessione corrente:
+
+```powershell
+$env:VITE_FIREBASE_APPCHECK_DEBUG_TOKEN="<TOKEN_REGISTRATO>"
+npm.cmd run dev:staging
+Remove-Item Env:VITE_FIREBASE_APPCHECK_DEBUG_TOKEN
+```
+
+Il token non deve essere scritto nei file `.env`, nei log, nel repository o in
+una build. Non aggiungere `localhost` ai domini reCAPTCHA. In CI il valore deve
+provenire dal secret store della piattaforma.
+
 ## Avvio dello sviluppo
 
 Requisito: Node.js 22.12 o successivo.

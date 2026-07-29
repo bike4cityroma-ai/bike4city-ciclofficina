@@ -23,6 +23,7 @@ import {
   getFunctions,
   type Functions,
 } from "firebase/functions";
+import { configureAppCheckDebug } from "./appCheckDebug";
 
 const demoProjectId = "demo-bike4city-ciclofficina";
 
@@ -66,11 +67,19 @@ function useEmulators() {
   return import.meta.env.VITE_USE_FIREBASE_EMULATORS !== "false";
 }
 
+const emulatorsEnabled = useEmulators();
+
+configureAppCheckDebug({
+  debugToken: import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN,
+  isDevelopment: import.meta.env.DEV,
+  useEmulators: emulatorsEnabled,
+});
+
 const app = getApps().length === 0
   ? initializeApp(getFirebaseOptions())
   : getApp();
 
-if (!useEmulators()) {
+if (!emulatorsEnabled) {
   const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY;
   if (!appCheckSiteKey) {
     throw new Error("Configurazione App Check mancante.");
@@ -86,7 +95,7 @@ export const db: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);
 export const functions: Functions = getFunctions(app, "europe-west1");
 
-if (import.meta.env.DEV && useEmulators()) {
+if (import.meta.env.DEV && emulatorsEnabled) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", {
     disableWarnings: true,
   });

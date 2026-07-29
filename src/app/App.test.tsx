@@ -5,8 +5,12 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 async function openSection(name: string) {
   fireEvent.click(await screen.findByRole("button", { name }));
@@ -21,6 +25,19 @@ describe("App", () => {
       screen.getByRole("heading", { name: "Gestionale ciclofficina" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Ambiente demo")).toBeInTheDocument();
+  });
+
+  it("distingue lo staging dagli emulatori e non precompila credenziali", () => {
+    vi.stubEnv("VITE_USE_FIREBASE_EMULATORS", "false");
+
+    render(<App />);
+
+    expect(screen.getByText("Ambiente staging")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email account fittizio")).toHaveValue("");
+    expect(screen.getByLabelText("Password")).toHaveValue("");
+    expect(
+      screen.getByRole("button", { name: "Accedi allo staging" }),
+    ).toBeInTheDocument();
   });
 
   it("apre la dashboard e consente di uscire", async () => {

@@ -153,3 +153,33 @@ non sono state create o scaricate chiavi private o credenziali amministrative.
 
 Prima di imporre App Check sulle API dovranno essere verificati i token nello
 staging e predisposto il debug provider per sviluppo locale e CI.
+
+## Debug provider per sviluppo e CI
+
+Il client abilita il debug provider soltanto quando tutte queste condizioni
+sono vere:
+
+- Vite è in modalità sviluppo;
+- gli emulatori sono disattivati;
+- `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN` è presente nella sessione.
+
+Il token non può essere conservato in `.env.staging.local`. Il controllo
+ordinario e la build staging lo rifiutano anche se ereditato dalla sessione.
+Per una prova locale controllata:
+
+```powershell
+$env:VITE_FIREBASE_APPCHECK_DEBUG_TOKEN="<TOKEN_REGISTRATO>"
+npm.cmd run dev:staging
+Remove-Item Env:VITE_FIREBASE_APPCHECK_DEBUG_TOKEN
+```
+
+In CI deve essere usato un token separato, registrato con un'etichetta
+riconoscibile e fornito dal secret store. Un token compromesso deve essere
+revocato immediatamente dalla console Firebase.
+
+Il 29 luglio 2026 è stato registrato il token
+**Staging locale Livio 2026-07-29**. Il valore non è stato scritto su disco né
+nel repository. Il percorso di configurazione e i blocchi contro emulatori e
+build sono coperti da test automatici. Lo scambio effettivo del token dovrà
+essere ricontrollato durante la prima sessione di collaudo integrato dello
+staging, prima dell'enforcement.

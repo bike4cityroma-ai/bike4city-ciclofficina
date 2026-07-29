@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:staging": "node scripts/check-staging-readiness.mjs --allow-debug && vite --mode staging",
     "build": "tsc -b && vite build",
     "build:staging": "npm.cmd run staging:check && tsc -b && vite build --mode staging",
     "staging:check": "node scripts/check-staging-readiness.mjs",
