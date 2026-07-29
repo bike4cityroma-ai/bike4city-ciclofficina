@@ -40,7 +40,7 @@ export interface SaveMemberInput {
 }
 
 export function observeMembers(
-  onData: (members: Member[]) => void,
+  onData: (members: Member[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   return onSnapshot(
@@ -84,7 +84,7 @@ export function observeMembers(
               }).format(updatedAt.toDate())
             : "Data non disponibile",
         };
-      }));
+      }), snapshot.metadata.fromCache);
     },
     onError,
   );

@@ -16,7 +16,7 @@ export interface ReceiptItem {
 }
 
 export function observeReceipts(
-  onData: (items: ReceiptItem[]) => void,
+  onData: (items: ReceiptItem[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   return onSnapshot(
@@ -36,7 +36,7 @@ export function observeReceipts(
           ? new Intl.DateTimeFormat("it-IT", { dateStyle: "medium" })
             .format(createdAt.toDate()) : "Data non disponibile",
       };
-    })),
+    }), snapshot.metadata.fromCache),
     onError,
   );
 }

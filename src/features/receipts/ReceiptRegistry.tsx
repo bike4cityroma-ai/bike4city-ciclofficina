@@ -20,8 +20,9 @@ export function ReceiptRegistry() {
   const [loadError, setLoadError] = useState(false);
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeReceipts((next) => {
-      setItems(next); setLoadError(false);
+    return observeReceipts((next, fromCache) => {
+      if (next.length > 0 || !fromCache) setItems(next);
+      setLoadError(fromCache);
     }, () => setLoadError(true));
   }, []);
   return <section aria-labelledby="receipts-title">
@@ -34,7 +35,8 @@ export function ReceiptRegistry() {
     </div><button className="primary-action" type="button"
       onClick={() => setDialogOpen(true)}>Nuova bozza ricevuta</button></div>
     {loadError && <p className="notice-banner" role="alert">
-      Registro ricevute non disponibile: verifica gli emulatori.
+      Connessione alle ricevute non disponibile. I dati visibili possono
+      provenire dalla cache: verifica gli emulatori prima di modificarli.
     </p>}
     <div className="registry-table-wrap"><table className="registry-table">
       <caption className="sr-only">Bozze ricevute dimostrative</caption>

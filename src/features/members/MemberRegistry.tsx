@@ -41,12 +41,14 @@ export function MemberRegistry() {
   const [status, setStatus] = useState("Tutti");
   const [editing, setEditing] = useState<Member | null | undefined>(undefined);
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeMembers(setMembers, () => {
-      setMessage("Impossibile caricare il registro soci.");
-    });
+    return observeMembers((nextMembers, fromCache) => {
+      if (nextMembers.length > 0 || !fromCache) setMembers(nextMembers);
+      setLoadError(fromCache);
+    }, () => setLoadError(true));
   }, []);
 
   const filtered = useMemo(() => members.filter((member) => {
@@ -87,7 +89,11 @@ export function MemberRegistry() {
           {filtered.length} risultati
         </span>
       </div>
-      {message && <p role="alert">{message}</p>}
+      {loadError && <p className="notice-banner" role="alert">
+        Connessione al registro soci non disponibile. I dati visibili possono
+        provenire dalla cache: verifica gli emulatori prima di modificarli.
+      </p>}
+      {message && <p role="status">{message}</p>}
       <div className="registry-table-wrap">
         <table className="registry-table">
           <thead><tr><th>Tessera</th><th>Socio</th><th>Scadenza</th>

@@ -27,7 +27,7 @@ export interface OperationalDocument {
 }
 
 export function observeDocuments(
-  onData: (documents: OperationalDocument[]) => void,
+  onData: (documents: OperationalDocument[], fromCache: boolean) => void,
   onError: () => void,
 ) {
   return onSnapshot(
@@ -50,7 +50,7 @@ export function observeDocuments(
             }).format(createdAt.toDate())
           : "Data non disponibile",
       };
-    })),
+    }), snapshot.metadata.fromCache),
     onError,
   );
 }

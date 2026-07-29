@@ -47,10 +47,15 @@ export function DocumentRegistry() {
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState(false);
   useEffect(() => {
     if (import.meta.env.MODE === "test") return;
-    return observeDocuments(setDocuments, () =>
-      setMessage("Impossibile caricare i documenti."));
+    return observeDocuments((nextDocuments, fromCache) => {
+      if (nextDocuments.length > 0 || !fromCache) {
+        setDocuments(nextDocuments);
+      }
+      setLoadError(fromCache);
+    }, () => setLoadError(true));
   }, []);
   const openPdf = async (document: OperationalDocument) => {
     try {
@@ -72,6 +77,10 @@ export function DocumentRegistry() {
       <span>Testi e firme non sono approvati. Questi file non costituiscono
         documenti consolidati o legalmente validi.</span>
     </div>
+    {loadError && <p className="notice-banner" role="alert">
+      Connessione ai documenti non disponibile. I dati visibili possono
+      provenire dalla cache: verifica gli emulatori prima di modificarli.
+    </p>}
     {message && <p role="status">{message}</p>}
     <div className="registry-table-wrap"><table className="registry-table">
       <thead><tr><th>Codice</th><th>Documento</th><th>Collegamento</th>

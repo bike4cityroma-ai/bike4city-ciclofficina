@@ -23,15 +23,22 @@ export function UserAccessRegistry() {
   const [users, setUsers] = useState<UserAccess[]>([]);
   const [selected, setSelected] = useState<UserAccess | null>(null);
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState(false);
   useEffect(() => onSnapshot(
     query(collection(db, "users"), orderBy("displayName")),
-    (snapshot) => setUsers(snapshot.docs.map((item) => ({
-      uid: item.id,
-      displayName: String(item.data().displayName ?? "Utente senza nome"),
-      active: item.data().active === true,
-      roles: Array.isArray(item.data().roles) ? item.data().roles : [],
-    }))),
-    () => setMessage("Impossibile caricare gli account."),
+    (snapshot) => {
+      const nextUsers = snapshot.docs.map((item) => ({
+        uid: item.id,
+        displayName: String(item.data().displayName ?? "Utente senza nome"),
+        active: item.data().active === true,
+        roles: Array.isArray(item.data().roles) ? item.data().roles : [],
+      }));
+      if (nextUsers.length > 0 || !snapshot.metadata.fromCache) {
+        setUsers(nextUsers);
+      }
+      setLoadError(snapshot.metadata.fromCache);
+    },
+    () => setLoadError(true),
   ), []);
   return <section aria-labelledby="users-title">
     <div className="section-heading"><div>
@@ -42,7 +49,11 @@ export function UserAccessRegistry() {
       Ogni modifica è applicata ad Authentication e Firestore e viene
       registrata nell’audit. Gli account disabilitati perdono l’accesso.
     </p>
-    {message && <p role="alert">{message}</p>}
+    {loadError && <p className="notice-banner" role="alert">
+      Connessione agli account non disponibile. I dati visibili possono
+      provenire dalla cache: verifica gli emulatori prima di modificarli.
+    </p>}
+    {message && <p role="status">{message}</p>}
     <div className="registry-table-wrap"><table className="registry-table">
       <thead><tr><th>Utente</th><th>Ruoli</th><th>Account</th><th /></tr></thead>
       <tbody>{users.map((item) => <tr key={item.uid}>

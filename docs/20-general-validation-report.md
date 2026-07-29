@@ -56,8 +56,8 @@ resta il riferimento principale per le future misurazioni.
 - zoom reale al 200% su browser fisico; il reflow equivalente è stato
   verificato automaticamente;
 - lettura con tecnologia assistiva;
-- messaggi di errore e recupero dei registri amministrativi e dei moduli
-  secondari;
+- messaggi di errore e recupero delle liste secondarie e prova offline di
+  Utenti con una sessione amministratore;
 - prove operative complete di ogni modulo per ciascun ruolo;
 - prova fisica di stampa e firma sui PDF generati.
 
@@ -241,3 +241,25 @@ avvisi. Dopo l'interruzione controllata dell'emulatore, ciascun registro ha
 conservato i dati fittizi disponibili e ha dichiarato chiaramente che potevano
 provenire dalla cache, invitando a verificare il servizio prima di apportare
 modifiche. Nessun registro ha presentato la cache come dato aggiornato.
+
+## Estensione ai registri amministrativi del 29 luglio 2026
+
+La distinzione fra dati confermati e dati in cache è stata estesa a Soci,
+Ricevute, Documenti e Utenti. I messaggi di conferma restano annunciati come
+stato, mentre l'indisponibilità della connessione usa un avviso separato con
+`role="alert"`.
+
+Soci, Ricevute e Documenti sono stati caricati con Firestore disponibile senza
+mostrare avvisi. Dopo l'interruzione controllata dell'emulatore hanno conservato
+gli eventuali dati fittizi disponibili e segnalato correttamente la
+provenienza dalla cache. Soci ha mantenuto anche la separazione fra anagrafica
+associativa e profilo privato dei contatti.
+
+Utenti applica la stessa gestione della metadata Firestore e mantiene separati
+gli avvisi di connessione dalle conferme di aggiornamento. La prova manuale
+dell'interruzione resta da ripetere con un account amministratore fittizio:
+l'account usato in questo ciclo è il Responsabile ciclofficina e non può aprire
+il modulo riservato agli amministratori.
+
+Le diciture fiscali delle Ricevute non sono state validate né modificate in
+questo ciclo.
