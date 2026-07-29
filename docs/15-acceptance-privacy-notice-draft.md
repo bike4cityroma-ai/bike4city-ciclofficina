@@ -8,6 +8,12 @@
 - Ambito: accettazione, diagnosi, autorizzazione, riparazione, collaudo,
   consegna e gestione documentale
 
+Decisione associativa `PRI-001` del 30 luglio 2026:
+
+> Misure operative di minimizzazione, separazione, accesso e conservazione
+> approvate dall'associazione; basi giuridiche, tempi definitivi e procedure
+> privacy da confermare dal consulente.
+
 Questa bozza non deve essere attivata nel gestionale finché i campi tra
 parentesi quadre non saranno completati e l'associazione non avrà documentato
 la validazione privacy.

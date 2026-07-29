@@ -241,7 +241,16 @@ Validare:
 
 ## Privacy e protezione dei dati
 
-Sottoporre a valutazione:
+Stato approvato dall'associazione il 30 luglio 2026:
+
+> Misure operative di minimizzazione, separazione, accesso e conservazione
+> approvate dall'associazione; basi giuridiche, tempi definitivi e procedure
+> privacy da confermare dal consulente.
+
+Sono quindi approvate come misure interne la raccolta dei soli dati necessari,
+la separazione tra profili personali e record tecnici, gli accessi per ruolo,
+l'audit, lo Storage privato, l'archiviazione logica e la revisione manuale
+delle evidenze dopo 24 mesi. Restano da sottoporre a valutazione professionale:
 
 - titolare del trattamento e responsabilità interne;
 - finalità e basi giuridiche;
@@ -308,7 +317,7 @@ Decidere:
 |---|---|---|---|---|
 | LEG-001 | Classificazione delle attività | APS Bike4City ETS | Prassi operativa approvata; classificazione professionale da confermare | Dal 30/07/2026 |
 | TAX-001 | Regole delle ricevute | APS Bike4City ETS | Prassi amministrativa e modello operativo approvati; trattamento fiscale e diciture normative da confermare dal consulente | Dal 30/07/2026 |
-| PRI-001 | Dati e tempi di conservazione | Da definire | Aperta | — |
+| PRI-001 | Dati e tempi di conservazione | APS Bike4City ETS | Misure operative approvate; basi giuridiche, tempi definitivi e procedure privacy da confermare dal consulente | Dal 30/07/2026 |
 | DOC-001 | Testi e firme dei documenti | Da definire | Aperta | — |
 | ACC-001 | Testo privacy della scheda di accettazione | Da definire | Aperta | — |
 | ACC-002 | Condizioni del servizio e beni non ritirati | Da definire | Aperta | — |
