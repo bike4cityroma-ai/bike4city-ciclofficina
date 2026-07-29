@@ -282,3 +282,37 @@ precedente. `firebase.json` richiede ora la rivalidazione tramite
 stata pubblicata con un deploy del solo Hosting e verificata sulla pagina
 principale, sul bundle JavaScript e sul fallback SPA: tutte le risposte hanno
 restituito stato `200` e gli header previsti.
+
+## Deploy fotografie biciclette del 29 luglio 2026
+
+Il commit `84e67a8` è stato pubblicato nello staging in questo ordine:
+
+1. Cloud Functions, con creazione di `registerBikePhoto` in `europe-west1`;
+2. Firestore Rules per `bikes/{bikeId}/photos`;
+3. Storage Rules con metadati obbligatori e divieto di sovrascrittura;
+4. Firebase Hosting.
+
+Il bucket consente `GET` e `HEAD` via CORS esclusivamente dai domini
+`bike4city-ciclofficina.web.app` e
+`bike4city-ciclofficina.firebaseapp.com`. Le richieste continuano a richiedere
+autenticazione e ruolo tramite Storage Rules; non sono stati introdotti URL
+pubblici.
+
+Il collaudo online ha usato una bicicletta, una PNG 1×1 e descrizioni
+esclusivamente fittizie. Sono stati verificati:
+
+- caricamento tramite SDK Firebase con metadati obbligatori;
+- verifica e collegamento tramite `registerBikePhoto`;
+- comparsa di metadati e anteprima nella galleria;
+- lettura consentita al volontario;
+- assenza del comando di caricamento per il volontario;
+- revoca finale dell'account temporaneo.
+
+Al termine sono stati eliminati amministrativamente e in modo puntuale il file,
+la bicicletta, i metadati fotografici, due chiavi idempotenti, due audit di
+collaudo e il contatore esclusivamente fittizio. Lo staging è tornato senza
+biciclette o fotografie di prova.
+
+La CLI segnala la disponibilità di una versione più recente di
+`firebase-functions`. L'aggiornamento non è stato eseguito durante il deploy:
+richiede un ciclo separato di aggiornamento dipendenze e regressione.
