@@ -1,4 +1,9 @@
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import {
+  FieldValue,
+  getFirestore,
+  Timestamp,
+} from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 const permittedRoles = new Set([
@@ -21,6 +26,13 @@ const statusTransitions = new Map<string, Set<string>>([
   ["Da riparare", new Set(["In lavorazione", "In attesa ricambi"])],
   ["In lavorazione", new Set(["In attesa ricambi", "Pronta"])],
   ["In attesa ricambi", new Set(["In lavorazione"])],
+]);
+
+const photoTypes = new Set([
+  "Ingresso",
+  "Dettaglio tecnico",
+  "Lavorazione",
+  "Risultato finale",
 ]);
 
 interface BikeInput {
@@ -129,6 +141,41 @@ function requireStatusUpdateInput(value: unknown) {
     newStatus,
     reason,
     idempotencyKey: requiredText("idempotencyKey", 80),
+  };
+}
+
+function requireBikePhotoInput(value: unknown) {
+  if (!value || typeof value !== "object") {
+    throw new HttpsError("invalid-argument", "Dati fotografia mancanti.");
+  }
+  const data = value as Record<string, unknown>;
+  const text = (name: string, max: number, required = true) => {
+    const field = data[name];
+    if (typeof field !== "string" ||
+        (required && !field.trim()) || field.length > max) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Il campo ${name} non è valido.`,
+      );
+    }
+    return field.trim();
+  };
+  const photoType = text("photoType", 40);
+  if (!photoTypes.has(photoType)) {
+    throw new HttpsError("invalid-argument", "Tipo fotografia non valido.");
+  }
+  const photoId = text("photoId", 160);
+  const storagePath = text("storagePath", 500);
+  if (!/^[A-Za-z0-9_-]+$/.test(photoId)) {
+    throw new HttpsError("invalid-argument", "ID fotografia non valido.");
+  }
+  return {
+    bikeId: text("bikeId", 160),
+    photoId,
+    storagePath,
+    photoType,
+    description: text("description", 300, false),
+    idempotencyKey: text("idempotencyKey", 80),
   };
 }
 
@@ -306,6 +353,122 @@ export const updateBikeStatus = onCall(
           },
         },
         reason: input.reason,
+        createdAt: now,
+      });
+      transaction.create(requestRef, {
+        ...result,
+        createdAt: now,
+        createdBy: uid,
+      });
+      return result;
+    });
+  },
+);
+
+export const registerBikePhoto = onCall(
+  { region: "europe-west1", enforceAppCheck: false },
+  async (request) => {
+    const uid = requireAuthorizedUser(request.auth);
+    const input = requireBikePhotoInput(request.data);
+    const expectedPath =
+      `bikes/${input.bikeId}/photos/${uid}_${input.photoId}`;
+    if (input.storagePath !== expectedPath) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Percorso della fotografia non valido.",
+      );
+    }
+
+    const db = getFirestore();
+    const user = await db.doc(`users/${uid}`).get();
+    if (!hasPermittedProfile(user.data())) {
+      throw new HttpsError(
+        "permission-denied",
+        "Profilo non autorizzato alle fotografie.",
+      );
+    }
+    const bikeRef = db.doc(`bikes/${input.bikeId}`);
+    const bike = await bikeRef.get();
+    if (!bike.exists) {
+      throw new HttpsError("not-found", "Bicicletta non trovata.");
+    }
+
+    const bucketName = process.env.FIREBASE_STORAGE_BUCKET ||
+      `${process.env.GCLOUD_PROJECT}.firebasestorage.app`;
+    const file = getStorage().bucket(bucketName).file(input.storagePath);
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new HttpsError("failed-precondition", "Fotografia non trovata.");
+    }
+    const [metadata] = await file.getMetadata();
+    const customMetadata = metadata.metadata ?? {};
+    const size = Number(metadata.size ?? 0);
+    if (size <= 0 || size >= 10 * 1024 * 1024 ||
+        !["image/jpeg", "image/png", "image/webp"].includes(
+          String(metadata.contentType),
+        ) ||
+        customMetadata.bikeId !== input.bikeId ||
+        customMetadata.uploaderUid !== uid ||
+        customMetadata.photoType !== input.photoType) {
+      throw new HttpsError(
+        "failed-precondition",
+        "File o metadati della fotografia non coerenti.",
+      );
+    }
+
+    const photoRef = bikeRef.collection("photos").doc(input.photoId);
+    const requestRef = db.doc(
+      `idempotencyKeys/bike-photo_${uid}_${input.idempotencyKey}`,
+    );
+    const auditRef = db.collection("auditLogs").doc();
+    return db.runTransaction(async (transaction) => {
+      const [existingPhoto, existingRequest, currentBike] = await Promise.all([
+        transaction.get(photoRef),
+        transaction.get(requestRef),
+        transaction.get(bikeRef),
+      ]);
+      if (existingRequest.exists || existingPhoto.exists) {
+        return {
+          bikeId: input.bikeId,
+          photoId: input.photoId,
+          storagePath: input.storagePath,
+        };
+      }
+      if (!currentBike.exists) {
+        throw new HttpsError("not-found", "Bicicletta non trovata.");
+      }
+      const now = Timestamp.now();
+      const result = {
+        bikeId: input.bikeId,
+        photoId: input.photoId,
+        storagePath: input.storagePath,
+      };
+      transaction.create(photoRef, {
+        storagePath: input.storagePath,
+        photoType: input.photoType,
+        description: input.description || null,
+        contentType: String(metadata.contentType),
+        size,
+        status: "active",
+        createdAt: now,
+        createdBy: uid,
+      });
+      transaction.update(bikeRef, {
+        photoDocumentIds: FieldValue.arrayUnion(input.photoId),
+        updatedAt: now,
+        updatedBy: uid,
+        version: Number(currentBike.data()?.version ?? 0) + 1,
+      });
+      transaction.create(auditRef, {
+        action: "bike.photo.register",
+        entityType: "bikePhoto",
+        entityId: input.photoId,
+        relatedEntityType: "bike",
+        relatedEntityId: input.bikeId,
+        actorUid: uid,
+        changes: {
+          photoType: { from: null, to: input.photoType },
+        },
         createdAt: now,
       });
       transaction.create(requestRef, {

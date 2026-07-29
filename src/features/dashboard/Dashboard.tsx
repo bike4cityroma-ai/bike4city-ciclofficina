@@ -241,7 +241,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           }>
             {section === "members" && <MemberRegistry />}
             {section === "users" && <UserAccessRegistry />}
-            {section === "bikes" && <BikeRegistry />}
+            {section === "bikes" && <BikeRegistry userRoles={user.roles} />}
             {section === "repairs" && <RepairRegistry />}
             {section === "parts" && <PartRegistry />}
             {section === "tests" && <TestRegistry />}

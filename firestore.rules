@@ -97,6 +97,16 @@ service cloud.firestore {
         allow write: if false;
       }
 
+      match /photos/{photoId} {
+        allow read: if hasAnyRole([
+          'admin',
+          'workshop_manager',
+          'operator',
+          'volunteer'
+        ]);
+        allow write: if false;
+      }
+
     }
 
     match /bikeDonations/{donationId} {

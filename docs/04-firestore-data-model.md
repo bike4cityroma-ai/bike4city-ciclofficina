@@ -135,6 +135,19 @@ Lo storico delle transizioni è conservato nella sottocollezione append-only
 Il client può leggere lo storico secondo il ruolo, ma non può scriverlo. Stato
 della bicicletta, evento storico e audit sono aggiornati insieme dal backend.
 
+Le fotografie tecniche sono descritte nella sottocollezione append-only
+`bikes/{bikeId}/photos`. Ogni record contiene:
+
+- `storagePath`, `contentType`, `size`;
+- `photoType`: ingresso, dettaglio tecnico, lavorazione o risultato finale;
+- `description: string | null`;
+- `status: "active"`;
+- `createdAt`, `createdBy`.
+
+Il file corrispondente resta privato in Storage. Il backend verifica la
+coerenza tra file e metadati prima di collegare `photoId` a
+`photoDocumentIds`; il client non può modificare direttamente i record.
+
 ### `bikeDonations`
 
 Finalità: registrare ingresso, provenienza e liberatoria.

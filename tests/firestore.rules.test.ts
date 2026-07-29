@@ -71,11 +71,20 @@ beforeEach(async () => {
       active: true,
       roles: ["operator"],
     });
+    await setDoc(doc(adminDb, "users", "treasurer-demo"), {
+      active: true,
+      roles: ["treasurer"],
+    });
     await setDoc(doc(adminDb, "bikes", "bike-demo"), {
       code: "BICI-DEMO-0001",
       status: "Da valutare",
       createdAt: "demo-created-at",
       createdBy: "manager-demo",
+    });
+    await setDoc(doc(adminDb, "bikes", "bike-demo", "photos", "photo-demo"), {
+      storagePath: "bikes/bike-demo/photos/manager-demo_photo-demo",
+      photoType: "Ingresso",
+      status: "active",
     });
     await setDoc(doc(adminDb, "members", "member-demo"), {
       membershipNumber: "DEMO-001",
@@ -129,6 +138,19 @@ describe("Regole Firestore", () => {
       .firestore();
 
     await assertSucceeds(getDoc(doc(db, "bikes", "bike-demo")));
+  });
+
+  it("limita i metadati fotografici ai ruoli tecnici autorizzati", async () => {
+    const volunteerDb = testEnvironment
+      .authenticatedContext("volunteer-demo")
+      .firestore();
+    const treasurerDb = testEnvironment
+      .authenticatedContext("treasurer-demo")
+      .firestore();
+    const photoPath = ["bikes", "bike-demo", "photos", "photo-demo"] as const;
+
+    await assertSucceeds(getDoc(doc(volunteerDb, ...photoPath)));
+    await assertFails(getDoc(doc(treasurerDb, ...photoPath)));
   });
 
   it("nega al volontario i dati dei soci", async () => {
@@ -355,16 +377,36 @@ describe("Regole Storage", () => {
 
       await assertSucceeds(
         uploadBytes(
-          ref(storage, "bikes/bike-demo/photos/photo-demo"),
+          ref(storage, "bikes/bike-demo/photos/manager-demo_photo-demo"),
           new Uint8Array([137, 80, 78, 71]),
           {
             contentType: "image/png",
+            customMetadata: {
+              bikeId: "bike-demo",
+              uploaderUid: "manager-demo",
+              photoType: "Ingresso",
+            },
           },
         ),
       );
     },
     20_000,
   );
+
+  it("nega fotografie prive dei metadati obbligatori", async () => {
+    const storage = testEnvironment
+      .authenticatedContext("manager-demo", {
+        active: true,
+        roles: ["workshop_manager"],
+      })
+      .storage();
+
+    await assertFails(uploadBytes(
+      ref(storage, "bikes/bike-demo/photos/manager-demo_senza-metadati"),
+      new Uint8Array([137, 80, 78, 71]),
+      { contentType: "image/png" },
+    ));
+  });
 
   it("nega la lettura diretta del PDF anche al responsabile", async () => {
     const storage = testEnvironment
@@ -512,10 +554,15 @@ describe("Regole Storage", () => {
 
       await assertFails(
         uploadBytes(
-          ref(storage, "bikes/bike-demo/photos/file-demo"),
+          ref(storage, "bikes/bike-demo/photos/manager-demo_file-demo"),
           new TextEncoder().encode("contenuto dimostrativo"),
           {
             contentType: "text/plain",
+            customMetadata: {
+              bikeId: "bike-demo",
+              uploaderUid: "manager-demo",
+              photoType: "Dettaglio tecnico",
+            },
           },
         ),
       );

@@ -577,7 +577,11 @@ function effectiveEvidenceRetentionStatus(
   return String(evidence.retentionStatus ?? "unknown");
 }
 
-export { createBike, updateBikeStatus } from "./bikes.js";
+export {
+  createBike,
+  registerBikePhoto,
+  updateBikeStatus,
+} from "./bikes.js";
 export const accessAuthorizationEvidence = onCall(
   { region: "europe-west1", enforceAppCheck: false },
   async (request) => {

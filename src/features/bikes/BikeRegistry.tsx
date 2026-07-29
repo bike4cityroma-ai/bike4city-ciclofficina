@@ -6,12 +6,13 @@ import {
   type DemoBike,
 } from "./demoBikes";
 import { BikeRegistrationForm } from "./BikeRegistrationForm";
+import { BikePhotos } from "./BikePhotos";
 import { BikeStatusWorkflow } from "./BikeStatusWorkflow";
 import { observeBikes } from "./bikeService";
 
 type StatusFilter = BikeStatus | "Tutti gli stati";
 
-export function BikeRegistry() {
+export function BikeRegistry({ userRoles = [] }: { userRoles?: string[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("Tutti gli stati");
   const [selectedBike, setSelectedBike] = useState<DemoBike | null>(null);
@@ -207,6 +208,7 @@ export function BikeRegistry() {
         {selectedBike && (
           <BikeDetail
             bike={selectedBike}
+            userRoles={userRoles}
             onClose={() => setSelectedBike(null)}
           />
         )}
@@ -220,10 +222,11 @@ export function BikeRegistry() {
 
 interface BikeDetailProps {
   bike: DemoBike;
+  userRoles: string[];
   onClose: () => void;
 }
 
-function BikeDetail({ bike, onClose }: BikeDetailProps) {
+function BikeDetail({ bike, userRoles, onClose }: BikeDetailProps) {
   return (
     <aside
       className="bike-detail"
@@ -303,6 +306,10 @@ function BikeDetail({ bike, onClose }: BikeDetailProps) {
         <h4>Note dimostrative</h4>
         <p>{bike.notes}</p>
       </div>
+
+      {userRoles.some((role) =>
+        ["admin", "workshop_manager", "operator", "volunteer"].includes(role)
+      ) && <BikePhotos bikeId={bike.id} userRoles={userRoles} />}
 
       <BikeStatusWorkflow bike={bike} />
     </aside>

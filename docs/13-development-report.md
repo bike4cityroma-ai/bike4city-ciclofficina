@@ -236,7 +236,7 @@ Il prototipo non è pronto per la produzione. Restano almeno:
 - autorizzazioni e classificazioni amministrative validate;
 - ricevute, annullamenti e progressivi contabili;
 - approvazione dei testi PDF, valore delle firme e tempi di conservazione;
-- fotografie e documenti Storage con flussi completi;
+- eventuale archiviazione logica e revisione periodica delle fotografie;
 - collegamento strutturato delle biciclette esterne;
 - esportazioni, backup e ripristino provati;
 - App Check, MFA e configurazione degli ambienti reali;
@@ -244,6 +244,23 @@ Il prototipo non è pronto per la produzione. Restano almeno:
 - ottimizzazione del bundle;
 - revisione legale, fiscale, privacy e organizzativa;
 - deploy, che richiede una conferma esplicita separata.
+
+## Fotografie biciclette
+
+La scheda bicicletta integra una galleria privata con caricamento da file o
+fotocamera. Il client accetta JPEG, PNG e WebP sotto 10 MB e ridimensiona le
+immagini superiori a 2 MB quando le API del dispositivo lo consentono.
+
+Il file viene creato in
+`bikes/{bikeId}/photos/{uploaderUid}_{photoId}` con metadati obbligatori. La
+callable `registerBikePhoto` verifica nuovamente utente, profilo, bicicletta,
+percorso, tipo, dimensione e metadati Storage, quindi crea il record append-only
+in `bikes/{bikeId}/photos`, collega l'ID alla bicicletta e registra l'audit.
+
+Amministratore, responsabile e operatore possono caricare; il volontario può
+leggere; tesoriere e sola lettura non accedono alle immagini. Non vengono
+generati URL pubblici: la visualizzazione usa un blob ottenuto con la sessione
+Firebase autenticata. Sovrascrittura e cancellazione client restano vietate.
 
 ## Conclusione
 

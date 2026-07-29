@@ -761,6 +761,65 @@ nav ul,
   line-height: 1.5;
 }
 
+.bike-photo-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bike-photo-heading h4 {
+  margin: 0;
+}
+
+.photo-privacy-note {
+  font-size: 0.82rem;
+}
+
+.bike-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.bike-photo-grid li {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.bike-photo-grid a,
+.photo-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  background: #edf2ef;
+}
+
+.bike-photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: #526760;
+  font-size: 0.8rem;
+}
+
+.bike-photo-grid span,
+.bike-photo-grid small {
+  overflow-wrap: anywhere;
+  color: #526760;
+}
+
 .repair-toolbar {
   grid-template-columns:
     minmax(15rem, 1fr) minmax(11rem, 0.35fr)

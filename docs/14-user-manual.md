@@ -67,6 +67,26 @@ Il sistema assegna il codice `BICI-AAAA-NNNN` e lo stato iniziale
 Lo storico compare nella stessa scheda. `Consegnata` non è selezionabile
 manualmente.
 
+### Fotografie della bicicletta
+
+Amministratore, responsabile e operatore possono:
+
+1. aprire una bicicletta;
+2. raggiungere la sezione **Fotografie**;
+3. premere **Aggiungi fotografia**;
+4. scegliere un'immagine JPEG, PNG o WebP, anche dalla fotocamera del
+   dispositivo;
+5. classificare la foto come ingresso, dettaglio tecnico, lavorazione o
+   risultato finale;
+6. inserire una descrizione facoltativa;
+7. premere **Carica fotografia**.
+
+Le immagini grandi vengono ridimensionate nel browser quando possibile e
+devono comunque restare sotto 10 MB. Non fotografare persone, documenti o
+altri dati personali. Le immagini sono private: il volontario può consultarle,
+mentre tesoriere e sola lettura non accedono alla galleria. Il client non può
+sovrascrivere o cancellare i file.
+
 ## Riparazioni
 
 ### Nuova accettazione

@@ -203,6 +203,83 @@ describe("createBike", () => {
   }, 30_000);
 });
 
+describe("registerBikePhoto", () => {
+  it("verifica il file, collega la fotografia e registra l'audit", async () => {
+    const bikeRef = db.collection("bikes").doc();
+    const photoId = crypto.randomUUID();
+    const storagePath =
+      `bikes/${bikeRef.id}/photos/${managerUid}_${photoId}`;
+    await bikeRef.set({
+      code: "BICI-2026-FOTO",
+      status: "Da valutare",
+      version: 1,
+      createdAt: Timestamp.now(),
+      createdBy: managerUid,
+      updatedAt: Timestamp.now(),
+      updatedBy: managerUid,
+    });
+    await getStorage(app).bucket(`${projectId}.firebasestorage.app`)
+      .file(storagePath)
+      .save(Buffer.from([137, 80, 78, 71]), {
+        contentType: "image/png",
+        metadata: {
+          metadata: {
+            bikeId: bikeRef.id,
+            uploaderUid: managerUid,
+            photoType: "Ingresso",
+          },
+        },
+      });
+
+    const response = await invokeFunction("registerBikePhoto", {
+      bikeId: bikeRef.id,
+      photoId,
+      storagePath,
+      photoType: "Ingresso",
+      description: "Fotografia fittizia di ingresso.",
+      idempotencyKey: photoId,
+    });
+    expect(response.status).toBe(200);
+    const photo = await bikeRef.collection("photos").doc(photoId).get();
+    expect(photo.data()).toMatchObject({
+      storagePath,
+      photoType: "Ingresso",
+      description: "Fotografia fittizia di ingresso.",
+      status: "active",
+      createdBy: managerUid,
+    });
+    const updatedBike = await bikeRef.get();
+    expect(updatedBike.data()?.photoDocumentIds).toContain(photoId);
+    const audit = await db.collection("auditLogs")
+      .where("entityId", "==", photoId)
+      .where("action", "==", "bike.photo.register")
+      .get();
+    expect(audit.size).toBe(1);
+
+    const repeated = await invokeFunction("registerBikePhoto", {
+      bikeId: bikeRef.id,
+      photoId,
+      storagePath,
+      photoType: "Ingresso",
+      description: "Fotografia fittizia di ingresso.",
+      idempotencyKey: photoId,
+    });
+    expect(repeated.status).toBe(200);
+  }, 30_000);
+
+  it("nega la registrazione al volontario", async () => {
+    const response = await invokeFunction("registerBikePhoto", {
+      bikeId: "bike-demo",
+      photoId: crypto.randomUUID(),
+      storagePath: "bikes/bike-demo/photos/volunteer-demo_photo",
+      photoType: "Ingresso",
+      description: "",
+      idempotencyKey: crypto.randomUUID(),
+    }, volunteerToken);
+    expect(response.status).toBe(403);
+  });
+});
+
 describe("reviewAuthorizationEvidence", () => {
   it("separa proposta e conferma amministrativa con audit", async () => {
     const evidenceRef = db.collection("authorizationEvidence").doc();

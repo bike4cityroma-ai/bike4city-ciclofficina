@@ -23,6 +23,26 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
 
+    function validBikePhoto(bikeId, uploaderUid) {
+      return resource == null
+        && validImageUpload()
+        && request.resource.size > 0
+        && request.auth.uid == uploaderUid
+        && request.resource.metadata.keys().hasAll([
+          'bikeId',
+          'uploaderUid',
+          'photoType'
+        ])
+        && request.resource.metadata.bikeId == bikeId
+        && request.resource.metadata.uploaderUid == uploaderUid
+        && request.resource.metadata.photoType in [
+          'Ingresso',
+          'Dettaglio tecnico',
+          'Lavorazione',
+          'Risultato finale'
+        ];
+    }
+
     function validAuthorizationEvidence(repairId, uploaderUid, method) {
       return resource == null
         && request.resource != null
@@ -66,7 +86,7 @@ service firebase.storage {
         'admin',
         'workshop_manager',
         'operator'
-      ]) && validImageUpload();
+      ]) && validBikePhoto(bikeId, request.auth.uid);
       allow update, delete: if false;
     }
 
