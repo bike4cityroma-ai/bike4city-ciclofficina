@@ -205,7 +205,7 @@ function hasPermittedProfile(data: Record<string, unknown> | undefined) {
 }
 
 export const createBike = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     const uid = requireAuthorizedUser(request.auth);
     const input = requireBikeInput(request.data);
@@ -273,7 +273,7 @@ export const createBike = onCall(
 );
 
 export const updateBikeStatus = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -366,7 +366,7 @@ export const updateBikeStatus = onCall(
 );
 
 export const registerBikePhoto = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     const uid = requireAuthorizedUser(request.auth);
     const input = requireBikePhotoInput(request.data);

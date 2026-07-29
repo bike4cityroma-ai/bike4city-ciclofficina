@@ -163,7 +163,7 @@ function requirePartMovementInput(value: unknown) {
 }
 
 export const useRepairPart = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -306,7 +306,7 @@ export const useRepairPart = onCall(
   },
 );
 export const createPart = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     const uid = requireAuthorizedUser(request.auth);
     const input = requirePartInput(request.data);
@@ -409,7 +409,7 @@ export const createPart = onCall(
 );
 
 export const recordPartMovement = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -502,4 +502,3 @@ export const recordPartMovement = onCall(
     });
   },
 );
-

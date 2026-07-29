@@ -331,3 +331,27 @@ deploy il precedente warning sulla versione obsoleta non è ricomparso.
 maggiore alla versione 14 non è necessario per questo intervento e, nel
 controllo effettuato, introduceva nuove segnalazioni alte nelle dipendenze
 transitive. L'audit corrente non riporta vulnerabilità alte o critiche.
+
+## Enforcement App Check del 29 luglio 2026
+
+L'enforcement di base è stato attivato tramite l'API ufficiale App Check, un
+servizio alla volta:
+
+- Cloud Firestore: `ENFORCED`;
+- Cloud Storage for Firebase: `ENFORCED`;
+- Firebase Authentication: `OFF`, in attesa di un ciclo dedicato con prova
+  completa di logout e nuovo login;
+- replay protection: `OFF`.
+
+Dopo la propagazione, il client locale di staging con debug provider
+registrato è stato ricaricato: sessione attiva, lettura Firestore disponibile
+e nessun errore o warning App Check nella console. Il debug token resta
+esclusivamente nella sessione locale e non è stato scritto nei file o nel
+repository.
+
+Le 30 callable Node.js sono configurate con `enforceAppCheck` attivo nel cloud
+e disattivo esclusivamente quando `FUNCTIONS_EMULATOR=true`. Build Functions,
+40 test frontend, build staging e regressione completa con Firebase Emulator
+Suite sono state superate. La configurazione delle callable richiede ancora
+commit, push e deploy esplicitamente autorizzato prima di diventare effettiva
+nello staging.

@@ -44,7 +44,7 @@ function requireText(
 }
 
 export const createReceiptDraft = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -256,7 +256,7 @@ export const createReceiptDraft = onCall(
 );
 
 export const voidReceiptDraft = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");

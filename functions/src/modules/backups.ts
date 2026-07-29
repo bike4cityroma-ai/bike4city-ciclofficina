@@ -163,7 +163,7 @@ function checksum(value: string | Buffer) {
 export const createJsonBackup = onCall(
   {
     region: "europe-west1",
-    enforceAppCheck: false,
+    enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true",
     timeoutSeconds: 300,
     memory: "1GiB",
   },
@@ -273,7 +273,7 @@ export const createJsonBackup = onCall(
 export const accessJsonBackup = onCall(
   {
     region: "europe-west1",
-    enforceAppCheck: false,
+    enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true",
     timeoutSeconds: 120,
     memory: "512MiB",
   },

@@ -583,7 +583,7 @@ export {
   updateBikeStatus,
 } from "./bikes.js";
 export const accessAuthorizationEvidence = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -651,7 +651,7 @@ export const accessAuthorizationEvidence = onCall(
 );
 
 export const accessAuthorizationReviewEvidence = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -735,7 +735,7 @@ export const accessAuthorizationReviewEvidence = onCall(
 );
 
 export const replaceAuthorizationReviewEvidence = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -847,7 +847,7 @@ export const replaceAuthorizationReviewEvidence = onCall(
 );
 
 export const manageAuthorizationEvidenceIncident = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -968,7 +968,7 @@ export const manageAuthorizationEvidenceIncident = onCall(
 );
 
 export const reviewAuthorizationEvidence = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -1222,7 +1222,7 @@ export {
   saveMember,
 } from "./members-and-users.js";
 export const accessOperationalDocument = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -1282,7 +1282,7 @@ export const accessOperationalDocument = onCall(
 );
 
 export const recordAcceptanceCopy = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -1381,7 +1381,7 @@ export const recordAcceptanceCopy = onCall(
 );
 
 export const consolidateAcceptanceDocument = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -1563,7 +1563,7 @@ export const consolidateAcceptanceDocument = onCall(
 );
 
 export const correctAcceptanceDocument = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -1823,7 +1823,7 @@ export const correctAcceptanceDocument = onCall(
 );
 
 export const createOperationalDocument = onCall(
-  { region: "europe-west1", enforceAppCheck: false },
+  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
