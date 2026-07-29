@@ -278,5 +278,7 @@ Il primo caricamento dopo il deploy ha inoltre evidenziato che la configurazione
 predefinita di Hosting conservava `index.html` in cache fino a un'ora. Un
 browser già aperto poteva quindi mostrare temporaneamente la versione
 precedente. `firebase.json` richiede ora la rivalidazione tramite
-`Cache-Control: no-cache, max-age=0, must-revalidate`. La configurazione deve
-essere pubblicata con un ulteriore deploy del solo Hosting.
+`Cache-Control: no-cache, max-age=0, must-revalidate`. La configurazione è
+stata pubblicata con un deploy del solo Hosting e verificata sulla pagina
+principale, sul bundle JavaScript e sul fallback SPA: tutte le risposte hanno
+restituito stato `200` e gli header previsti.
