@@ -313,6 +313,21 @@ la bicicletta, i metadati fotografici, due chiavi idempotenti, due audit di
 collaudo e il contatore esclusivamente fittizio. Lo staging è tornato senza
 biciclette o fotografie di prova.
 
-La CLI segnala la disponibilità di una versione più recente di
-`firebase-functions`. L'aggiornamento non è stato eseguito durante il deploy:
-richiede un ciclo separato di aggiornamento dipendenze e regressione.
+## Aggiornamento Firebase Functions del 29 luglio 2026
+
+`firebase-functions` è stato aggiornato dalla versione `7.2.2` alla `7.3.2`
+con il commit `e704cb6`. Il ciclo di regressione ha compreso:
+
+- build TypeScript delle Cloud Functions;
+- 40 test frontend;
+- build staging;
+- suite completa tramite Firebase Emulator Suite.
+
+Tutte le verifiche sono state superate. Le 30 Cloud Functions Node.js 22 di
+seconda generazione sono state quindi aggiornate in `europe-west1`; durante il
+deploy il precedente warning sulla versione obsoleta non è ricomparso.
+
+`firebase-admin` resta fissato alla versione `13.10.0`: l'aggiornamento
+maggiore alla versione 14 non è necessario per questo intervento e, nel
+controllo effettuato, introduceva nuove segnalazioni alte nelle dipendenze
+transitive. L'audit corrente non riporta vulnerabilità alte o critiche.

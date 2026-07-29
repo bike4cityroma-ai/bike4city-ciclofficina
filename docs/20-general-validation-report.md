@@ -41,9 +41,10 @@ resta il riferimento principale per le future misurazioni.
 
 ## Warning non bloccanti
 
-- Firebase CLI confronta `firebase-functions` stabile `7.2.2` con una release
-  candidate pubblicata come `latest`; non è stato eseguito un aggiornamento
-  prerelease.
+- Il precedente warning relativo a `firebase-functions` è stato chiuso il
+  29 luglio 2026 aggiornando la dipendenza stabile alla versione `7.3.2`;
+  build, test, regressione completa e deploy delle 30 Functions sono stati
+  completati con esito positivo.
 - Al termine degli emulatori può comparire `MetadataLookupWarning` perché il
   progetto demo non contatta i servizi cloud reali.
 - Il messaggio `SIGKILL` di Firestore compare durante lo spegnimento gestito
