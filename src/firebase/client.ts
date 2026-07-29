@@ -1,7 +1,7 @@
 import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
 import {
   initializeAppCheck,
-  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
 import {
   connectAuthEmulator,
@@ -76,7 +76,7 @@ if (!useEmulators()) {
     throw new Error("Configurazione App Check mancante.");
   }
   initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(appCheckSiteKey),
+    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
     isTokenAutoRefreshEnabled: true,
   });
 }

@@ -69,7 +69,7 @@ Questi comandi non eseguono deploy.
 - verificare proprietà, regione e servizi del progetto
   `bike4city-ciclofficina`;
 - compilare `.env.staging.local`;
-- abilitare App Check nel progetto e verificarne i token;
+- verificare i token App Check nello staging prima dell'enforcement;
 - sostituire `enforceAppCheck: false` nelle callable con una configurazione
   approvata per lo staging e ripetere i test;
 - predisporre account fittizi per tutti i ruoli, incluso amministratore;
@@ -118,9 +118,8 @@ locale `staging`. L'alias `default` resta
 `demo-bike4city-ciclofficina`, così i comandi locali non selezionano
 accidentalmente il progetto cloud.
 
-I parametri pubblici della Web App sono stati salvati esclusivamente nel file
-locale `.env.staging.local`, escluso da Git. La chiave sito App Check rimane
-vuota fino alla configurazione esplicitamente autorizzata del servizio.
+I parametri pubblici della Web App e la chiave sito App Check sono stati
+salvati esclusivamente nel file locale `.env.staging.local`, escluso da Git.
 Nessun deploy è stato eseguito.
 
 ## Verifica in console del 29 luglio 2026
@@ -139,5 +138,18 @@ La console Firebase è stata verificata in sola lettura:
 La Web App è stata registrata dopo conferma esplicita dell'associazione.
 Sono stati recuperati soltanto i parametri pubblici della configurazione web;
 non sono state create o scaricate chiavi private o credenziali amministrative.
-Il prossimo intervento cloud da autorizzare separatamente è la configurazione
-di App Check per la Web App.
+
+## App Check del 29 luglio 2026
+
+- API reCAPTCHA Enterprise abilitata;
+- chiave web **Bike4city Ciclofficina Staging** creata;
+- verifica dominio mantenuta attiva;
+- domini autorizzati: `bike4city-ciclofficina.web.app` e
+  `bike4city-ciclofficina.firebaseapp.com`;
+- Web App registrata in App Check con reCAPTCHA Enterprise;
+- TTL token: un'ora;
+- fatturazione non attivata;
+- enforcement delle API non attivato durante la fase di monitoraggio.
+
+Prima di imporre App Check sulle API dovranno essere verificati i token nello
+staging e predisposto il debug provider per sviluppo locale e CI.
