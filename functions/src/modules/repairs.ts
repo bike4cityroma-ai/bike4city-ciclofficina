@@ -342,7 +342,7 @@ function requireSafetyReviewInput(value: unknown) {
 }
 
 export const createRepair = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     const uid = requireAuthorizedUser(request.auth);
     const input = requireRepairInput(request.data);
@@ -453,7 +453,7 @@ export const createRepair = onCall(
 );
 
 export const updateRepairWorkflow = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -614,7 +614,7 @@ export const updateRepairWorkflow = onCall(
 );
 
 export const authorizeRepairWork = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     const uid = requireAuthorizedUser(request.auth);
     const input = requireRepairAuthorizationInput(request.data);
@@ -857,7 +857,7 @@ export const authorizeRepairWork = onCall(
 );
 
 export const manageRepairSafetyReview = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");

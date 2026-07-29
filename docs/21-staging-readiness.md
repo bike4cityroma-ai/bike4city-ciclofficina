@@ -367,3 +367,28 @@ fittizia; al termine sono stati rimossi amministrativamente e in modo puntuale
 la bicicletta, il relativo audit, la chiave d'idempotenza e il contatore
 generati dalla prova. La verifica finale ha rilevato zero biciclette, sessione
 attiva e nessun errore o warning nella console del browser.
+
+## Rollback enforcement App Check del 29 luglio 2026
+
+Il successivo ciclo dedicato ad Authentication ha completato correttamente un
+logout e un nuovo login fittizio prima dell'enforcement. Dopo l'attivazione di
+Authentication, il login continuava a riuscire ma Firestore non era più
+raggiungibile e l'interfaccia mostrava dati dimostrativi provenienti dalla
+cache.
+
+Il controllo ha rilevato che il server locale aveva generato un nuovo debug
+token non ancora registrato. Poiché il token non poteva essere trasferito in
+modo sicuro tra browser e CLI senza esporlo o salvarlo, è stato autorizzato un
+rollback temporaneo:
+
+- Firebase Authentication: `OFF`;
+- Cloud Firestore: `UNENFORCED`;
+- Cloud Storage for Firebase: `UNENFORCED`;
+- replay protection: `OFF`;
+- callable Functions: `enforceAppCheck: false`.
+
+App Check resta configurato e i servizi in `UNENFORCED` raccolgono metriche
+senza bloccare le richieste. Security Rules, Authentication e autorizzazioni
+backend restano attive. Prima di riprovare l'enforcement occorre predisporre un
+debug token stabile, registrarlo senza conservarlo nel repository e ripetere
+logout, login, letture Firestore, accesso Storage e una callable.

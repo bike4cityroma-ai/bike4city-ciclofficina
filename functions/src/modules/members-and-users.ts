@@ -105,7 +105,7 @@ function requireUserAccessInput(value: unknown) {
 }
 
 export const saveMember = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
@@ -230,7 +230,7 @@ export const saveMember = onCall(
 );
 
 export const manageUserAccess = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");

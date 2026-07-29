@@ -181,7 +181,7 @@ async function createPdf(
 }
 
 export const exportOperationalReport = onCall(
-  { region: "europe-west1", enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== "true" },
+  { region: "europe-west1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Accesso richiesto.");
